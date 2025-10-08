@@ -55,8 +55,8 @@ Forum General: tempat untuk membahas topik umum seputar olahraga.
 Forum by Category: membahas topik spesifik seperti liga tertentu, klub favorit, atau pemain.
 
 # Role User: 
-Admin
-User
+- Admin : Bisa melakukan create, edit, and delete sports article, bisa edit juga, bookmark, menambah history match dalam page, dan post, comment, and delete forum.
+- User: Bisa comment dan post forum, serta bookmark.
 
 
 
