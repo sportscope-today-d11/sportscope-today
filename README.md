@@ -12,9 +12,12 @@ SPORTSCOPE TODAY adalah platform majalah olahraga digital yang menyajikan berita
 
 
 # Datasets:
-berita dan pertandingan
+berita: https://www.bola.net/news/
+history pertandingan: https://www.bola.net/hasil-pertandingan/
 
 
+# URL PWS
+https://ahmad-omar-sportscopetoday.pbp.cs.ui.ac.id/
 
 # Modul untuk setiap anggota: modul 2-6 pakai pageination
 ## 1. dashboard
