@@ -19,9 +19,9 @@ berita dan pertandingan
 # Modul untuk setiap anggota: modul 2-6 pakai pageination
 ## 1. dashboard
 Menampilkan ringkasan konten utama seperti:
-- Berita olahraga terbaru dari berbagai cabang (football, basketball, e-sports, dll).
-- Highlight hasil pertandingan terbaru dan jadwal pertandingan mendatang.
-- Notifikasi aktivitas komunitas (misalnya: komentar baru, thread populer, atau live chat yang sedang aktif).
+- Berita olahraga terbaru dari berbagai cabang (football, basketball, dll).
+- Highlight hasil pertandingan terbaru
+- Notifikasi aktivitas komunitas (misalnya: komentar baru atau thread populer).
 Fungsi utamanya: jadi beranda utama pengguna untuk memantau semua update penting secara cepat.
 
 ## 2. halaman news 
@@ -30,7 +30,7 @@ Fitur yang tersedia:
 - Filter berita per cabang olahraga.
 - Fitur pencarian berita tertentu.
 - Tombol Bookmark untuk menyimpan berita favorit.
-- Tampilan detail berita dengan komentar pengguna dan rekomendasi artikel terkait.
+- Tampilan detail berita.
 
 ## 3. halaman bookmark news
 Menampilkan kumpulan berita yang telah disimpan (bookmark) oleh pengguna.
@@ -45,9 +45,8 @@ Berisi thread/forum yang telah di-bookmark oleh pengguna.
 
 ## 5. history pertandingan
 Fitur ini menampilkan rekap hasil pertandingan sebelumnya.
-- Data mencakup skor akhir, statistik pertandingan, dan highlight video (jika tersedia).
+- Data mencakup skor akhir pertandingan.
 - Pengguna dapat melihat history by team atau by competition.
-- Dilengkapi dengan grafik performa tim dan tren kemenangan.
 
 ## 6. forum general and by category
 Ruang diskusi komunitas yang mirip konsepnya dengan Reddit/Quora.
