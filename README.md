@@ -54,5 +54,9 @@ Ruang diskusi komunitas yang mirip konsepnya dengan Reddit/Quora.
 Forum General: tempat untuk membahas topik umum seputar olahraga.
 Forum by Category: membahas topik spesifik seperti liga tertentu, klub favorit, atau pemain.
 
+# Role User: 
+Admin
+User
+
 
 
