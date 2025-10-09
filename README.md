@@ -12,8 +12,8 @@ SPORTSCOPE TODAY adalah platform majalah olahraga digital yang menyajikan berita
 
 
 # Datasets:
-berita: https://www.bola.net/news/
-history pertandingan: https://www.bola.net/hasil-pertandingan/
+berita: https://www.kaggle.com/datasets/hammadjavaid/football-news-articles
+history pertandingan: https://www.kaggle.com/datasets/martj42/international-football-results-from-1872-to-2017
 
 
 # URL PWS
