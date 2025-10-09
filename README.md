@@ -12,8 +12,13 @@ SPORTSCOPE TODAY adalah platform majalah olahraga digital yang menyajikan berita
 
 
 # Datasets:
-berita: https://www.kaggle.com/datasets/hammadjavaid/football-news-articles
-history pertandingan: https://www.kaggle.com/datasets/martj42/international-football-results-from-1872-to-2017
+berita:https://www.kaggle.com/datasets/hammadjavaid/football-news-articles 
+
+history pertandingan: https://www.kaggle.com/datasets/marcohuiii/english-premier-league-epl-match-data-2000-2025
+
+statistik tim Premier League: https://www.kaggle.com/datasets/flynn28/2025-premier-league-stats-matches-salaries
+
+daftar pemain fifa: https://www.kaggle.com/datasets (we lost the url, can't find it in history either)
 
 
 # URL PWS
