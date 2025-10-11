@@ -4,7 +4,7 @@ from django.db import models
 
 class TeamStats(models.Model):
     team = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True, null=True)
+    slug = models.SlugField(unique=True)
     players = models.PositiveIntegerField()
     age = models.FloatField()
     possession = models.FloatField()
@@ -14,7 +14,7 @@ class TeamStats(models.Model):
     penalty_kick_attempts = models.PositiveIntegerField()
     yellows = models.PositiveIntegerField()
     reds = models.PositiveIntegerField()
-    expected_goals = models.FloatField()
+    expected_goals = models.FloatField(null=True)
     expected_assists = models.FloatField()
     progressive_carries = models.PositiveIntegerField()
     progressive_passes = models.PositiveIntegerField()
