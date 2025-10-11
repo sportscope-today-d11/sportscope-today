@@ -4,7 +4,7 @@ from django.db import models
 
 class TeamStats(models.Model):
     team = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, null=True)
     players = models.PositiveIntegerField()
     age = models.FloatField()
     possession = models.FloatField()
