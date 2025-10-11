@@ -14,7 +14,7 @@ class TeamStats(models.Model):
     penalty_kick_attempts = models.PositiveIntegerField()
     yellows = models.PositiveIntegerField()
     reds = models.PositiveIntegerField()
-    expected_goals = models.FloatField()
+    expected_goals = models.FloatField(null=True)
     expected_assists = models.FloatField()
     progressive_carries = models.PositiveIntegerField()
     progressive_passes = models.PositiveIntegerField()
