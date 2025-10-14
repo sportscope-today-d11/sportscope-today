@@ -1,28 +1,40 @@
 from django.db import models
+from django.utils.text import slugify
+from unidecode import unidecode
+import os
 
 # Create your models here.
 
-class TeamStats(models.Model):
-    team = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True)
-    players = models.PositiveIntegerField()
+class Team(models.Model):
+    slug = models.SlugField(unique=True, primary_key=True)
+    name = models.CharField(max_length=255)
+    players = models.IntegerField()
     age = models.FloatField()
     possession = models.FloatField()
-    goals = models.PositiveIntegerField()
-    assists = models.PositiveIntegerField()
-    penalty_kicks = models.PositiveIntegerField()
-    penalty_kick_attempts = models.PositiveIntegerField()
-    yellows = models.PositiveIntegerField()
-    reds = models.PositiveIntegerField()
-    expected_goals = models.FloatField(null=True)
-    expected_assists = models.FloatField()
-    progressive_carries = models.PositiveIntegerField()
-    progressive_passes = models.PositiveIntegerField()
+    goals = models.IntegerField()
+    assists = models.IntegerField()
+    penalty_kicks = models.IntegerField()
+    penalty_kick_attempts = models.IntegerField()
+    yellows = models.IntegerField()
+    reds = models.IntegerField()
+    image = models.ImageField(upload_to="teams/", null=True, blank=True)
 
-    class Meta:
-        db_table = "team_stats"
-        verbose_name = "Team Statistics"
-        verbose_name_plural = "Teams Statistics"
+    # override fungsi save agar membuat slug otomatis dari nama tim
+    def save(self, *args, **kwargs):
+        if not self.slug and self.name:
+            self.slug = slugify(unidecode(self.name))
+        super().save(*args, **kwargs)
+
+    @property
+    def image_url(self):
+        if self.image:
+            return self.image.url
+        static_path = f"/static/images/teams/{self.slug}.png" if self.slug else None
+        default_path = "/static/images/teams/default.png"
+        static_file = f"static/images/teams/{self.slug}.png" if self.slug else None
+        if static_file and os.path.exists(static_file):
+            return static_path
+        return default_path
 
     def __str__(self):
-        return self.team
+        return self.name or "Unnamed Team"
