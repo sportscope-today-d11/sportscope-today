@@ -10,11 +10,7 @@
     "penalty_kicks":2,
     "penalty_kick_attempts":2,
     "yellows":70,
-    "reds":6,
-    "expected_goals":57.6,
-    "expected_assists":43.2,
-    "progressive_carries":830,
-    "progressive_passes":1764
+    "reds":6
   },
   {
     "team":"Aston Villa",
@@ -27,11 +23,7 @@
     "penalty_kicks":3,
     "penalty_kick_attempts":6,
     "yellows":74,
-    "reds":3,
-    "expected_goals":55.7,
-    "expected_assists":41.5,
-    "progressive_carries":709,
-    "progressive_passes":1326
+    "reds":3
   },
   {
     "team":"Bournemouth",
@@ -44,11 +36,7 @@
     "penalty_kicks":6,
     "penalty_kick_attempts":7,
     "yellows":97,
-    "reds":3,
-    "expected_goals":62.4,
-    "expected_assists":42.6,
-    "progressive_carries":732,
-    "progressive_passes":1438
+    "reds":3
   },
   {
     "team":"Brentford",
@@ -61,11 +49,7 @@
     "penalty_kicks":5,
     "penalty_kick_attempts":6,
     "yellows":61,
-    "reds":1,
-    "expected_goals":57.6,
-    "expected_assists":41.3,
-    "progressive_carries":579,
-    "progressive_passes":1318
+    "reds":1
   },
   {
     "team":"Brighton",
@@ -78,11 +62,7 @@
     "penalty_kicks":6,
     "penalty_kick_attempts":6,
     "yellows":77,
-    "reds":3,
-    "expected_goals":56.5,
-    "expected_assists":39.7,
-    "progressive_carries":798,
-    "progressive_passes":1478
+    "reds":3
   },
   {
     "team":"Chelsea",
@@ -95,11 +75,7 @@
     "penalty_kicks":4,
     "penalty_kick_attempts":5,
     "yellows":99,
-    "reds":2,
-    "expected_goals":66.7,
-    "expected_assists":51.6,
-    "progressive_carries":848,
-    "progressive_passes":1573
+    "reds":2
   },
   {
     "team":"Crystal Palace",
@@ -112,11 +88,7 @@
     "penalty_kicks":3,
     "penalty_kick_attempts":4,
     "yellows":80,
-    "reds":4,
-    "expected_goals":58.7,
-    "expected_assists":44.7,
-    "progressive_carries":491,
-    "progressive_passes":1140
+    "reds":4
   },
   {
     "team":"Everton",
@@ -129,11 +101,7 @@
     "penalty_kicks":2,
     "penalty_kick_attempts":2,
     "yellows":78,
-    "reds":2,
-    "expected_goals":40.6,
-    "expected_assists":31.5,
-    "progressive_carries":474,
-    "progressive_passes":1027
+    "reds":2
   },
   {
     "team":"Fulham",
@@ -146,11 +114,7 @@
     "penalty_kicks":3,
     "penalty_kick_attempts":4,
     "yellows":80,
-    "reds":2,
-    "expected_goals":47.8,
-    "expected_assists":36.9,
-    "progressive_carries":773,
-    "progressive_passes":1524
+    "reds":2
   },
   {
     "team":"Ipswich",
@@ -163,11 +127,7 @@
     "penalty_kicks":2,
     "penalty_kick_attempts":2,
     "yellows":91,
-    "reds":5,
-    "expected_goals":33.6,
-    "expected_assists":23.7,
-    "progressive_carries":488,
-    "progressive_passes":896
+    "reds":5
   },
   {
     "team":"Leicester",
@@ -180,11 +140,7 @@
     "penalty_kicks":2,
     "penalty_kick_attempts":3,
     "yellows":85,
-    "reds":0,
-    "expected_goals":32.4,
-    "expected_assists":25.0,
-    "progressive_carries":569,
-    "progressive_passes":1068
+    "reds":0
   },
   {
     "team":"Liverpool",
@@ -197,11 +153,7 @@
     "penalty_kicks":9,
     "penalty_kick_attempts":9,
     "yellows":65,
-    "reds":2,
-    "expected_goals":80.0,
-    "expected_assists":59.6,
-    "progressive_carries":801,
-    "progressive_passes":1846
+    "reds":2
   },
   {
     "team":"Manchester City",
@@ -214,11 +166,7 @@
     "penalty_kicks":2,
     "penalty_kick_attempts":3,
     "yellows":59,
-    "reds":2,
-    "expected_goals":65.2,
-    "expected_assists":52.5,
-    "progressive_carries":1112,
-    "progressive_passes":1890
+    "reds":2
   },
   {
     "team":"Manchester United",
@@ -231,11 +179,7 @@
     "penalty_kicks":3,
     "penalty_kick_attempts":3,
     "yellows":84,
-    "reds":3,
-    "expected_goals":49.7,
-    "expected_assists":37.9,
-    "progressive_carries":669,
-    "progressive_passes":1379
+    "reds":3
   },
   {
     "team":"Newcastle",
@@ -248,11 +192,7 @@
     "penalty_kicks":5,
     "penalty_kick_attempts":6,
     "yellows":67,
-    "reds":1,
-    "expected_goals":62.6,
-    "expected_assists":45.2,
-    "progressive_carries":727,
-    "progressive_passes":1541
+    "reds":1
   },
   {
     "team":"Nottingham Forest",
@@ -265,11 +205,7 @@
     "penalty_kicks":3,
     "penalty_kick_attempts":3,
     "yellows":88,
-    "reds":2,
-    "expected_goals":44.3,
-    "expected_assists":32.1,
-    "progressive_carries":610,
-    "progressive_passes":1079
+    "reds":2
   },
   {
     "team":"Southampton",
@@ -282,11 +218,7 @@
     "penalty_kicks":0,
     "penalty_kick_attempts":2,
     "yellows":89,
-    "reds":3,
-    "expected_goals":32.0,
-    "expected_assists":24.5,
-    "progressive_carries":628,
-    "progressive_passes":1114
+    "reds":3
   },
   {
     "team":"Tottenham",
@@ -299,11 +231,7 @@
     "penalty_kicks":2,
     "penalty_kick_attempts":3,
     "yellows":69,
-    "reds":1,
-    "expected_goals":56.8,
-    "expected_assists":43.1,
-    "progressive_carries":827,
-    "progressive_passes":1582
+    "reds":1
   },
   {
     "team":"West Ham",
@@ -316,11 +244,7 @@
     "penalty_kicks":3,
     "penalty_kick_attempts":3,
     "yellows":81,
-    "reds":3,
-    "expected_goals":45.9,
-    "expected_assists":33.0,
-    "progressive_carries":617,
-    "progressive_passes":1192
+    "reds":3
   },
   {
     "team":"Wolves",
@@ -333,10 +257,6 @@
     "penalty_kicks":0,
     "penalty_kick_attempts":0,
     "yellows":77,
-    "reds":2,
-    "expected_goals":42.6,
-    "expected_assists":34.6,
-    "progressive_carries":587,
-    "progressive_passes":1148
+    "reds":2
   }
 ]
