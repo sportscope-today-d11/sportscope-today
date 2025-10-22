@@ -1,7 +1,53 @@
-{% extends base.html %}
+{% extends 'base.html' %}
 
 {%block meta%}
+<style>
+.team-logo {
+  width: 60px;          /* atur lebar tetap */
+  height: 60px;         /* tinggi tetap juga boleh */
+  object-fit: contain;  /* biar proporsional, gak gepeng */
+  background-color: white; /* opsional, buat gambar transparan */
+  border-radius: 8px;   /* opsional, buat lebih halus */
+  padding: 4px;
+}
+
+.team{
+    display: flex;
+}
+
+
+</style>
 {%endblock meta%}
 
 {%block content%}
+{% load static %}
+    <div>
+        <!-- news highlight section -->
+        <section>
+            <div class="team">
+                {%for team in teams %}
+                <br>
+                <br>
+                <hr>
+                <br>
+                <h1>{{team.name}}</h1>
+                <img src="{% static 'images/logo/' %}{{ team.slug }}.png" class="team-logo" alt="{{ team.name }}">
+                <br>
+                <hr>
+                <br>
+                <br>
+                {%endfor%}
+            </div>
+        </section>
+
+        <!-- clubs section -->
+        <section>
+
+        </section>
+
+        <!-- top 10 liked players section -->
+        <section>
+
+        </section>
+    </div>
 {%endblock content%}

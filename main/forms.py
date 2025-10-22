@@ -9,6 +9,7 @@ class TeamForm(forms.ModelForm):
             'assists', 'penalty_kicks', 'penalty_kick_attempts',
             'yellows', 'reds', 'image'
         ]
+        
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Team name'}),
             'players': forms.NumberInput(attrs={'class': 'form-control'}),
