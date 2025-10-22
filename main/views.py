@@ -53,4 +53,4 @@ def match_list(request):
 def match_detail(request, match_id):
     """Tampilkan detail satu pertandingan"""
     match = get_object_or_404(Match.objects.select_related('home_team', 'away_team'), id=match_id)
-    return render(request, 'matches/match_detail.html', {'match': match})
+    return render(request, 'main/match_detail.html', {'match': match})
