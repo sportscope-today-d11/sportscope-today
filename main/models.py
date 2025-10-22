@@ -45,6 +45,7 @@ class Match(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     season = models.CharField(max_length=20)
     match_date = models.DateField()
+    league = models.CharField(max_length=100, default="Unknown")
 
     home_team = models.ForeignKey(Team, related_name="home_matches", on_delete=models.CASCADE)
     away_team = models.ForeignKey(Team, related_name="away_matches", on_delete=models.CASCADE)

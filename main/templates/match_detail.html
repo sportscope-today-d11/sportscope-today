@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+  <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">
+    {{ match.home_team.name }} vs {{ match.away_team.name }}
+  </h1>
+
+  <div class="bg-white rounded-lg shadow p-6 mb-8">
+    <div class="text-center mb-6">
+      <p class="text-gray-500">{{ match.match_date }}</p>
+      <p class="text-xl font-semibold mt-2">
+        <span class="text-gray-800">{{ match.home_team.name }}</span>
+        <span class="mx-3 font-bold">{{ match.full_time_home_goals }} - {{ match.full_time_away_goals }}</span>
+        <span class="text-gray-800">{{ match.away_team.name }}</span>
+      </p>
+      <p class="text-sm text-gray-500 mt-1">Full-time Result:
+        {% if match.full_time_result == 'H' %}
+          <span class="text-green-600 font-semibold">Menang (Home)</span>
+        {% elif match.full_time_result == 'A' %}
+          <span class="text-red-600 font-semibold">Menang (Away)</span>
+        {% else %}
+          <span class="text-gray-600 font-semibold">Seri</span>
+        {% endif %}
+      </p>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- HALF-TIME -->
+    <div class="mb-6">
+      <h2 class="text-lg font-semibold mb-2 text-gray-700">Hasil Babak Pertama</h2>
+      <p class="text-gray-800">
+        {{ match.half_time_home_goals }} - {{ match.half_time_away_goals }}
+        {% if match.half_time_result == 'H' %}
+          (Menang Home)
+        {% elif match.half_time_result == 'A' %}
+          (Menang Away)
+        {% else %}
+          (Seri)
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- STATISTIK -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
+      <div class="bg-gray-50 rounded p-3">
+        <p class="text-sm text-gray-500">Shots</p>
+        <p class="font-semibold">{{ match.home_shots }} - {{ match.away_shots }}</p>
+      </div>
+      <div class="bg-gray-50 rounded p-3">
+        <p class="text-sm text-gray-500">Shots on Target</p>
+        <p class="font-semibold">{{ match.home_shots_on_target }} - {{ match.away_shots_on_target }}</p>
+      </div>
+      <div class="bg-gray-50 rounded p-3">
+        <p class="text-sm text-gray-500">Corners</p>
+        <p class="font-semibold">{{ match.home_corners }} - {{ match.away_corners }}</p>
+      </div>
+      <div class="bg-gray-50 rounded p-3">
+        <p class="text-sm text-gray-500">Fouls</p>
+        <p class="font-semibold">{{ match.home_fouls }} - {{ match.away_fouls }}</p>
+      </div>
+      <div class="bg-gray-50 rounded p-3">
+        <p class="text-sm text-gray-500">Yellow Cards</p>
+        <p class="font-semibold text-yellow-600">{{ match.home_yellow_cards }} - {{ match.away_yellow_cards }}</p>
+      </div>
+      <div class="bg-gray-50 rounded p-3">
+        <p class="text-sm text-gray-500">Red Cards</p>
+        <p class="font-semibold text-red-600">{{ match.home_red_cards }} - {{ match.away_red_cards }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center">
+    <a href="{% url 'match_list' %}"
+       class="inline-block bg-gray-800 text-white px-5 py-2 rounded-md hover:bg-gray-700 transition">
+       ‹ Kembali ke Daftar Pertandingan
+    </a>
+  </div>
+</div>
+{% endblock %}
