@@ -1,12 +1,18 @@
 from django.conf import settings
 from django.urls import path
-from main.views import *
+from . import views
 from django.conf.urls.static import static
 
 app_name = 'main'
 
 urlpatterns = [
+        # TEAM URLS
+    path('teams/', views.team_list, name='team_list'),
+    path('teams/<slug:slug>/', views.team_detail, name='team_detail'),
 
+    # MATCH URLS
+    path('matches/', views.match_list, name='match_list'),
+    path('matches/<uuid:match_id>/', views.match_detail, name='match_detail'),
 ]
 
 if settings.DEBUG:

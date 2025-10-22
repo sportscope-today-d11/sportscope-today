@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+
+  <h1 class="text-2xl font-bold mb-6 text-gray-800">
+    Jadwal Pertandingan {{ match_date|date:"j F Y" }}
+  </h1>
+
+  {% for league, matches in matches_by_league.items %}
+  <div class="mb-8">
+    <div class="bg-gray-100 px-4 py-2 font-semibold text-gray-700 border-b border-gray-300">
+      {{ league }}
+    </div>
+
+    <div class="divide-y divide-gray-200 bg-white rounded-b-lg shadow">
+      {% for match in matches %}
+      <div class="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition">
+
+        <div class="flex items-center space-x-3 w-1/3">
+          {% if match.home_team.image %}
+          <img src="{{ match.home_team.image.url }}" alt="{{ match.home_team.name }}" class="h-6 w-6 object-contain">
+          {% endif %}
+          <span class="font-medium text-gray-800">{{ match.home_team.name }}</span>
+        </div>
+
+        <div class="w-1/3 text-center font-semibold text-gray-700">
+          {{ match.full_time_home_goals|default:"-" }} - {{ match.full_time_away_goals|default:"-" }}
+        </div>
+
+        <div class="flex items-center space-x-3 w-1/3 justify-end">
+          <span class="font-medium text-gray-800">{{ match.away_team.name }}</span>
+          {% if match.away_team.image %}
+          <img src="{{ match.away_team.image.url }}" alt="{{ match.away_team.name }}" class="h-6 w-6 object-contain">
+          {% endif %}
+        </div>
+
+        <div class="ml-4 text-sm text-gray-500 w-24 text-right">
+          {{ match.match_date|date:"H:i" }} WIB
+        </div>
+
+        <a href="{% url 'match_detail' match.id %}" 
+           class="text-green-600 font-semibold text-sm ml-4 hover:text-green-700">Detail ›</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}
