@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10">
+  <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ news.title }}</h1>
+  <p class="text-gray-500 text-sm mb-6">
+    {{ news.author }} — {{ news.source }} • {{ news.publish_time|date:"j F Y" }}
+  </p>
+  <img src="{{ news.thumbnail }}" alt="Thumbnail" class="w-full rounded-lg mb-6 shadow">
+  <div class="prose max-w-none text-gray-700 leading-relaxed">
+    {{ news.content|safe }}
+  </div>
+
+  <a href="{% url 'main:news_list' %}" class="inline-block mt-6 text-green-600 hover:text-green-700 font-semibold">
+    ‹ Kembali ke daftar berita
+  </a>
+</div>
+{% endblock %}

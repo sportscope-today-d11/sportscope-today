@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import Team, Match
 from django.utils.timezone import localtime
 from collections import defaultdict
+from .models import News
 
 # ------------------------------
 # TEAM VIEWS
@@ -54,3 +55,18 @@ def match_detail(request, match_id):
     """Tampilkan detail satu pertandingan"""
     match = get_object_or_404(Match.objects.select_related('home_team', 'away_team'), id=match_id)
     return render(request, 'matches/match_detail.html', {'match': match})
+
+# ------------------------------
+# NEWS VIEWS
+# ------------------------------
+
+def news_list(request):
+    """Menampilkan daftar semua berita"""
+    news_items = News.objects.all().order_by('-publish_time')
+    return render(request, 'news/news_list.html', {'news_items': news_items})
+
+
+def news_detail(request, news_id):
+    """Menampilkan detail satu berita"""
+    news = get_object_or_404(News, id=news_id)
+    return render(request, 'news/news_detail.html', {'news': news})
