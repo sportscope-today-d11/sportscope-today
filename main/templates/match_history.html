@@ -1,38 +1,98 @@
-<h2>History Pertandingan</h2>
+{% extends "base.html" %}
 
-<form method="get">
-  <input type="text" name="team" placeholder="Cari tim">
-  <input type="text" name="competition" placeholder="Cari kompetisi">
-  <button type="submit">Filter</button>
-</form>
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-10">
 
-<table>
-  <thead>
-    <tr>
-      <th>Tanggal</th>
-      <th>Pertandingan</th>
-      <th>Skor</th>
-      <th>Kompetisi</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for match in page_obj %}
-    <tr>
-      <td>{{ match.date }}</td>
-      <td>{{ match.home_team }} vs {{ match.away_team }}</td>
-      <td>{{ match.home_score }} - {{ match.away_score }}</td>
-      <td>{{ match.competition }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <h1 class="text-2xl font-bold text-[#052962] mb-8">
+    History Pertandingan
+  </h1>
 
-<div>
+  <form method="get" class="flex flex-wrap gap-3 items-center mb-6 bg-[#F6F6F6] p-4 rounded-lg border border-gray-200">
+    <input type="text" name="team" placeholder="Cari tim..." 
+           value="{{ request.GET.team }}" 
+           class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:ring-1 focus:ring-[#052962]">
+
+    <input type="text" name="competition" placeholder="Cari kompetisi..." 
+           value="{{ request.GET.competition }}" 
+           class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-48 focus:outline-none focus:ring-1 focus:ring-[#052962]">
+
+    <button type="submit" 
+            class="bg-[#052962] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0a3d91] transition">
+      Filter
+    </button>
+
+    {% if request.GET.team or request.GET.competition %}
+    <a href="{% url 'main:match_history' %}" 
+       class="text-[#C70000] text-sm ml-2 hover:underline">
+       Reset
+    </a>
+    {% endif %}
+  </form>
+
+  <div class="overflow-x-auto bg-white rounded-xl shadow border border-gray-200">
+    <table class="min-w-full text-sm text-gray-800">
+      <thead class="bg-[#F6F6F6] text-[#052962] uppercase text-xs font-semibold">
+        <tr>
+          <th class="px-4 py-3 text-left">Tanggal</th>
+          <th class="px-4 py-3 text-left">Pertandingan</th>
+          <th class="px-4 py-3 text-center">Skor</th>
+          <th class="px-4 py-3 text-left">Kompetisi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for match in page_obj %}
+        <tr class="border-t border-gray-100 hover:bg-gray-50">
+          <td class="px-4 py-3 text-gray-600">{{ match.date|date:"j M Y" }}</td>
+          <td class="px-4 py-3">
+            <span class="font-medium text-gray-900">{{ match.home_team }}</span>
+            <span class="text-gray-500">vs</span>
+            <span class="font-medium text-gray-900">{{ match.away_team }}</span>
+          </td>
+          <td class="px-4 py-3 text-center font-semibold text-gray-700">
+            {{ match.home_score }} - {{ match.away_score }}
+          </td>
+          <td class="px-4 py-3 text-gray-700">{{ match.competition }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="px-4 py-6 text-center text-gray-500">
+            Tidak ada data pertandingan ditemukan.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex justify-center items-center space-x-2 mt-8">
   {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}">Prev</a>
+    <a href="?page={{ page_obj.previous_page_number }}" 
+       class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition">
+       ‹ Prev
+    </a>
+  {% else %}
+    <span class="px-3 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed">‹ Prev</span>
   {% endif %}
-  <span>Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span>
+
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+      <span class="px-3 py-1 bg-[#dcd6cc] text-[#052962] font-semibold rounded">{{ num }}</span>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+      <a href="?page={{ num }}" 
+         class="px-3 py-1 bg-white text-[#052962] border border-gray-300 rounded hover:bg-[#f6f6f6] transition">
+         {{ num }}
+      </a>
+    {% endif %}
+  {% endfor %}
+
   {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}">Next</a>
+    <a href="?page={{ page_obj.next_page_number }}" 
+       class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition">
+       Next ›
+    </a>
+  {% else %}
+    <span class="px-3 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed">Next ›</span>
   {% endif %}
 </div>
+
+{% endblock %}
