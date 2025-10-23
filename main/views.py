@@ -50,12 +50,12 @@ def match_list(request):
         'match_date': today,
         'matches_by_league': dict(matches_by_league)
     }
-    return render(request, 'main/matches.html', context)
+    return render(request, 'matches.html', context)
 
 def match_detail(request, match_id):
     """Tampilkan detail satu pertandingan"""
     match = get_object_or_404(Match.objects.select_related('home_team', 'away_team'), id=match_id)
-    return render(request, 'main/match_detail.html', {'match': match})
+    return render(request, 'match_detail.html', {'match': match})
 
 def match_history(request):
     matches = Match.objects.all().order_by('-match_date')
@@ -74,4 +74,4 @@ def match_history(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'main/match_history.html', {'page_obj': page_obj})
+    return render(request, 'match_history.html', {'page_obj': page_obj})
