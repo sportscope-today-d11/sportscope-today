@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Daftar Pertandingan</h2>
+  <table class="table table-bordered mt-3">
+    <thead>
+      <tr>
+        <th>Tanggal</th>
+        <th>Waktu</th>
+        <th>Home</th>
+        <th>Away</th>
+        <th>Skor</th>
+        <th>Liga</th>
+        <th>Status</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for match in matches %}
+      <tr>
+        <td>{{ match.date }}</td>
+        <td>{{ match.time }}</td>
+        <td>{{ match.home_team }}</td>
+        <td>{{ match.away_team }}</td>
+        <td>{{ match.score_home }} - {{ match.score_away }}</td>
+        <td>{{ match.league }}</td>
+        <td>{{ match.status }}</td>
+        <td>
+          <a href="{% url 'edit_match' match.id %}" class="btn btn-sm btn-primary">Edit</a>
+          <a href="{% url 'delete_match' match.id %}" class="btn btn-sm btn-danger">Hapus</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" class="text-center">Belum ada data pertandingan.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <a href="{% url 'add_match' %}" class="btn btn-success mt-3">Tambah Pertandingan</a>
+</div>
+{% endblock %}

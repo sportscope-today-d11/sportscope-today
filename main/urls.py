@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 app_name = 'main'
 
 urlpatterns = [
-        # TEAM URLS
+    # TEAM URLS
     path('teams/', views.team_list, name='team_list'),
     path('teams/<slug:slug>/', views.team_detail, name='team_detail'),
 
@@ -14,6 +14,12 @@ urlpatterns = [
     path('matches/today/', views.match_list, name='match_list'),
     path('matches/<uuid:match_id>/', views.match_detail, name='match_detail'),
     path('matches/history/', views.match_history, name='match_history'),
+
+    # ADMIN URLS
+    path('admin/matches/', views.match_list_admin, name='admin_match_list'),
+    path('admin/matches/add/', views.add_match, name='add_match'),
+    path('admin/matches/<int:match_id>/edit/', views.edit_match, name='edit_match'),
+    path('admin/matches/<int:match_id>/delete/', views.delete_match, name='delete_match'),
 ]
 
 if settings.DEBUG:

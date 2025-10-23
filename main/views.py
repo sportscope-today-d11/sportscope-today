@@ -1,9 +1,10 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from .models import Team, Match
 from django.utils.timezone import localtime
 from collections import defaultdict
 from django.core.paginator import Paginator
 from django.db.models import Q
+from .forms import MatchForm
 
 # ------------------------------
 # TEAM VIEWS
@@ -75,3 +76,38 @@ def match_history(request):
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'match_history.html', {'page_obj': page_obj})
+
+
+# ------------------------------
+# Admin Views for Match Management
+# ------------------------------
+
+def match_list_admin(request):
+    matches = Match.objects.all().order_by('-date')
+    return render(request, 'match_list_admin.html', {'matches': matches})
+
+def add_match(request):
+    if request.method == 'POST':
+        form = MatchForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_match_list')
+    else:
+        form = MatchForm()
+    return render(request, 'match_form.html', {'form': form, 'title': 'Tambah Pertandingan'})
+
+def edit_match(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+    if request.method == 'POST':
+        form = MatchForm(request.POST, instance=match)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_match_list')
+    else:
+        form = MatchForm(instance=match)
+    return render(request, 'match_form.html', {'form': form, 'title': 'Edit Pertandingan'})
+
+def delete_match(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+    match.delete()
+    return redirect('admin_match_list')
