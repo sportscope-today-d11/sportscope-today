@@ -3,6 +3,7 @@ from .models import Team, Match
 from django.utils.timezone import localtime
 from collections import defaultdict
 from django.core.paginator import Paginator
+from django.db.models import Q
 
 # ------------------------------
 # TEAM VIEWS
@@ -57,18 +58,20 @@ def match_detail(request, match_id):
     return render(request, 'main/match_detail.html', {'match': match})
 
 def match_history(request):
-    matches = Match.objects.all().order_by('-date')
+    matches = Match.objects.all().order_by('-match_date')
 
     team = request.GET.get('team')
     competition = request.GET.get('competition')
 
     if team:
-        matches = matches.filter(home_team__icontains=team) | matches.filter(away_team__icontains=team)
+        matches = matches.filter(
+        Q(home_team__name__icontains=team) | Q(away_team__name__icontains=team)
+    )
     if competition:
-        matches = matches.filter(competition__icontains=competition)
+        matches = matches.filter(league__icontains=competition)
 
     paginator = Paginator(matches, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'match_history.html', {'page_obj': page_obj})
+    return render(request, 'main/match_history.html', {'page_obj': page_obj})

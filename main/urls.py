@@ -11,9 +11,9 @@ urlpatterns = [
     path('teams/<slug:slug>/', views.team_detail, name='team_detail'),
 
     # MATCH URLS
-    path('matches/', views.match_list, name='match_list'),
+    path('matches/today/', views.match_list, name='match_list'),
     path('matches/<uuid:match_id>/', views.match_detail, name='match_detail'),
-    path('matches/', views.match_history, name='match_history'),
+    path('matches/history/', views.match_history, name='match_history'),
 ]
 
 if settings.DEBUG:
