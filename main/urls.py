@@ -13,6 +13,7 @@ urlpatterns = [
     # MATCH URLS
     path('matches/', views.match_list, name='match_list'),
     path('matches/<uuid:match_id>/', views.match_detail, name='match_detail'),
+    path('matches/', views.match_history, name='match_history'),
 ]
 
 if settings.DEBUG:

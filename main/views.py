@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from .models import Team, Match
 from django.utils.timezone import localtime
 from collections import defaultdict
+from django.core.paginator import Paginator
 
 # ------------------------------
 # TEAM VIEWS
@@ -54,3 +55,20 @@ def match_detail(request, match_id):
     """Tampilkan detail satu pertandingan"""
     match = get_object_or_404(Match.objects.select_related('home_team', 'away_team'), id=match_id)
     return render(request, 'main/match_detail.html', {'match': match})
+
+def match_history(request):
+    matches = Match.objects.all().order_by('-date')
+
+    team = request.GET.get('team')
+    competition = request.GET.get('competition')
+
+    if team:
+        matches = matches.filter(home_team__icontains=team) | matches.filter(away_team__icontains=team)
+    if competition:
+        matches = matches.filter(competition__icontains=competition)
+
+    paginator = Paginator(matches, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'match_history.html', {'page_obj': page_obj})

@@ -1,0 +1,38 @@
+<h2>History Pertandingan</h2>
+
+<form method="get">
+  <input type="text" name="team" placeholder="Cari tim">
+  <input type="text" name="competition" placeholder="Cari kompetisi">
+  <button type="submit">Filter</button>
+</form>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tanggal</th>
+      <th>Pertandingan</th>
+      <th>Skor</th>
+      <th>Kompetisi</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for match in page_obj %}
+    <tr>
+      <td>{{ match.date }}</td>
+      <td>{{ match.home_team }} vs {{ match.away_team }}</td>
+      <td>{{ match.home_score }} - {{ match.away_score }}</td>
+      <td>{{ match.competition }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div>
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}">Prev</a>
+  {% endif %}
+  <span>Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}">Next</a>
+  {% endif %}
+</div>
