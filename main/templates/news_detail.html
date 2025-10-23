@@ -10,6 +10,13 @@
   <div class="prose max-w-none text-gray-700 leading-relaxed">
     {{ news.content|safe }}
   </div>
+  
+  {% if user.is_authenticated and user.is_staff %}
+  <div class="flex space-x-3 mt-6">
+    <a href="{% url 'main:news_update' news.id %}" class="bg-yellow-500 text-white px-3 py-1 rounded">Edit</a>
+    <a href="{% url 'main:news_delete' news.id %}" class="bg-red-600 text-white px-3 py-1 rounded">Hapus</a>
+  </div>
+  {% endif %}
 
   <a href="{% url 'main:news_list' %}" class="inline-block mt-6 text-green-600 hover:text-green-700 font-semibold">
     ‹ Kembali ke daftar berita
