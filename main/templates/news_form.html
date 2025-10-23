@@ -5,7 +5,7 @@
         {% if mode == "edit" %}✏️ Edit Berita{% else %}📰 Tambah Berita{% endif %}
     </h1>
 
-    <form method="POST">
+    <form id="newsForm" method="POST" data-mode="{{ mode }}" data-id="{{ form.instance.id|default:'' }}">
         {% csrf_token %}
         <div class="space-y-4">
             {% for field in form %}
@@ -22,9 +22,40 @@
         <div class="flex justify-end mt-6 space-x-3">
             <a href="{% url 'main:news_list' %}" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Batal</a>
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                {% if mode == "edit" %}Simpan Perubahan{% else %}Tambah Berita{% endif %}
+                {% if mode == "edit" %}Simpan{% else %}Tambah{% endif %}
             </button>
         </div>
     </form>
+
+    <p id="statusMsg" class="text-center text-sm mt-4"></p>
 </div>
+
+<script>
+document.getElementById("newsForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const mode = form.dataset.mode;
+    const id = form.dataset.id;
+    const url = mode === "edit" ? `/news/${id}/edit/` : `/news/create/`;
+
+    const formData = new FormData(form);
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+        body: formData
+    });
+
+    const result = await response.json();
+    const msg = document.getElementById("statusMsg");
+
+    if (result.success) {
+        msg.textContent = "✅ Berita berhasil disimpan!";
+        msg.classList.add("text-green-600");
+        setTimeout(() => window.location.href = "/news/", 1200);
+    } else {
+        msg.textContent = "❌ Gagal menyimpan berita!";
+        msg.classList.add("text-red-600");
+    }
+});
+</script>
 {% endblock %}

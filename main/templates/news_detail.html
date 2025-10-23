@@ -1,25 +1,52 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="max-w-3xl mx-auto px-4 py-10">
-  <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ news.title }}</h1>
-  <p class="text-gray-500 text-sm mb-6">
-    {{ news.author }} — {{ news.source }} • {{ news.publish_time|date:"j F Y" }}
+<div class="max-w-4xl mx-auto mt-10 bg-white shadow-lg rounded-2xl p-8">
+  <h1 class="text-3xl font-bold mb-4">{{ news.title }}</h1>
+  <img src="{{ news.thumbnail_url }}" class="rounded-lg w-full mb-4" alt="{{ news.title }}">
+  <p class="text-gray-600 mb-2">
+    Oleh {{ news.author }} • {{ news.publish_time|date:"j F Y" }} • {{ news.source }}
   </p>
-  <img src="{{ news.thumbnail }}" alt="Thumbnail" class="w-full rounded-lg mb-6 shadow">
-  <div class="prose max-w-none text-gray-700 leading-relaxed">
-    {{ news.content|safe }}
-  </div>
-  
-  {% if user.is_authenticated and user.is_staff %}
-  <div class="flex space-x-3 mt-6">
-    <a href="{% url 'main:news_update' news.id %}" class="bg-yellow-500 text-white px-3 py-1 rounded">Edit</a>
-    <a href="{% url 'main:news_delete' news.id %}" class="bg-red-600 text-white px-3 py-1 rounded">Hapus</a>
+  <p class="text-gray-800 mb-6">{{ news.content }}</p>
+
+  {% if user.is_staff %}
+  <div class="flex justify-end space-x-3 mt-6">
+      <a href="{% url 'main:news_update' news.id %}" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Edit</a>
+      <button id="deleteBtn" data-id="{{ news.id }}" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Hapus</button>
   </div>
   {% endif %}
 
-  <a href="{% url 'main:news_list' %}" class="inline-block mt-6 text-green-600 hover:text-green-700 font-semibold">
-    ‹ Kembali ke daftar berita
-  </a>
+  <p id="deleteStatus" class="text-center mt-4 text-sm"></p>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const deleteBtn = document.getElementById("deleteBtn");
+    if (!deleteBtn) return;
+
+    deleteBtn.addEventListener("click", async function() {
+        const id = this.dataset.id;
+        if (!confirm("Yakin ingin menghapus berita ini?")) return;
+
+        const response = await fetch(`/news/${id}/delete/`, {
+            method: "POST",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+        });
+
+        const result = await response.json();
+        const status = document.getElementById("deleteStatus");
+
+        if (result.success) {
+            status.textContent = "✅ Berita berhasil dihapus!";
+            status.classList.add("text-green-600");
+            setTimeout(() => window.location.href = "/news/", 1000);
+        } else {
+            status.textContent = "❌ Gagal menghapus berita!";
+            status.classList.add("text-red-600");
+        }
+    });
+});
+</script>
 {% endblock %}
