@@ -83,15 +83,18 @@ def match_history(request):
 # ------------------------------
 
 def match_list_admin(request):
-    matches = Match.objects.all().order_by('-date')
-    return render(request, 'match_list_admin.html', {'matches': matches})
+    matches = Match.objects.all().order_by('-match_date')
+    paginator = Paginator(matches, 10)  # 10 pertandingan per halaman
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'match_list_admin.html', {'page_obj': page_obj})
 
 def add_match(request):
     if request.method == 'POST':
         form = MatchForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('admin_match_list')
+            return redirect('main:admin_match_list')
     else:
         form = MatchForm()
     return render(request, 'match_form.html', {'form': form, 'title': 'Tambah Pertandingan'})
@@ -102,7 +105,7 @@ def edit_match(request, match_id):
         form = MatchForm(request.POST, instance=match)
         if form.is_valid():
             form.save()
-            return redirect('admin_match_list')
+            return redirect('main:admin_match_list')
     else:
         form = MatchForm(instance=match)
     return render(request, 'match_form.html', {'form': form, 'title': 'Edit Pertandingan'})
@@ -110,4 +113,4 @@ def edit_match(request, match_id):
 def delete_match(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     match.delete()
-    return redirect('admin_match_list')
+    return redirect('main:admin_match_list')

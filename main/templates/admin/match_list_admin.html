@@ -1,42 +1,90 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-  <h2>Daftar Pertandingan</h2>
-  <table class="table table-bordered mt-3">
-    <thead>
-      <tr>
-        <th>Tanggal</th>
-        <th>Waktu</th>
-        <th>Home</th>
-        <th>Away</th>
-        <th>Skor</th>
-        <th>Liga</th>
-        <th>Status</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for match in matches %}
-      <tr>
-        <td>{{ match.date }}</td>
-        <td>{{ match.time }}</td>
-        <td>{{ match.home_team }}</td>
-        <td>{{ match.away_team }}</td>
-        <td>{{ match.score_home }} - {{ match.score_away }}</td>
-        <td>{{ match.league }}</td>
-        <td>{{ match.status }}</td>
-        <td>
-          <a href="{% url 'edit_match' match.id %}" class="btn btn-sm btn-primary">Edit</a>
-          <a href="{% url 'delete_match' match.id %}" class="btn btn-sm btn-danger">Hapus</a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr>
-        <td colspan="8" class="text-center">Belum ada data pertandingan.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <a href="{% url 'add_match' %}" class="btn btn-success mt-3">Tambah Pertandingan</a>
+<div class="max-w-6xl mx-auto py-10 px-4">
+  <div class="flex justify-between items-center mb-8">
+    <h2 class="text-2xl font-bold text-[#052962]">Daftar Pertandingan</h2>
+    <a href="{% url 'main:add_match' %}" 
+       class="px-4 py-2 bg-[#052962] text-white rounded-lg hover:bg-[#063b8b] transition">
+      + Tambah Pertandingan
+    </a>
+  </div>
+
+  <div class="overflow-x-auto bg-white rounded-xl shadow border border-gray-200">
+    <table class="min-w-full text-sm text-gray-800">
+      <thead class="bg-[#F6F6F6] text-[#052962] uppercase text-xs font-semibold">
+        <tr>
+          <th class="px-4 py-3 text-left">Tanggal</th>
+          <th class="px-4 py-3 text-left">Waktu</th>
+          <th class="px-4 py-3 text-left">Home</th>
+          <th class="px-4 py-3 text-left">Away</th>
+          <th class="px-4 py-3 text-center">Skor</th>
+          <th class="px-4 py-3 text-left">Liga</th>
+          <th class="px-4 py-3 text-left">Status</th>
+          <th class="px-4 py-3 text-center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for match in page_obj %}
+        <tr class="border-t border-gray-100 hover:bg-gray-50">
+          <td class="px-4 py-3">{{ match.date }}</td>
+          <td class="px-4 py-3">{{ match.time }}</td>
+          <td class="px-4 py-3 font-medium text-gray-900">{{ match.home_team }}</td>
+          <td class="px-4 py-3 font-medium text-gray-900">{{ match.away_team }}</td>
+          <td class="px-4 py-3 text-center font-semibold">{{ match.score_home }} - {{ match.score_away }}</td>
+          <td class="px-4 py-3">{{ match.league }}</td>
+          <td class="px-4 py-3">{{ match.status }}</td>
+          <td class="px-4 py-3 text-center space-x-2">
+            <a href="{% url 'main:edit_match' match.id %}" 
+               class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition text-xs">
+              Edit
+            </a>
+            <a href="{% url 'main:delete_match' match.id %}" 
+               class="px-3 py-1 bg-[#C70000] text-white rounded hover:bg-[#a10000] transition text-xs"
+               onclick="return confirm('Yakin ingin menghapus pertandingan ini?');">
+              Hapus
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="px-4 py-6 text-center text-gray-500">
+            Belum ada data pertandingan.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex justify-center items-center space-x-2 mt-8">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" 
+         class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition">
+         ‹ Prev
+      </a>
+    {% else %}
+      <span class="px-3 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed">‹ Prev</span>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <span class="px-3 py-1 bg-[#dcd6cc] text-[#052962] font-semibold rounded">{{ num }}</span>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}" 
+           class="px-3 py-1 bg-white text-[#052962] border border-gray-300 rounded hover:bg-[#f6f6f6] transition">
+           {{ num }}
+        </a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" 
+         class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition">
+         Next ›
+      </a>
+    {% else %}
+      <span class="px-3 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed">Next ›</span>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

@@ -18,8 +18,8 @@ urlpatterns = [
     # ADMIN URLS
     path('admin/matches/', views.match_list_admin, name='admin_match_list'),
     path('admin/matches/add/', views.add_match, name='add_match'),
-    path('admin/matches/<int:match_id>/edit/', views.edit_match, name='edit_match'),
-    path('admin/matches/<int:match_id>/delete/', views.delete_match, name='delete_match'),
+    path('admin/matches/<uuid:match_id>/edit/', views.edit_match, name='edit_match'),
+    path('admin/matches/<uuid:match_id>/delete/', views.delete_match, name='delete_match'),
 ]
 
 if settings.DEBUG:
