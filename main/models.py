@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 import os
 import uuid
+from unidecode import unidecode
 
 # Create your models here.
 
@@ -105,3 +106,99 @@ class Match(models.Model):
 
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name} ({self.match_date})"
+
+class Player(models.Model):
+    slug = models.SlugField(unique=True, primary_key=True)
+    name = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255, blank=True)
+    age = models.PositiveIntegerField(null=True, blank=True)
+    height_cm = models.FloatField(null=True, blank=True)
+    weight_kgs = models.FloatField(null=True, blank=True)
+    positions = models.CharField(max_length=100, blank=True)
+    nationality = models.CharField(max_length=100, blank=True)
+    overall_rating = models.PositiveIntegerField(null=True, blank=True)
+    value_euro = models.FloatField(null=True, blank=True)
+    wage_euro = models.FloatField(null=True, blank=True)
+    preferred_foot = models.CharField(max_length=10, null=True)
+    international_reputation = models.PositiveIntegerField(null=True, blank=True)
+    weak_foot = models.PositiveIntegerField(null=True, blank=True)
+    skill_moves = models.PositiveIntegerField(null=True, blank=True)
+    release_clause_euro = models.FloatField(null=True, blank=True)
+    national_team = models.CharField(max_length=100, null=True)
+    finishing = models.PositiveIntegerField(null=True, blank=True)
+    heading_accuracy = models.PositiveIntegerField(null=True, blank=True)
+    short_passing = models.PositiveIntegerField(null=True, blank=True)
+    volleys = models.PositiveIntegerField(null=True, blank=True)
+    dribbling = models.PositiveIntegerField(null=True, blank=True)
+    long_passing = models.PositiveIntegerField(null=True, blank=True)
+    ball_control = models.PositiveIntegerField(null=True, blank=True)
+    acceleration = models.PositiveIntegerField(null=True, blank=True)
+    sprint_speed = models.PositiveIntegerField(null=True, blank=True)
+    agility = models.PositiveIntegerField(null=True, blank=True)
+    jumping = models.PositiveIntegerField(null=True, blank=True)
+    stamina = models.PositiveIntegerField(null=True, blank=True)
+    strength = models.PositiveIntegerField(null=True, blank=True)
+    long_shots = models.PositiveIntegerField(null=True, blank=True)
+    vision = models.PositiveIntegerField(null=True, blank=True)
+    penalties = models.PositiveIntegerField(null=True, blank=True)
+    marking = models.PositiveIntegerField(null=True, blank=True)
+    standing_tackle = models.PositiveIntegerField(null=True, blank=True)
+    sliding_tackle = models.PositiveIntegerField(null=True, blank=True)
+    likes = models.PositiveIntegerField(default=0)
+
+    # override fungsi save agar membuat slug otomatis dari nama pemain
+    def save(self, *args, **kwargs):
+        if not self.slug and self.name:
+            self.slug = slugify(unidecode(self.name))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name or "Unnamed Player"
+
+class Player(models.Model):
+    slug = models.SlugField(unique=True, primary_key=True)
+    name = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255, blank=True)
+    age = models.PositiveIntegerField(null=True, blank=True)
+    height_cm = models.FloatField(null=True, blank=True)
+    weight_kgs = models.FloatField(null=True, blank=True)
+    positions = models.CharField(max_length=100, blank=True)
+    nationality = models.CharField(max_length=100, blank=True)
+    overall_rating = models.PositiveIntegerField(null=True, blank=True)
+    value_euro = models.FloatField(null=True, blank=True)
+    wage_euro = models.FloatField(null=True, blank=True)
+    preferred_foot = models.CharField(max_length=10, null=True)
+    international_reputation = models.PositiveIntegerField(null=True, blank=True)
+    weak_foot = models.PositiveIntegerField(null=True, blank=True)
+    skill_moves = models.PositiveIntegerField(null=True, blank=True)
+    release_clause_euro = models.FloatField(null=True, blank=True)
+    national_team = models.CharField(max_length=100, null=True)
+    finishing = models.PositiveIntegerField(null=True, blank=True)
+    heading_accuracy = models.PositiveIntegerField(null=True, blank=True)
+    short_passing = models.PositiveIntegerField(null=True, blank=True)
+    volleys = models.PositiveIntegerField(null=True, blank=True)
+    dribbling = models.PositiveIntegerField(null=True, blank=True)
+    long_passing = models.PositiveIntegerField(null=True, blank=True)
+    ball_control = models.PositiveIntegerField(null=True, blank=True)
+    acceleration = models.PositiveIntegerField(null=True, blank=True)
+    sprint_speed = models.PositiveIntegerField(null=True, blank=True)
+    agility = models.PositiveIntegerField(null=True, blank=True)
+    jumping = models.PositiveIntegerField(null=True, blank=True)
+    stamina = models.PositiveIntegerField(null=True, blank=True)
+    strength = models.PositiveIntegerField(null=True, blank=True)
+    long_shots = models.PositiveIntegerField(null=True, blank=True)
+    vision = models.PositiveIntegerField(null=True, blank=True)
+    penalties = models.PositiveIntegerField(null=True, blank=True)
+    marking = models.PositiveIntegerField(null=True, blank=True)
+    standing_tackle = models.PositiveIntegerField(null=True, blank=True)
+    sliding_tackle = models.PositiveIntegerField(null=True, blank=True)
+    likes = models.PositiveIntegerField(default=0)
+
+    # override fungsi save agar membuat slug otomatis dari nama pemain
+    def save(self, *args, **kwargs):
+        if not self.slug and self.name:
+            self.slug = slugify(unidecode(self.name))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name or "Unnamed Player"
