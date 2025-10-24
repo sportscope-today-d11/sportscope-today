@@ -2,81 +2,82 @@
 {% load static humanize %}
 
 {% block content %}
-<main class="bg-[#f6f6f6] text-[#121212]">
-<!-- ===== HERO / FEATURED NEWS ===== -->
-<section class="max-w-7xl mx-auto px-4 py-8">
-  <h2 class="text-2xl font-bold border-l-4 border-[#052962] pl-3 mb-6">Latest Highlights</h2>
-  {% if featured_news %}
-  <div class="grid md:grid-cols-12 gap-6">
+  <!-- ===== HERO / FEATURED NEWS ===== -->
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold border-l-4 border-[#052962] pl-3 mb-6">Latest Highlights</h2>
+    {% if featured_news %}
+    <div class="grid md:grid-cols-12 gap-6">
 
-    <!-- Left Column (scrollable highlights) -->
-    <div class="hidden md:flex flex-col gap-4 md:col-span-3 overflow-y-auto max-h-[700px] pr-4">
-      {% for news in featured_news|slice:":10" %}
-      <a href="{{ news.link }}" target="_blank" class="group block border-b border-gray-200 pb-2">
-        <h3 class="text-sm font-semibold leading-tight group-hover:text-[#c70000]">{{ news.title }}</h3>
-        <p class="text-xs text-gray-600 mt-1">{{ news.category }}</p>
-      </a>
-      {% endfor %}
-    </div>
+      <!-- Left Column (scrollable highlights) -->
+      <div class="hidden md:flex flex-col gap-4 md:col-span-3 overflow-y-auto max-h-[700px] pr-4">
+        {% for news in featured_news|slice:":10" %}
+        <a href="{{ news.link }}" target="_blank" class="group block border-b border-gray-200 pb-2">
+          <h3 class="text-sm font-semibold leading-tight group-hover:text-[#c70000]">{{ news.title }}</h3>
+          <p class="text-xs text-gray-600 mt-1">{{ news.category }}</p>
+        </a>
+        {% endfor %}
+      </div>
 
-    <!-- Center (Hero + 2 mids below) -->
-    <div class="md:col-span-6 flex flex-col gap-6">
-      {% with hero=featured_news.10 %}
-      {% if hero %}
-      <a href="{{ hero.link }}" target="_blank" class="block">
-        <img src="{{ hero.thumbnail }}" alt="{{ hero.title }}" class="w-full h-80 object-cover rounded-lg shadow">
-        <div class="mt-3">
-          <span class="text-xs uppercase text-[#052962] font-bold">{{ hero.category }}</span>
-          <h2 class="text-2xl font-bold leading-snug hover:text-[#c70000]">{{ hero.title }}</h2>
-          <p class="text-sm text-gray-600 mt-1">{{ hero.source }}</p>
-          
-          <!-- Author and Published Time -->
-          <div class="text-xs text-gray-500 mt-2">
-            <span>By: {{ hero.author }} | Published: {{ hero.publish_time|date:"F j, Y" }}</span>
+      <!-- Center (Hero + 2 mids below) -->
+      <div class="md:col-span-6 flex flex-col gap-6">
+        {% with hero=featured_news.10 %}
+        {% if hero %}
+        <a href="{{ hero.link }}" target="_blank" class="block">
+          <!-- Using thumbnail_url for hero -->
+          <img src="{{ hero.thumbnail_url }}" alt="{{ hero.title }}" class="w-full h-80 object-cover rounded-lg shadow">
+          <div class="mt-3">
+            <span class="text-xs uppercase text-[#052962] font-bold">{{ hero.category }}</span>
+            <h2 class="text-2xl font-bold leading-snug hover:text-[#c70000]">{{ hero.title }}</h2>
+            <p class="text-sm text-gray-600 mt-1">{{ hero.source }}</p>
+            
+            <!-- Author and Published Time -->
+            <div class="text-xs text-gray-500 mt-2">
+              <span>By: {{ hero.author }} | Published: {{ hero.publish_time|date:"F j, Y" }}</span>
+            </div>
           </div>
-        </div>
-      </a>
-      {% endif %}
-      {% endwith %}
+        </a>
+        {% endif %}
+        {% endwith %}
 
-      <!-- 2 mid-news -->
-      <div class="grid sm:grid-cols-2 gap-4">
-        {% for news in featured_news|slice:"11:13" %}
-        <a href="{{ news.link }}" target="_blank" class="block bg-white rounded-lg shadow hover:shadow-md overflow-hidden">
-          <img src="{{ news.thumbnail }}" alt="{{ news.title }}" class="h-44 w-full object-cover">
-          <div class="p-3">
-            <p class="text-xs uppercase text-[#052962] font-bold">{{ news.category }}</p>
-            <h4 class="font-semibold text-sm leading-snug hover:text-[#c70000]">{{ news.title }}</h4>
-            <p class="text-xs text-gray-600 mt-1 line-clamp-3">{{ news.content|truncatewords:25 }}</p>
+        <!-- 2 mid-news -->
+        <div class="grid sm:grid-cols-2 gap-4">
+          {% for news in featured_news|slice:"11:13" %}
+          <a href="{{ news.link }}" target="_blank" class="block bg-white rounded-lg shadow hover:shadow-md overflow-hidden">
+            <!-- Using thumbnail_url for mid-news -->
+            <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="h-44 w-full object-cover">
+            <div class="p-3">
+              <p class="text-xs uppercase text-[#052962] font-bold">{{ news.category }}</p>
+              <h4 class="font-semibold text-sm leading-snug hover:text-[#c70000]">{{ news.title }}</h4>
+              <p class="text-xs text-gray-600 mt-1 line-clamp-3">{{ news.content|truncatewords:25 }}</p>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Right Column (small thumbnail_url news) -->
+      <div class="hidden md:flex flex-col gap-4 md:col-span-3">
+        {% for news in featured_news|slice:"13:18" %}
+        <a href="{{ news.link }}" target="_blank" class="group flex gap-3 items-start p-2 border-b border-gray-200 hover:bg-gray-100">
+          <div class="w-24 h-16">
+            <!-- Using thumbnail_url for small thumbnail news -->
+            <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="h-full w-full object-cover rounded-md">
+          </div>
+          <div class="flex flex-col justify-between">
+            <h3 class="text-sm font-semibold leading-tight group-hover:text-[#c70000]">{{ news.title }}</h3>
+            <p class="text-xs text-gray-600 mt-1">{{ news.category }}</p>
+            
+            <!-- Author and Published Time for Small News -->
+            <div class="text-xs text-gray-500 mt-1">
+              <span>By: {{ news.author }} | Published: {{ news.publish_time|date:"F j, Y" }}</span>
+            </div>
           </div>
         </a>
         {% endfor %}
       </div>
     </div>
-
-    <!-- Right Column (small thumbnail news) -->
-    <div class="hidden md:flex flex-col gap-4 md:col-span-3">
-      {% for news in featured_news|slice:"13:18" %}
-      <a href="{{ news.link }}" target="_blank" class="group flex gap-3 items-start p-2 border-b border-gray-200 hover:bg-gray-100">
-        <div class="w-24 h-16">
-          <img src="{{ news.thumbnail }}" alt="{{ news.title }}" class="h-full w-full object-cover rounded-md">
-        </div>
-        <div class="flex flex-col justify-between">
-          <h3 class="text-sm font-semibold leading-tight group-hover:text-[#c70000]">{{ news.title }}</h3>
-          <p class="text-xs text-gray-600 mt-1">{{ news.category }}</p>
-          
-          <!-- Author and Published Time for Small News -->
-          <div class="text-xs text-gray-500 mt-1">
-            <span>By: {{ news.author }} | Published: {{ news.publish_time|date:"F j, Y" }}</span>
-          </div>
-        </div>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
-</section>
-
+    {% endif %}
+  </section>
 
   <!-- ===== NEWS BY CATEGORY ===== -->
   <section class="max-w-7xl mx-auto px-4 py-10">
@@ -86,13 +87,18 @@
         <h3 class="text-xl font-bold text-[#052962] border-b-2 border-[#c70000]">{{ category }}</h3>
         <a href="#" class="text-sm text-[#c70000] hover:underline">Lihat selengkapnya</a>
       </div>
+
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {% for news in news_list %}
         <a href="{{ news.link }}" target="_blank" class="block bg-white rounded-lg shadow hover:shadow-md">
-          <img src="{{ news.thumbnail }}" alt="{{ news.title }}" class="h-40 w-full object-cover rounded-t-lg">
+          <!-- ✅ Thumbnail pakai properti model -->
+          <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="h-40 w-full object-cover rounded-t-lg">
           <div class="p-3">
             <h4 class="font-semibold text-sm hover:text-[#c70000]">{{ news.title }}</h4>
-            <p class="text-xs text-gray-500 mt-3">{{ news.author }} | {{ news.publish_time }}</p>
+            <!-- ✅ Tampilkan author & waktu publish -->
+            <p class="text-xs text-gray-500 mt-2">
+              By: {{ news.author }} | {{ news.publish_time|date:"F j, Y" }}
+            </p>
           </div>
         </a>
         {% endfor %}
@@ -100,7 +106,7 @@
     </div>
     {% endfor %}
   </section>
-
+  
   <!-- ===== PREMIER LEAGUE TABLE ===== -->
   <section class="max-w-6xl mx-auto px-4 py-10">
     <div class="flex items-center justify-between mb-4">
@@ -144,75 +150,75 @@
     </div>
   </section>
 
-<!-- ===== TOP 10 MOST LOVED PLAYERS ===== -->
-<section class="max-w-6xl mx-auto px-4 py-10">
-  <h2 class="text-2xl font-bold text-[#052962] mb-8">Top 10 Most Loved Players 💖</h2>
+  <!-- ===== TOP 10 MOST LOVED PLAYERS ===== -->
+  <section class="max-w-6xl mx-auto px-4 py-10">
+    <h2 class="text-2xl font-bold text-[#052962] mb-8">Top 10 Most Loved Players 💖</h2>
 
-  <!-- TOP 3 Podium (Smaller) -->
-  <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:items-end mb-10">
-    {% with first=top_players.0 second=top_players.1 third=top_players.2 %}
-    {% if first %}
-    <div class="flex flex-col items-center sm:order-2">
-      <div class="relative">
-        <img src="{% static 'images/player_pictures/' %}{{ first.slug }}.png"
-             alt="{{ first.name }}"
-             class="w-36 h-36 sm:w-44 sm:h-44 object-contain rounded-full shadow-lg border-4 border-yellow-400">
-        <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-yellow-400 text-3xl">👑</div>
-      </div>
-      <p class="mt-3 font-extrabold text-lg text-[#052962]">{{ first.name }}</p>
-      <p class="text-sm text-gray-600">{{ first.national_team }}</p>
-      <p class="text-gray-500 text-sm mt-1">❤️ {{ first.likes|intcomma }}</p>
-    </div>
-    {% endif %}
-
-    {% if second %}
-    <div class="flex flex-col items-center sm:order-1">
-      <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-gray-300 flex items-center justify-center bg-gray-50 shadow">
-        <img src="{% static 'images/player_pictures/' %}{{ second.slug }}.png"
-             alt="{{ second.name }}" class="object-contain w-28 h-28 sm:w-36 sm:h-36 rounded-full">
-      </div>
-      <p class="mt-2 font-bold text-[#052962]">{{ second.name }}</p>
-      <p class="text-sm text-gray-600">{{ second.national_team }}</p>
-      <p class="text-gray-500 text-sm mt-1">❤️ {{ second.likes|intcomma }}</p>
-    </div>
-    {% endif %}
-
-    {% if third %}
-    <div class="flex flex-col items-center sm:order-3">
-      <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-gray-300 flex items-center justify-center bg-gray-50 shadow">
-        <img src="{% static 'images/player_pictures/' %}{{ third.slug }}.png"
-             alt="{{ third.name }}" class="object-contain w-28 h-28 sm:w-36 sm:h-36 rounded-full">
-      </div>
-      <p class="mt-2 font-bold text-[#052962]">{{ third.name }}</p>
-      <p class="text-sm text-gray-600">{{ third.national_team }}</p>
-      <p class="text-gray-500 text-sm mt-1">❤️ {{ third.likes|intcomma }}</p>
-    </div>
-    {% endif %}
-    {% endwith %}
-  </div>
-
-    <!-- 4–10 -->
-    <div class="divide-y divide-gray-200 border-t border-b">
-    {% for player in top_players|slice:"3:" %}
-    <div class="flex items-center justify-between py-3 px-2 hover:bg-gray-50 transition">
-        <div class="flex items-center gap-4">
-        <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100">
-            <!-- Ganti inisial dengan gambar pemain -->
-            <img src="{% static 'images/player_pictures/' %}{{ player.slug }}.png" 
-                alt="{{ player.name }}" class="w-8 h-8 object-contain rounded-full">
+    <!-- TOP 3 Podium (Smaller) -->
+    <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:items-end mb-10">
+      {% with first=top_players.0 second=top_players.1 third=top_players.2 %}
+      {% if first %}
+      <div class="flex flex-col items-center sm:order-2">
+        <div class="relative">
+          <img src="{% static 'images/player_pictures/' %}{{ first.slug }}.png"
+              alt="{{ first.name }}"
+              class="w-36 h-36 sm:w-44 sm:h-44 object-contain rounded-full shadow-lg border-4 border-yellow-400">
+          <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-yellow-400 text-3xl">👑</div>
         </div>
-        <div>
-            <p class="font-semibold text-[#052962]">{{ player.name }}</p>
-            <p class="text-xs text-gray-600">{{ player.national_team }}</p>
+        <p class="mt-3 font-extrabold text-lg text-[#052962]">{{ first.name }}</p>
+        <p class="text-sm text-gray-600">{{ first.national_team }}</p>
+        <p class="text-gray-500 text-sm mt-1">❤️ {{ first.likes|intcomma }}</p>
+      </div>
+      {% endif %}
+
+      {% if second %}
+      <div class="flex flex-col items-center sm:order-1">
+        <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-gray-300 flex items-center justify-center bg-gray-50 shadow">
+          <img src="{% static 'images/player_pictures/' %}{{ second.slug }}.png"
+              alt="{{ second.name }}" class="object-contain w-28 h-28 sm:w-36 sm:h-36 rounded-full">
         </div>
+        <p class="mt-2 font-bold text-[#052962]">{{ second.name }}</p>
+        <p class="text-sm text-gray-600">{{ second.national_team }}</p>
+        <p class="text-gray-500 text-sm mt-1">❤️ {{ second.likes|intcomma }}</p>
+      </div>
+      {% endif %}
+
+      {% if third %}
+      <div class="flex flex-col items-center sm:order-3">
+        <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-gray-300 flex items-center justify-center bg-gray-50 shadow">
+          <img src="{% static 'images/player_pictures/' %}{{ third.slug }}.png"
+              alt="{{ third.name }}" class="object-contain w-28 h-28 sm:w-36 sm:h-36 rounded-full">
         </div>
-        <p class="text-gray-600 font-medium flex items-center gap-1">
-        ❤️ <span>{{ player.likes|intcomma }}</span>
-        </p>
+        <p class="mt-2 font-bold text-[#052962]">{{ third.name }}</p>
+        <p class="text-sm text-gray-600">{{ third.national_team }}</p>
+        <p class="text-gray-500 text-sm mt-1">❤️ {{ third.likes|intcomma }}</p>
+      </div>
+      {% endif %}
+      {% endwith %}
     </div>
-    {% endfor %}
-    </div>
-</section>
+
+      <!-- 4–10 -->
+      <div class="divide-y divide-gray-200 border-t border-b">
+      {% for player in top_players|slice:"3:" %}
+      <div class="flex items-center justify-between py-3 px-2 hover:bg-gray-50 transition">
+          <div class="flex items-center gap-4">
+          <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100">
+              <!-- Ganti inisial dengan gambar pemain -->
+              <img src="{% static 'images/player_pictures/' %}{{ player.slug }}.png" 
+                  alt="{{ player.name }}" class="w-8 h-8 object-contain rounded-full">
+          </div>
+          <div>
+              <p class="font-semibold text-[#052962]">{{ player.name }}</p>
+              <p class="text-xs text-gray-600">{{ player.national_team }}</p>
+          </div>
+          </div>
+          <p class="text-gray-600 font-medium flex items-center gap-1">
+          ❤️ <span>{{ player.likes|intcomma }}</span>
+          </p>
+      </div>
+      {% endfor %}
+      </div>
+  </section>
 
 
 </main>
