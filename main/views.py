@@ -38,20 +38,35 @@ def team_detail(request, slug):
 # ------------------------------
  
 def match_list(request):
-    # Ambil tanggal hari ini
-    today = localtime().date()
-    matches = Match.objects.filter(match_date__date=today).order_by('league', 'match_date')
+    # Ambil semua match dari database
+    matches = Match.objects.all().order_by('match_date')
 
-    # Kelompokkan berdasarkan liga
-    matches_by_league = defaultdict(list)
-    for match in matches:
-        matches_by_league[match.league].append(match)
+    # Ambil parameter GET dari form filter
+    competition = request.GET.get('competition')
+    date = request.GET.get('date')
+
+    # Terapkan filter kalau ada input dari user
+    if competition:
+        matches = matches.filter(league=competition)
+
+    if date:
+        matches = matches.filter(match_date__date=date)
+
+    # Ambil daftar unik kompetisi buat isi dropdown
+    competitions = Match.objects.values_list('league', flat=True).distinct()
+
+    # Kelompokkan data berdasarkan tanggal
+    paginator = Paginator(matches, 10)  # 10 match per halaman
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
 
     context = {
-        'match_date': today,
-        'matches_by_league': dict(matches_by_league)
+        'page_obj': page_obj,
+        'competitions': competitions,
+        'request': request,  # biar bisa dipakai di template
     }
-    return render(request, 'matches.html', context)
+
+    return render(request, 'match_history.html', context)
 
 def match_detail(request, match_id):
     """Tampilkan detail satu pertandingan"""

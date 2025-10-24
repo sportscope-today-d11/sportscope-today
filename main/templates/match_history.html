@@ -5,6 +5,28 @@
 <div class="max-w-5xl mx-auto px-4 py-10">
   <h1 class="text-2xl font-bold text-[#052962] mb-8">History Pertandingan</h1>
 
+  <!-- FILTER FORM -->
+  <form method="get" class="mb-6 flex flex-wrap gap-3 items-end">
+    <div>
+      <label for="competition" class="block text-sm font-medium text-gray-700">Kompetisi</label>
+      <select name="competition" id="competition" class="border border-gray-300 rounded px-3 py-1">
+        <option value="">Semua</option>
+        {% for comp in competitions %}
+          <option value="{{ comp }}" {% if request.GET.competition == comp %}selected{% endif %}>{{ comp }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="date" class="block text-sm font-medium text-gray-700">Tanggal</label>
+      <input type="date" name="date" id="date" value="{{ request.GET.date }}" class="border border-gray-300 rounded px-3 py-1">
+    </div>
+
+    <button type="submit" class="bg-[#052962] text-white px-4 py-1 rounded hover:bg-[#063b8b] transition">
+      Filter
+    </button>
+  </form>
+
   {% regroup page_obj by date as date_groups %}
   {% for day in date_groups %}
     <div class="mb-10">
