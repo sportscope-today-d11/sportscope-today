@@ -19,14 +19,25 @@ class TeamForm(forms.ModelForm):
 class MatchForm(forms.ModelForm):
     class Meta:
         model = Match
-        fields = ['home_team', 'away_team', 'date', 'time', 'score_home', 'score_away', 'league', 'status']
+        fields = [
+            'season',
+            'match_date',
+            'league',
+            'home_team',
+            'away_team',
+            'full_time_home_goals',
+            'full_time_away_goals',
+            'full_time_result',
+        ]
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
-            'home_team': forms.TextInput(attrs={'class': 'form-control'}),
-            'away_team': forms.TextInput(attrs={'class': 'form-control'}),
-            'score_home': forms.NumberInput(attrs={'class': 'form-control'}),
-            'score_away': forms.NumberInput(attrs={'class': 'form-control'}),
+            'match_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'home_team': forms.Select(attrs={'class': 'form-select'}),
+            'away_team': forms.Select(attrs={'class': 'form-select'}),
             'league': forms.TextInput(attrs={'class': 'form-control'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
+            'full_time_home_goals': forms.NumberInput(attrs={'class': 'form-control'}),
+            'full_time_away_goals': forms.NumberInput(attrs={'class': 'form-control'}),
+            'full_time_result': forms.Select(
+                choices=[('H', 'Home Win'), ('A', 'Away Win'), ('D', 'Draw')],
+                attrs={'class': 'form-select'}
+            ),
         }
