@@ -34,7 +34,7 @@ def news_list(request):
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'news/news_list.html', {
-        'news_items': page_obj,
+        'all_news': page_obj,
         'q': q,
         'category': category,
     })
