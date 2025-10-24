@@ -1,8 +1,10 @@
 from django.shortcuts import render
+from django.http import HttpResponse
 
 # Create your views here.
 from django.shortcuts import render
 from .models import News, Team, Player
+
 
 def homepage(request):
     # --- NEWS SECTION --- 
@@ -51,3 +53,9 @@ def homepage(request):
     }
 
     return render(request, "homepage.html", context)
+
+def news_list(request):
+    return HttpResponse('info')
+
+def news_detail(request, news_id):
+    return HttpResponse('info')
