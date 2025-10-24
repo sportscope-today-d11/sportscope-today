@@ -5,12 +5,12 @@
   <!-- ===== HERO / FEATURED NEWS ===== -->
   <section class="max-w-7xl mx-auto px-4 py-8">
     <h2 class="text-2xl font-bold border-l-4 border-[#052962] pl-3 mb-6">Latest Highlights</h2>
-    {% if featured_news %}
+    {% if hero_main %}
     <div class="grid md:grid-cols-12 gap-6">
 
       <!-- Left Column (scrollable highlights) -->
       <div class="hidden md:flex flex-col gap-4 md:col-span-3 overflow-y-auto max-h-[700px] pr-4">
-        {% for news in featured_news|slice:":10" %}
+        {% for news in left_news %}
         <a href="{{ news.link }}" target="_blank" class="group block border-b border-gray-200 pb-2">
           <h3 class="text-sm font-semibold leading-tight group-hover:text-[#c70000]">{{ news.title }}</h3>
           <p class="text-xs text-gray-600 mt-1">{{ news.category }}</p>
@@ -20,30 +20,24 @@
 
       <!-- Center (Hero + 2 mids below) -->
       <div class="md:col-span-6 flex flex-col gap-6">
-        {% with hero=featured_news.10 %}
-        {% if hero %}
-        <a href="{{ hero.link }}" target="_blank" class="block">
-          <!-- Using thumbnail_url for hero -->
-          <img src="{{ hero.thumbnail_url }}" alt="{{ hero.title }}" class="w-full h-80 object-cover rounded-lg shadow">
+        <a href="{{ hero_main.link }}" target="_blank" class="block">
+          <img src="{{ hero_main.thumbnail_url }}" alt="{{ hero_main.title }}" class="w-full h-80 object-cover shadow">
           <div class="mt-3">
-            <span class="text-xs uppercase text-[#052962] font-bold">{{ hero.category }}</span>
-            <h2 class="text-2xl font-bold leading-snug hover:text-[#c70000]">{{ hero.title }}</h2>
-            <p class="text-sm text-gray-600 mt-1">{{ hero.source }}</p>
+            <span class="text-xs uppercase text-[#052962] font-bold">{{ hero_main.category }}</span>
+            <h2 class="text-2xl font-bold leading-snug hover:text-[#c70000]">{{ hero_main.title }}</h2>
+            <p class="text-sm text-gray-600 mt-1">{{ hero_main.source }}</p>
             
             <!-- Author and Published Time -->
             <div class="text-xs text-gray-500 mt-2">
-              <span>By: {{ hero.author }} | Published: {{ hero.publish_time|date:"F j, Y" }}</span>
+              <span>By: {{ hero_main.author }} | Published: {{ hero_main.publish_time|date:"F j, Y" }}</span>
             </div>
           </div>
         </a>
-        {% endif %}
-        {% endwith %}
 
-        <!-- 2 mid-news -->
+        <!-- 2 bottom mid-news -->
         <div class="grid sm:grid-cols-2 gap-4">
-          {% for news in featured_news|slice:"11:13" %}
-          <a href="{{ news.link }}" target="_blank" class="block bg-white rounded-lg shadow hover:shadow-md overflow-hidden">
-            <!-- Using thumbnail_url for mid-news -->
+          {% for news in hero_bottom %}
+          <a href="{{ news.link }}" target="_blank" class="block bg-white shadow hover:shadow-md overflow-hidden">
             <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="h-44 w-full object-cover">
             <div class="p-3">
               <p class="text-xs uppercase text-[#052962] font-bold">{{ news.category }}</p>
@@ -57,10 +51,9 @@
 
       <!-- Right Column (small thumbnail_url news) -->
       <div class="hidden md:flex flex-col gap-4 md:col-span-3">
-        {% for news in featured_news|slice:"13:18" %}
+        {% for news in hero_right %}
         <a href="{{ news.link }}" target="_blank" class="group flex gap-3 items-start p-2 border-b border-gray-200 hover:bg-gray-100">
           <div class="w-24 h-16">
-            <!-- Using thumbnail_url for small thumbnail news -->
             <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="h-full w-full object-cover rounded-md">
           </div>
           <div class="flex flex-col justify-between">
@@ -87,18 +80,13 @@
         <h3 class="text-xl font-bold text-[#052962] border-b-2 border-[#c70000]">{{ category }}</h3>
         <a href="#" class="text-sm text-[#c70000] hover:underline">Lihat selengkapnya</a>
       </div>
-
       <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {% for news in news_list %}
-        <a href="{{ news.link }}" target="_blank" class="block bg-white rounded-lg shadow hover:shadow-md">
-          <!-- ✅ Thumbnail pakai properti model -->
+        <a href="{{ news.link }}" target="_blank" class="block bg-white shadow hover:shadow-md">
           <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="h-40 w-full object-cover rounded-t-lg">
           <div class="p-3">
             <h4 class="font-semibold text-sm hover:text-[#c70000]">{{ news.title }}</h4>
-            <!-- ✅ Tampilkan author & waktu publish -->
-            <p class="text-xs text-gray-500 mt-2">
-              By: {{ news.author }} | {{ news.publish_time|date:"F j, Y" }}
-            </p>
+            <p class="text-xs text-gray-500 mt-3">{{ news.author }} | {{ news.publish_time }}</p>
           </div>
         </a>
         {% endfor %}
@@ -106,7 +94,7 @@
     </div>
     {% endfor %}
   </section>
-  
+
   <!-- ===== PREMIER LEAGUE TABLE ===== -->
   <section class="max-w-6xl mx-auto px-4 py-10">
     <div class="flex items-center justify-between mb-4">
