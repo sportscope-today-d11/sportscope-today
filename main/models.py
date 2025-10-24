@@ -1,3 +1,6 @@
+from django.db import models
+
+# Create your models here.
 from unidecode import unidecode
 from django.db import models
 from django.utils.text import slugify
@@ -61,6 +64,7 @@ class News(models.Model):
         default="https://akcdn.detik.net.id/community/media/visual/2020/02/25/3833496a-a1b8-428f-9202-79f8671928b7_169.jpeg?w=700&q=90",
         blank=True
     )
+    featured = models.BooleanField(default=False)
     
     category = models.CharField(
         max_length=50,
