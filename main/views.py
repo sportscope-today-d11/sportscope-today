@@ -9,6 +9,7 @@ from .forms import MatchForm
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.contrib import messages
+from django.contrib.auth.decorators import user_passes_test
 
 # ------------------------------
 # TEAM VIEWS
@@ -111,6 +112,10 @@ def matches_by_date(request, date):
 # Admin Views for Match Management
 # ------------------------------
 
+def is_admin(user):
+    return user.is_staff  # cuma admin yang bisa lewat
+
+@user_passes_test(is_admin)
 def match_list_admin(request):
     matches = Match.objects.all().order_by('-match_date')
     paginator = Paginator(matches, 10)  # 10 pertandingan per halaman
@@ -118,6 +123,7 @@ def match_list_admin(request):
     page_obj = paginator.get_page(page_number)
     return render(request, 'match_list_admin.html', {'page_obj': page_obj})
 
+@user_passes_test(is_admin)
 def add_match(request):
     if request.method == 'POST':
         form = MatchForm(request.POST)
@@ -129,6 +135,7 @@ def add_match(request):
         form = MatchForm()
     return render(request, 'match_form.html', {'form': form, 'title': 'Tambah Pertandingan'})
 
+@user_passes_test(is_admin)
 def edit_match(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     if request.method == 'POST':
@@ -141,6 +148,7 @@ def edit_match(request, match_id):
         form = MatchForm(instance=match)
     return render(request, 'match_form.html', {'form': form, 'title': 'Edit Pertandingan'})
 
+@user_passes_test(is_admin)
 def delete_match(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     match.delete()
