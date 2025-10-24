@@ -1,16 +1,30 @@
 from django import forms
-from .models import Team
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
+from .models import Person
 
-class TeamForm(forms.ModelForm):
+class RegisterForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+    
+    # Hidden field dengan default value 'user'
+    role = forms.CharField(
+        initial='user',
+        widget=forms.HiddenInput(),
+        required=False
+    )
+
     class Meta:
-        model = Team
-        fields = [
-            'name', 'players', 'age', 'possession', 'goals',
-            'assists', 'penalty_kicks', 'penalty_kick_attempts',
-            'yellows', 'reds', 'image'
-        ]
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Team name'}),
-            'players': forms.NumberInput(attrs={'class': 'form-control'}),
-            'image': forms.FileInput(attrs={'class': 'form-control'}),
-        }
+        model = User
+        fields = ['username', 'email', 'password1', 'password2']
+
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            # Role otomatis diset ke 'user'
+            Person.objects.create(
+                user=user,
+                role='user'
+            )
+        return user

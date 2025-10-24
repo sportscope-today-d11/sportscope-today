@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+
+{% block content %}
+<main class="font-[Lato]">
+
+  <!-- ===== HERO / FEATURED NEWS ===== -->
+  <section class="max-w-7xl mx-auto px-8 py-8 border-b border-gray-300">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold border-l-4 border-[#052962] pl-3">
+        Latest Highlights
+      </h2>
+    </div>
+
+    {% if hero_main %}
+    <div class="grid md:grid-cols-12 gap-6">
+
+      <!-- Left Column -->
+      <div class="hidden md:flex flex-col gap-4 md:col-span-3 overflow-y-auto max-h-[800px] pr-2">
+        {% for news in left_news %}
+        <a href="{% url 'main:news_detail' news.id %}" class="group block border-b border-gray-200 pb-2">
+          <span class="text-xs font-bold text-[#c70000] uppercase tracking-wide">{{ news.category }}</span>
+          <h3 class="text-xs font-[Merriweather] font-semibold leading-tight group-hover:underline">
+            {{ news.title }}
+          </h3>
+        </a>
+        {% endfor %}
+      </div>
+
+      <!-- Center (Hero + 2 mids below) -->
+      <div class="md:col-span-6 flex flex-col gap-6 pr-2">
+        <!-- Hero utama -->
+        <a href="{% url 'main:news_detail' hero_main.id %}" class="block group">
+          <img src="{{ hero_main.thumbnail_url }}" alt="{{ hero_main.title }}" class="w-full h-80 object-cover shadow">
+          <div class="mt-3">
+            <span class="text-sm uppercase text-[#c70000] font-bold">{{ hero_main.category }}</span>
+            <h2 class="text-3xl font-[Merriweather] font-bold leading-snug group-hover:underline">
+              {{ hero_main.title }}
+            </h2>
+            <p class="text-gray-700 text-base mt-2">{{ hero_main.content|truncatewords:25 }}</p>
+            <div class="text-xs text-gray-500 mt-2">
+              <span>By {{ hero_main.author }}</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Dua berita bawah -->
+        <div class="grid sm:grid-cols-2 gap-4 border-t border-gray-200 pt-4">
+          {% for news in hero_bottom %}
+          <a href="{% url 'main:news_detail' news.id %}" class="block group">
+            <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="h-44 w-full object-cover">
+            <div class="mt-2">
+              <span class="text-xs uppercase text-[#c70000] font-bold">{{ news.category }}</span>
+              <h4 class="font-[Merriweather] font-semibold text-base leading-snug group-hover:underline">
+                {{ news.title }}
+              </h4>
+              <p class="text-sm text-gray-700 mt-1">{{ news.content|truncatewords:20 }}</p>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="hidden md:flex flex-col gap-4 md:col-span-3 pl-3 border-l border-[1px] border-dashed border-gray-400">
+        {% for news in hero_right %}
+        <a href="{% url 'main:news_detail' news.id %}" class="group flex gap-3 items-start p-2 border-b border-gray-200 hover:bg-gray-100">
+          <div class="w-24 aspect-video flex-shrink-0">
+            <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="w-full h-full object-cover">
+          </div>
+          <div class="flex flex-col justify-between w-[70%]">
+            <h3 class="text-sm font-[Merriweather] font-semibold leading-tight group-hover:underline">
+              {{ news.title }}
+            </h3>
+            <span class="text-xs font-bold text-[#c70000] uppercase tracking-wide mt-2">{{ news.category }}</span>
+            <div class="text-xs text-gray-500 mt-1">
+              <span>By {{ news.author }} | {{ news.publish_time|date:"M j, Y" }}</span>
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- ===== NEWS BY CATEGORY ===== -->
+  {% for category, news_list in news_by_category.items %}
+  <section class="max-w-7xl mx-auto px-8 py-10 border-b border-gray-300">
+    <h2 class="text-2xl font-bold text-[#c70000] mb-6 border-b border-gray-200 pb-2">{{ category }}</h2>
+
+    <!-- ubah dari 3 kolom jadi 4 -->
+    <div class="grid md:grid-cols-4 sm:grid-cols-2 gap-5">
+      {% for news in news_list %}
+      <a href="{% url 'main:news_detail' news.id %}" class="block group">
+        <!-- kecilin dikit tinggi image -->
+        <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="w-full h-36 object-cover mb-3 rounded">
+        
+        <h3 class="text-m font-[Merriweather] font-bold leading-snug group-hover:underline">
+          {{ news.title }}
+        </h3>
+        <p class="text-gray-700 text-sm mt-2">{{ news.content|truncatewords:10 }}</p>
+        <div class="text-xs text-gray-500 mt-2">
+          <span>By {{ news.author }} | {{ news.publish_time|date:"M j, Y" }}</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+
+
+  <!-- ===== PREMIER LEAGUE TABLE ===== -->
+  <section class="max-w-6xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-2xl font-bold text-[#052962]">Premier League Table</h2>
+      <div>
+        <button class="px-3 py-1 bg-[#052962] text-white text-sm rounded hover:bg-[#c70000]" onclick="filterTeams(10)">Top 10</button>
+        <button class="px-3 py-1 bg-gray-200 text-sm rounded ml-2 hover:bg-gray-300" onclick="filterTeams(5)">Top 5</button>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table id="teamTable" class="min-w-full bg-white border rounded-lg overflow-hidden">
+        <thead class="bg-[#052962] text-white text-sm">
+          <tr>
+            <th class="py-2 px-4 text-left">#</th>
+            <th class="py-2 px-4 text-left">Team</th>
+            <th class="py-2 px-4">Goals</th>
+            <th class="py-2 px-4">Assists</th>
+            <th class="py-2 px-4">Yellows</th>
+            <th class="py-2 px-4">Reds</th>
+            <th class="py-2 px-4">Possession (%)</th>
+          </tr>
+        </thead>
+        <tbody class="text-sm text-gray-800">
+          {% for team in teams %}
+          <tr class="border-b hover:bg-gray-100">
+            <td class="py-2 px-4">{{ forloop.counter }}</td>
+            <td class="flex items-center gap-2 py-2 px-4">
+              <img src="{% static 'images/logo/' %}{{ team.slug }}.png" alt="{{ team.name }}" class="w-6 h-6">
+              {{ team.name }}
+            </td>
+            <td class="text-center">{{ team.goals }}</td>
+            <td class="text-center">{{ team.assists }}</td>
+            <td class="text-center">{{ team.yellows }}</td>
+            <td class="text-center">{{ team.reds }}</td>
+            <td class="text-center">{{ team.possession }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== TOP 10 MOST LOVED PLAYERS ===== -->
+  <section class="max-w-6xl mx-auto px-4 py-10">
+    <h2 class="text-2xl font-bold text-[#052962] mb-8">Top 10 Most Loved Players All Time</h2>
+
+    <!-- TOP 3 Podium (Smaller) -->
+    <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:items-end mb-10">
+      {% with first=top_players.0 second=top_players.1 third=top_players.2 %}
+      {% if first %}
+      <div class="flex flex-col items-center sm:order-2">
+        <div class="relative">
+          <img src="{% static 'images/player_pictures/' %}{{ first.slug }}.png"
+              alt="{{ first.name }}"
+              class="w-36 h-36 sm:w-44 sm:h-44 object-contain rounded-full shadow-lg border-4 border-yellow-400">
+        </div>
+        <p class="mt-3 font-extrabold text-lg text-[#052962]">{{ first.name }}</p>
+        <p class="text-sm text-gray-600">{{ first.national_team }}</p>
+        <p class="text-gray-500 text-sm mt-1">❤️ {{ first.likes|intcomma }}</p>
+      </div>
+      {% endif %}
+
+      {% if second %}
+      <div class="flex flex-col items-center sm:order-1">
+        <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-gray-300 flex items-center justify-center bg-gray-50 shadow">
+          <img src="{% static 'images/player_pictures/' %}{{ second.slug }}.png"
+              alt="{{ second.name }}" class="object-contain w-28 h-28 sm:w-36 sm:h-36 rounded-full">
+        </div>
+        <p class="mt-2 font-bold text-[#052962]">{{ second.name }}</p>
+        <p class="text-sm text-gray-600">{{ second.national_team }}</p>
+        <p class="text-gray-500 text-sm mt-1">❤️ {{ second.likes|intcomma }}</p>
+      </div>
+      {% endif %}
+
+      {% if third %}
+      <div class="flex flex-col items-center sm:order-3">
+        <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-gray-300 flex items-center justify-center bg-gray-50 shadow">
+          <img src="{% static 'images/player_pictures/' %}{{ third.slug }}.png"
+              alt="{{ third.name }}" class="object-contain w-28 h-28 sm:w-36 sm:h-36 rounded-full">
+        </div>
+        <p class="mt-2 font-bold text-[#052962]">{{ third.name }}</p>
+        <p class="text-sm text-gray-600">{{ third.national_team }}</p>
+        <p class="text-gray-500 text-sm mt-1">❤️ {{ third.likes|intcomma }}</p>
+      </div>
+      {% endif %}
+      {% endwith %}
+    </div>
+
+      <!-- 4–10 -->
+      <div class="divide-y divide-gray-200 border-t border-b">
+      {% for player in top_players|slice:"3:" %}
+      <div class="flex items-center justify-between py-3 px-2 hover:bg-gray-50 transition">
+          <div class="flex items-center gap-4">
+          <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100">
+              <!-- Ganti inisial dengan gambar pemain -->
+              <img src="{% static 'images/player_pictures/' %}{{ player.slug }}.png" 
+                  alt="{{ player.name }}" class="w-8 h-8 object-contain rounded-full">
+          </div>
+          <div>
+              <p class="font-semibold text-[#052962]">{{ player.name }}</p>
+              <p class="text-xs text-gray-600">{{ player.national_team }}</p>
+          </div>
+          </div>
+          <p class="text-gray-600 font-medium flex items-center gap-1">
+          ❤️ <span>{{ player.likes|intcomma }}</span>
+          </p>
+      </div>
+      {% endfor %}
+      </div>
+  </section>
+
+
+</main>
+
+<!-- ===== JS FILTER TABLE ===== -->
+<script>
+function filterTeams(limit) {
+  const rows = document.querySelectorAll("#teamTable tbody tr");
+  rows.forEach((row, idx) => {
+    row.style.display = idx < limit ? "" : "none";
+  });
+}
+</script>
+
+{% endblock %}

@@ -1,6 +1,6 @@
 [
   {
-    "team":"Arsenal",
+    "name":"Arsenal",
     "slug":"arsenal",
     "players":25,
     "age":26.6,
@@ -13,7 +13,7 @@
     "reds":6
   },
   {
-    "team":"Aston Villa",
+    "name":"Aston Villa",
     "slug":"aston-villa",
     "players":28,
     "age":27.8,
@@ -26,7 +26,7 @@
     "reds":3
   },
   {
-    "team":"Bournemouth",
+    "name":"Bournemouth",
     "slug":"bournemouth",
     "players":29,
     "age":25.9,
@@ -39,7 +39,7 @@
     "reds":3
   },
   {
-    "team":"Brentford",
+    "name":"Brentford",
     "slug":"brentford",
     "players":28,
     "age":26.6,
@@ -52,7 +52,7 @@
     "reds":1
   },
   {
-    "team":"Brighton",
+    "name":"Brighton",
     "slug":"brighton",
     "players":32,
     "age":25.7,
@@ -65,7 +65,7 @@
     "reds":3
   },
   {
-    "team":"Chelsea",
+    "name":"Chelsea",
     "slug":"chelsea",
     "players":29,
     "age":24.5,
@@ -78,7 +78,7 @@
     "reds":2
   },
   {
-    "team":"Crystal Palace",
+    "name":"Crystal Palace",
     "slug":"crystal-palace",
     "players":29,
     "age":27.0,
@@ -91,7 +91,7 @@
     "reds":4
   },
   {
-    "team":"Everton",
+    "name":"Everton",
     "slug":"everton",
     "players":26,
     "age":28.8,
@@ -104,7 +104,7 @@
     "reds":2
   },
   {
-    "team":"Fulham",
+    "name":"Fulham",
     "slug":"fulham",
     "players":26,
     "age":28.8,
@@ -117,7 +117,7 @@
     "reds":2
   },
   {
-    "team":"Ipswich",
+    "name":"Ipswich",
     "slug":"ipswich",
     "players":32,
     "age":26.6,
@@ -130,7 +130,7 @@
     "reds":5
   },
   {
-    "team":"Leicester",
+    "name":"Leicester",
     "slug":"leicester",
     "players":31,
     "age":27.4,
@@ -143,7 +143,7 @@
     "reds":0
   },
   {
-    "team":"Liverpool",
+    "name":"Liverpool",
     "slug":"liverpool",
     "players":24,
     "age":28.0,
@@ -156,7 +156,7 @@
     "reds":2
   },
   {
-    "team":"Manchester City",
+    "name":"Manchester City",
     "slug":"manchester-city",
     "players":29,
     "age":27.6,
@@ -169,7 +169,7 @@
     "reds":2
   },
   {
-    "team":"Manchester United",
+    "name":"Manchester United",
     "slug":"manchester-united",
     "players":31,
     "age":26.3,
@@ -182,7 +182,7 @@
     "reds":3
   },
   {
-    "team":"Newcastle",
+    "name":"Newcastle",
     "slug":"newcastle",
     "players":24,
     "age":28.2,
@@ -195,7 +195,7 @@
     "reds":1
   },
   {
-    "team":"Nottingham Forest",
+    "name":"Nottingham Forest",
     "slug":"nottingham-forest",
     "players":23,
     "age":27.0,
@@ -208,7 +208,7 @@
     "reds":2
   },
   {
-    "team":"Southampton",
+    "name":"Southampton",
     "slug":"southampton",
     "players":36,
     "age":26.1,
@@ -221,7 +221,7 @@
     "reds":3
   },
   {
-    "team":"Tottenham",
+    "name":"Tottenham",
     "slug":"tottenham",
     "players":31,
     "age":25.8,
@@ -234,7 +234,7 @@
     "reds":1
   },
   {
-    "team":"West Ham",
+    "name":"West Ham",
     "slug":"west-ham",
     "players":27,
     "age":29.0,
@@ -247,7 +247,7 @@
     "reds":3
   },
   {
-    "team":"Wolves",
+    "name":"Wolves",
     "slug":"wolves",
     "players":31,
     "age":27.7,
