@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -103,3 +103,42 @@ def user_logout(request):
     response.delete_cookie('last_login')
     messages.info(request, 'You have been logged out successfully.')
     return response
+
+def login_ajax(request):
+    if request.method == "POST":
+        import json
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "status": "error", 
+                "message": "Invalid request format!"
+            })
+
+        username = data.get("username")
+        password = data.get("password")
+
+        if not username or not password:
+            return JsonResponse({
+                "status": "error",
+                "message": "Username and password are required!"
+            })
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return JsonResponse({
+                "status": "success",
+                "redirect_url": reverse("main:homepage")
+            })
+
+        return JsonResponse({
+            "status": "error", 
+            "message": "Invalid username or password."
+        })
+
+    return JsonResponse({
+        "status": "error", 
+        "message": "Only POST method allowed."
+    })

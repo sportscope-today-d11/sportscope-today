@@ -26,7 +26,7 @@
       left: 0;
       width: 0;
       height: 3px;
-      background-color: #c70000;
+      background-color: #FFD700;
       transition: width 0.25s ease-in-out;
     }
     .menu-link:hover::after {
@@ -38,7 +38,7 @@
 <body class="bg-[#f9fafb] text-gray-900">
 
   <!-- ===== NAVBAR ===== -->
-  <nav class="fixed top-0 left-0 w-full bg-[#052962] text-white z-50 shadow-md">
+  <nav class="fixed top-0 left-0 w-full bg-[#052962] text-white z-50 shadow">
     <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
 
       <!-- Logo -->
@@ -57,23 +57,44 @@
       <!-- Right Side -->
       <div class="hidden md:flex items-center space-x-4">
         {% if user.is_authenticated %}
-          <!-- Avatar / Profile -->
-          <button id="profile-btn" class="w-9 h-9 rounded-full bg-[#FFD700] text-[#052962] font-bold uppercase flex items-center justify-center hover:ring-2 hover:ring-[#FFD700]/50 transition">
-            {{ user.username|first }}
-          </button>
+          <!-- Username & Avatar -->
+          <div class="relative">
+            <button id="profile-btn" class="flex items-center space-x-3 hover:opacity-80 transition">
+              <div class="w-9 h-9 rounded-full bg-[#FFD700] text-[#052962] font-bold uppercase flex items-center justify-center">
+                {{ user.username|first }}
+              </div>
+              <span class="text-white font-medium">{{ user.username }}</span>
+            </button>
+            
+            <!-- Profile Dropdown Modal -->
+            <div id="profile-modal" class="hidden absolute right-0 top-full mt-2 bg-white rounded-xl shadow-2xl w-64 p-5 z-50">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-[#FFD700] text-[#052962] font-bold text-xl flex items-center justify-center uppercase">
+                  {{ user.username|first }}
+                </div>
+                <div>
+                  <p class="font-semibold text-[#052962]">{{ user.username }}</p>
+                  <p class="text-sm text-gray-500">{{ user.email }}</p>
+                </div>
+              </div>
+              <hr class="border-gray-300 mb-4">
+              <a href="{% url 'main:logout' %}" class="block w-full text-center py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                Logout
+              </a>
+            </div>
+          </div>
         {% else %}
-          <!-- Login Button -->
           <a href="{% url 'main:login' %}" class="px-4 py-2 bg-[#FFD700] text-[#052962] font-semibold rounded hover:bg-yellow-400 transition">
             Login
           </a>
         {% endif %}
       </div>
 
-      <!-- Mobile Toggle -->
+      <!-- Mobile Menu Toggle -->
       <button id="menu-toggle" class="md:hidden text-[#FFD700] text-2xl font-bold">☰</button>
     </div>
 
-    <!-- ===== SUBNAV ===== -->
+    <!-- Submenu -->
     <div class="hidden md:flex bg-[#031a42] border-t border-[#FFD700]/20 text-sm font-medium px-8 py-2 overflow-x-auto space-x-6 whitespace-nowrap">
       <a href="#" class="hover:text-[#FFD700]">Transfer</a>
       <a href="#" class="hover:text-[#FFD700]">Injury Update</a>
@@ -83,67 +104,92 @@
     </div>
   </nav>
 
-
   <!-- ===== MOBILE MENU ===== -->
-  <div id="mobile-menu" class="fixed inset-0 bg-[#052962]/95 text-white hidden flex-col items-center justify-center space-y-6 text-lg font-semibold z-40">
-    <!--  -->
-    <a href="{% url 'main:news_list' %}" class="hover:text-[#FFD700]">News</a>
-    <a href="#" class="hover:text-[#FFD700]">Matches</a>
-    <a href="#" class="hover:text-[#FFD700]">Players</a>
-    <a href="#" class="hover:text-[#FFD700]">Forum</a>
-
-    {% if user.is_authenticated %}
-      <button id="mobile-logout" class="px-4 py-2 bg-red-600 rounded hover:bg-red-700">Logout</button>
-    {% else %}
-    <!-- LOGIN INI -->
-      <a href="{% url 'main:login' %}" class="px-4 py-2 bg-[#FFD700] text-[#052962] rounded hover:bg-yellow-400">Login</a>
-    {% endif %}
-  </div>
-
-  <!-- ===== PROFILE MODAL ===== -->
-  {% if user.is_authenticated %}
-  <div id="profile-modal" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl w-80 p-6">
-      <div class="flex items-center gap-4 mb-4">
-        <div class="w-12 h-12 rounded-full bg-[#FFD700] text-[#052962] font-bold text-xl flex items-center justify-center uppercase">
-          {{ user.username|first }}
+  <div id="mobile-menu" class="fixed top-0 right-0 h-full w-3/4 bg-[#052962] text-white hidden flex-col shadow-2xl z-40 transition-all overflow-y-auto">
+    <!-- Header Section -->
+    <div class="p-6 pb-4 border-b border-[#FFD700]/30">
+      {% if user.is_authenticated %}
+        <!-- User Profile -->
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-full bg-[#FFD700] text-[#052962] font-bold text-lg flex items-center justify-center uppercase flex-shrink-0">
+            {{ user.username|first }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-base truncate">{{ user.username }}</p>
+            <p class="text-xs text-gray-300 truncate">{{ user.email }}</p>
+          </div>
         </div>
-        <div>
-          <p class="font-semibold text-[#052962]">{{ user.username }}</p>
-        </div>
-      </div>
-      <hr class="border-gray-300 mb-4">
-      <!-- LOGOUT NIH -->
-      <a href="#" class="block w-full text-center py-2 bg-red-600 text-white rounded hover:bg-red-700">
-        Logout
-      </a>
+      {% else %}
+        <!-- Login/Register -->
+        <p class="text-lg font-semibold text-[#FFD700]">Login / Register</p>
+      {% endif %}
+    </div>
+
+    <!-- Menu Items -->
+    <div class="flex flex-col py-4 px-6 space-y-1">
+      <a href="{% url 'main:news_list' %}" class="py-3 hover:text-[#FFD700] transition text-base font-medium">News</a>
+      <a href="#" class="py-3 hover:text-[#FFD700] transition text-base font-medium">Matches</a>
+      <a href="#" class="py-3 hover:text-[#FFD700] transition text-base font-medium">Players</a>
+      <a href="#" class="py-3 hover:text-[#FFD700] transition text-base font-medium">Forum</a>
+    </div>
+
+    <hr class="border-[#FFD700]/30 mx-6">
+
+    <!-- Submenu Items -->
+    <div class="flex flex-col py-4 px-6 space-y-1">
+      <a href="#" class="py-2.5 hover:text-[#FFD700] transition text-sm">Transfer</a>
+      <a href="#" class="py-2.5 hover:text-[#FFD700] transition text-sm">Injury Update</a>
+      <a href="#" class="py-2.5 hover:text-[#FFD700] transition text-sm">Match Result</a>
+      <a href="#" class="py-2.5 hover:text-[#FFD700] transition text-sm">Manager News</a>
+      <a href="#" class="py-2.5 hover:text-[#FFD700] transition text-sm">Thoughts</a>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="mt-auto p-6 border-t border-[#FFD700]/30">
+      {% if user.is_authenticated %}
+        <a href="{% url 'main:logout' %}" class="block w-full text-center py-3 bg-red-600 rounded-lg hover:bg-red-700 transition font-semibold text-sm">
+          Logout
+        </a>
+      {% else %}
+        <a href="{% url 'main:login' %}" class="block w-full text-center py-3 bg-[#FFD700] text-[#052962] rounded-lg hover:bg-yellow-400 transition font-semibold text-sm">
+          Login
+        </a>
+      {% endif %}
     </div>
   </div>
-  {% endif %}
 
-  <!-- ===== JS ===== -->
   <script>
+    // Toggle mobile menu
     const toggle = document.getElementById('menu-toggle');
     const mobileMenu = document.getElementById('mobile-menu');
     toggle.addEventListener('click', () => {
       mobileMenu.classList.toggle('hidden');
     });
 
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!toggle.contains(e.target) && !mobileMenu.contains(e.target) && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+      }
+    });
+
     {% if user.is_authenticated %}
+    // Profile dropdown toggle
     const profileBtn = document.getElementById('profile-btn');
     const profileModal = document.getElementById('profile-modal');
 
-    profileBtn.addEventListener('click', () => {
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       profileModal.classList.toggle('hidden');
     });
 
-    profileModal.addEventListener('click', (e) => {
-      if (e.target === profileModal) {
+    // Close modal when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!profileBtn.contains(e.target) && !profileModal.contains(e.target)) {
         profileModal.classList.add('hidden');
       }
     });
     {% endif %}
   </script>
-
 </body>
 </html>
