@@ -1,13 +1,9 @@
-from django.conf import settings
 from django.urls import path
-from main.views import *
-from django.conf.urls.static import static
-
-app_name = 'main'
+from . import views
 
 urlpatterns = [
-
+    path('', views.category_list, name='category_list'),
+    path('category/<slug:category_slug>/', views.thread_list, name='thread_list'),
+    path('category/<slug:category_slug>/create/', views.create_thread, name='create_thread'),
+    path('thread/<slug:slug>/', views.thread_detail, name='thread_detail'),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

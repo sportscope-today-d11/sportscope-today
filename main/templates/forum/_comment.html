@@ -1,0 +1,20 @@
+<div class="comment">
+  <strong>{{ comment.author.username }}</strong>
+  <p>{{ comment.content }}</p>
+  <small>{{ comment.created_at }}</small>
+
+  <!-- reply form -->
+  <form method="post" style="margin-top: 5px;">
+    {% csrf_token %}
+    <input type="hidden" name="parent_id" value="{{ comment.id }}">
+    {{ comment_form.as_p }}
+    <button type="submit">Reply</button>
+  </form>
+
+  <!-- tampilkan replies -->
+  {% for reply in comment.replies.all %}
+    <div class="reply" style="margin-left: 30px; border-left: 2px solid #ddd; padding-left: 10px;">
+      {% include "forum/_comment.html" with comment=reply comment_form=comment_form %}
+    </div>
+  {% endfor %}
+</div>

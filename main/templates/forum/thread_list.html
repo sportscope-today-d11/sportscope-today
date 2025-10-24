@@ -1,0 +1,14 @@
+<h1>{{ category.name }}</h1>
+
+<a href="{% url 'create_thread' category.slug %}">+ Create Thread</a>
+
+<ul>
+  {% for thread in threads %}
+    <li>
+      <a href="{% url 'thread_detail' thread.slug %}">{{ thread.title }}</a> 
+      by {{ thread.author.username }}
+    </li>
+  {% empty %}
+    <li>No threads yet.</li>
+  {% endfor %}
+</ul>

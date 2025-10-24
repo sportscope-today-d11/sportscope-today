@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ thread.title }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .thread-header {
+      margin-bottom: 30px;
+    }
+    .thread-title {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .thread-content {
+      font-size: 16px;
+      color: #333;
+    }
+    .comment {
+      background-color: #fafafa;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 10px 15px;
+      margin-top: 10px;
+    }
+    .reply {
+      margin-left: 40px;
+      border-left: 2px solid #ddd;
+      padding-left: 15px;
+    }
+    .comment small {
+      color: #888;
+      font-size: 12px;
+    }
+    form {
+      margin-top: 10px;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    hr {
+      margin: 30px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="thread-header">
+      <h2 class="thread-title">{{ thread.title }}</h2>
+      <p class="thread-content">{{ thread.content }}</p>
+      <small>Posted on {{ thread.created_at }}</small>
+    </div>
+
+    <hr>
+
+    <h3>Comments</h3>
+
+    {% for comment in comments %}
+    {% include "forum/_comment.html" with comment=comment comment_form=comment_form %}
+    {% empty %}
+    <p>No comments yet. Be the first to comment!</p>
+    {% endfor %}
+
+    <hr>
+
+    <h3>Leave a Comment</h3>
+    <form method="post">
+    {% csrf_token %}
+    {{ comment_form.as_p }}
+    <button type="submit">Post Comment</button>
+    </form>
+
+  </div>
+</body>
+</html>

@@ -1,88 +1,45 @@
 from django.db import models
 from django.utils.text import slugify
-from unidecode import unidecode
-import os
 
-# Create your models here.
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True, blank=True)
 
-class Team(models.Model):
-    slug = models.SlugField(unique=True, primary_key=True)
-    name = models.CharField(max_length=255)
-    players = models.IntegerField()
-    age = models.FloatField()
-    possession = models.FloatField()
-    goals = models.IntegerField()
-    assists = models.IntegerField()
-    penalty_kicks = models.IntegerField()
-    penalty_kick_attempts = models.IntegerField()
-    yellows = models.IntegerField()
-    reds = models.IntegerField()
-    image = models.ImageField(upload_to="teams/", null=True, blank=True)
-
-    # override fungsi save agar membuat slug otomatis dari nama tim
     def save(self, *args, **kwargs):
-        if not self.slug and self.name:
-            self.slug = slugify(unidecode(self.name))
-        super().save(*args, **kwargs)
-
-    @property
-    def image_url(self):
-        if self.image:
-            return self.image.url
-        static_path = f"/static/images/teams/{self.slug}.png" if self.slug else None
-        default_path = "/static/images/teams/default.png"
-        static_file = f"static/images/teams/{self.slug}.png" if self.slug else None
-        if static_file and os.path.exists(static_file):
-            return static_path
-        return default_path
-
-    def __str__(self):
-        return self.name or "Unnamed Team"
-
-class Player(models.Model):
-    slug = models.SlugField(unique=True, primary_key=True)
-    name = models.CharField(max_length=255)
-    full_name = models.CharField(max_length=255, blank=True)
-    age = models.PositiveIntegerField(null=True, blank=True)
-    height_cm = models.FloatField(null=True, blank=True)
-    weight_kgs = models.FloatField(null=True, blank=True)
-    positions = models.CharField(max_length=100, blank=True)
-    nationality = models.CharField(max_length=100, blank=True)
-    overall_rating = models.PositiveIntegerField(null=True, blank=True)
-    value_euro = models.FloatField(null=True, blank=True)
-    wage_euro = models.FloatField(null=True, blank=True)
-    preferred_foot = models.CharField(max_length=10, null=True)
-    international_reputation = models.PositiveIntegerField(null=True, blank=True)
-    weak_foot = models.PositiveIntegerField(null=True, blank=True)
-    skill_moves = models.PositiveIntegerField(null=True, blank=True)
-    release_clause_euro = models.FloatField(null=True, blank=True)
-    national_team = models.CharField(max_length=100, null=True)
-    finishing = models.PositiveIntegerField(null=True, blank=True)
-    heading_accuracy = models.PositiveIntegerField(null=True, blank=True)
-    short_passing = models.PositiveIntegerField(null=True, blank=True)
-    volleys = models.PositiveIntegerField(null=True, blank=True)
-    dribbling = models.PositiveIntegerField(null=True, blank=True)
-    long_passing = models.PositiveIntegerField(null=True, blank=True)
-    ball_control = models.PositiveIntegerField(null=True, blank=True)
-    acceleration = models.PositiveIntegerField(null=True, blank=True)
-    sprint_speed = models.PositiveIntegerField(null=True, blank=True)
-    agility = models.PositiveIntegerField(null=True, blank=True)
-    jumping = models.PositiveIntegerField(null=True, blank=True)
-    stamina = models.PositiveIntegerField(null=True, blank=True)
-    strength = models.PositiveIntegerField(null=True, blank=True)
-    long_shots = models.PositiveIntegerField(null=True, blank=True)
-    vision = models.PositiveIntegerField(null=True, blank=True)
-    penalties = models.PositiveIntegerField(null=True, blank=True)
-    marking = models.PositiveIntegerField(null=True, blank=True)
-    standing_tackle = models.PositiveIntegerField(null=True, blank=True)
-    sliding_tackle = models.PositiveIntegerField(null=True, blank=True)
-    likes = models.PositiveIntegerField(default=0)
-
-    # override fungsi save agar membuat slug otomatis dari nama pemain
-    def save(self, *args, **kwargs):
-        if not self.slug and self.name:
-            self.slug = slugify(unidecode(self.name))
+        if not self.slug:
+            self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name or "Unnamed Player"
+        return self.name
+
+
+class Thread(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="threads")
+    author_name = models.CharField(max_length=100, default="Guest")  # sementara pakai nama manual
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    slug = models.SlugField(unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title)
+            count = Thread.objects.filter(slug__startswith=base_slug).count()
+            self.slug = f"{base_slug}-{count+1}" if count else base_slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+
+class Comment(models.Model):
+    thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name="comments")
+    author_name = models.CharField(max_length=100, default="Guest")  # sementara juga
+    content = models.TextField()
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name="replies")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.author_name} on {self.thread}"
