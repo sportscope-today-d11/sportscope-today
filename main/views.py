@@ -1,6 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
-
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse, reverse_lazy
+import datetime
+from django.contrib import messages
 # Create your views here.
 from django.shortcuts import render
 from .models import News, Team, Player
@@ -60,8 +66,40 @@ def news_list(request):
 def news_detail(request, news_id):
     return HttpResponse('info')
 
-def user_login(request):
-    return 
-
 def user_register(request):
-    return 
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your account has been successfully created!')
+            return redirect('main:login')
+    else:
+        form = UserCreationForm()
+
+    context = {'form': form}
+    return render(request, 'register.html', context)
+
+def user_login(request):
+    if request.method == "POST":
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            response = HttpResponseRedirect(reverse('main:homepage'))
+            response.set_cookie('last_login', str(datetime.datetime.now()))
+            messages.success(request, f'Welcome back, {user.username}!')
+            return response
+        else:
+            messages.error(request, 'Invalid username or password.')
+    else:
+        form = AuthenticationForm(request)
+
+    context = {'form': form}
+    return render(request, 'login.html', context)
+
+def user_logout(request):
+    logout(request)
+    response = HttpResponseRedirect(reverse('main:homepage'))
+    response.delete_cookie('last_login')
+    messages.info(request, 'You have been logged out successfully.')
+    return response

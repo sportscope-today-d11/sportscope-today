@@ -9,6 +9,7 @@ import uuid
 from unidecode import unidecode
 from django.templatetags.static import static
 from urllib.parse import urlparse
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -178,3 +179,17 @@ class Player(models.Model):
 
     def __str__(self):
         return self.name or "Unnamed Player"
+
+
+class Person(models.Model):
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('user', 'User'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    email = models.EmailField(unique=True)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+
+    def __str__(self):
+        return f"{self.user.username} ({self.role})"
