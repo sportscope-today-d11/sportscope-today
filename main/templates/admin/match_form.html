@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="max-w-2xl mx-auto py-8">
-  <h2 class="text-2xl font-bold text-[#052962] mb-6">{{ title }}</h2>
+  <h2 class="text-2xl font-bold text-[#052962] mb-6">{{ title|default:"Form Pertandingan" }}</h2>
 
   <form method="POST" class="bg-white p-6 rounded-xl shadow border border-gray-200 space-y-4">
     {% csrf_token %}

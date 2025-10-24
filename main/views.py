@@ -8,6 +8,7 @@ from django.db.models import Q
 from .forms import MatchForm
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.contrib import messages
 
 # ------------------------------
 # TEAM VIEWS
@@ -122,6 +123,7 @@ def add_match(request):
         form = MatchForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Pertandingan berhasil ditambahkan!')
             return redirect('main:admin_match_list')
     else:
         form = MatchForm()
@@ -133,6 +135,7 @@ def edit_match(request, match_id):
         form = MatchForm(request.POST, instance=match)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Data pertandingan berhasil diperbarui!')
             return redirect('main:admin_match_list')
     else:
         form = MatchForm(instance=match)
@@ -141,4 +144,5 @@ def edit_match(request, match_id):
 def delete_match(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     match.delete()
+    messages.success(request, 'Pertandingan berhasil dihapus!')
     return redirect('main:admin_match_list')
