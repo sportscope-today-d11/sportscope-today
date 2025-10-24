@@ -156,3 +156,38 @@ class Person(models.Model):
     def __str__(self):
         return f"{self.user.username} ({self.role})"
 
+class Match(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    season = models.CharField(max_length=20)
+    match_date = models.DateField()
+    league = models.CharField(max_length=100, default="Unknown")
+
+    home_team = models.ForeignKey(Team, related_name="home_matches", on_delete=models.CASCADE)
+    away_team = models.ForeignKey(Team, related_name="away_matches", on_delete=models.CASCADE)
+
+    # Full-time results
+    full_time_home_goals = models.IntegerField()
+    full_time_away_goals = models.IntegerField()
+    full_time_result = models.CharField(max_length=1)  # 'H' (home), 'A' (away), 'D' (draw)
+
+    # Half-time results
+    half_time_home_goals = models.IntegerField()
+    half_time_away_goals = models.IntegerField()
+    half_time_result = models.CharField(max_length=1)
+
+    # Stats
+    home_shots = models.IntegerField()
+    away_shots = models.IntegerField()
+    home_shots_on_target = models.IntegerField()
+    away_shots_on_target = models.IntegerField()
+    home_corners = models.IntegerField()
+    away_corners = models.IntegerField()
+    home_fouls = models.IntegerField()
+    away_fouls = models.IntegerField()
+    home_yellow_cards = models.IntegerField()
+    away_yellow_cards = models.IntegerField()
+    home_red_cards = models.IntegerField()
+    away_red_cards = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.home_team.name} vs {self.away_team.name} ({self.match_date})"
