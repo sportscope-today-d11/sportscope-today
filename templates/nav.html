@@ -1,13 +1,183 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sportscope Today</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .brand-font {
+      font-family: 'Merriweather', serif;
+    }
+    .menu-link {
+      position: relative;
+      padding: 0.75rem 1rem;
+      transition: color 0.2s ease-in-out;
+    }
+    .menu-link::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background-color: #c70000;
+      transition: width 0.25s ease-in-out;
+    }
+    .menu-link:hover::after {
+      width: 100%;
+    }
+    /* Sidebar transition */
+    .sidebar-enter {
+      transform: translateX(100%);
+    }
+    .sidebar-active {
+      transform: translateX(0);
+      transition: transform 0.3s ease-in-out;
+    }
+  </style>
 </head>
-<body>
-    <p>Ini di navbar guys, kerjaan gw</p>
-    <p>Ini perubahan di feat/navbar</p>
-    <p>Ini gaakan konflik, ada di feat/navbar-sidebar</p>
+
+<body class="bg-[#f9fafb] text-gray-900">
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="fixed top-0 left-0 w-full bg-[#052962] text-white z-50 shadow-md">
+    <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+
+      <!-- Logo -->
+      <a href="{% url 'main:homepage' %}" class="brand-font text-2xl md:text-3xl font-bold tracking-tight">
+        <span class="text-[#FFD700]">Sportscope</span> Today
+      </a>
+
+      <!-- Desktop Menu -->
+      <div class="hidden md:flex items-center text-sm font-medium uppercase divide-x divide-gray-500/40">
+        <a href="{% url 'main:news_list' %}" class="menu-link hover:text-[#FFD700]">News</a>
+        <a href="#" class="menu-link hover:text-[#FFD700]">Matches</a>
+        <a href="#" class="menu-link hover:text-[#FFD700]">Players</a>
+        <a href="#" class="menu-link hover:text-[#FFD700]">Forum</a>
+      </div>
+
+      <!-- Right Side -->
+      <div class="hidden md:flex items-center space-x-4">
+        <!-- Profile Icon -->
+        <button id="profile-btn" class="hover:text-[#FFD700] transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M5.121 17.804A9 9 0 1118.88 17.804M12 14a4 4 0 100-8 4 4 0 000 8z" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile Toggle -->
+      <button id="menu-toggle" class="md:hidden text-[#FFD700] text-2xl font-bold">☰</button>
+    </div>
+
+    <!-- ===== SUBNAV ===== -->
+    <div class="hidden md:flex bg-[#031a42] border-t border-[#FFD700]/20 text-sm font-medium px-8 py-2 overflow-x-auto space-x-6 whitespace-nowrap">
+      <a href="#" class="hover:text-[#FFD700]">Transfer</a>
+      <a href="#" class="hover:text-[#FFD700]">Injury Update</a>
+      <a href="#" class="hover:text-[#FFD700]">Match Result</a>
+      <a href="#" class="hover:text-[#FFD700]">Manager News</a>
+      <a href="#" class="hover:text-[#FFD700]">Thoughts</a>
+    </div>
+  </nav>
+
+
+  <!-- ===== MOBILE MENU ===== -->
+  <div id="mobile-menu" class="fixed inset-0 bg-[#052962]/95 text-white hidden flex-col items-center justify-center space-y-6 text-lg font-semibold z-40">
+    <a href="{% url 'main:news_list' %}" class="hover:text-[#FFD700]">News</a>
+    <a href="#" class="hover:text-[#FFD700]">Matches</a>
+    <a href="#" class="hover:text-[#FFD700]">Players</a>
+    <a href="#" class="hover:text-[#FFD700]">Forum</a>
+  </div>
+
+
+  <!-- ===== PROFILE SIDEBAR ===== -->
+  <div id="profile-sidebar" class="fixed top-0 right-0 w-80 bg-white h-full shadow-lg z-50 transform translate-x-full transition-transform duration-300">
+    <div class="p-6 border-b flex justify-between items-center">
+      <h2 class="text-lg font-bold text-[#052962]">My Account</h2>
+      <button id="close-sidebar" class="text-gray-500 hover:text-[#c70000]">
+        ✕
+      </button>
+    </div>
+
+    <div class="p-6 space-y-6">
+      {% if user.is_authenticated %}
+      <!-- Logged In -->
+      <div class="flex items-center space-x-3">
+        <div class="bg-[#FFD700] text-[#052962] font-bold rounded-full w-10 h-10 flex items-center justify-center uppercase">
+          {{ user.username|first }}
+        </div>
+        <p class="font-semibold text-[#052962]">{{ user.username }}</p>
+      </div>
+
+      <div class="mt-6 space-y-4 text-gray-700">
+        <a href="#" class="flex items-center gap-3 hover:text-[#052962]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round"
+            d="M5.121 17.804A9 9 0 1118.88 17.804M12 14a4 4 0 100-8 4 4 0 000 8z" /></svg>
+          My Profile
+        </a>
+        <a href="#" class="flex items-center gap-3 hover:text-[#052962]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+          My Posts
+        </a>
+        <a href="{% url 'logout' %}" class="flex items-center gap-3 text-red-600 hover:text-[#c70000]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round"
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V5m0 14a9 9 0 100-18 9 9 0 000 18z" /></svg>
+          Logout
+        </a>
+      </div>
+
+      {% else %}
+      <!-- Not Logged In -->
+      <div class="space-y-4 text-gray-700">
+        <a href="{% url 'login' %}" class="flex items-center gap-3 hover:text-[#052962]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round"
+            d="M15 12H3m12 0l-4 4m4-4l-4-4m8 8a9 9 0 100-18 9 9 0 000 18z" /></svg>
+          Login
+        </a>
+        <a href="{% url 'register' %}" class="flex items-center gap-3 hover:text-[#052962]">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 4v16m8-8H4" /></svg>
+          Register
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+
+  <!-- ===== JS ===== -->
+  <script>
+    const toggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const profileBtn = document.getElementById('profile-btn');
+    const sidebar = document.getElementById('profile-sidebar');
+    const closeSidebar = document.getElementById('close-sidebar');
+
+    toggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    profileBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('translate-x-full');
+    });
+
+    closeSidebar.addEventListener('click', () => {
+      sidebar.classList.add('translate-x-full');
+    });
+  </script>
+
 </body>
 </html>
