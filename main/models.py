@@ -1,7 +1,14 @@
 from django.db import models
-from django.utils.text import slugify
+
+# Create your models here.
 from unidecode import unidecode
+from django.db import models
+from django.utils.text import slugify
 import os
+import uuid
+from unidecode import unidecode
+from django.templatetags.static import static
+from urllib.parse import urlparse
 
 # Create your models here.
 
@@ -22,7 +29,7 @@ class Team(models.Model):
     # override fungsi save agar membuat slug otomatis dari nama tim
     def save(self, *args, **kwargs):
         if not self.slug and self.name:
-            self.slug = slugify(unidecode(self.name))
+            self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
     @property
