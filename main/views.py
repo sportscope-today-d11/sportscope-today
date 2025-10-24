@@ -29,7 +29,7 @@ def news_list(request):
     if category:
         news_qs = news_qs.filter(category=category)
 
-    paginator = Paginator(news_qs, 10)
+    paginator = Paginator(news_qs, 9)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
