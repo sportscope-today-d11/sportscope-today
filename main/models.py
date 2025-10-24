@@ -1,7 +1,14 @@
 from django.db import models
-from django.utils.text import slugify
+
+# Create your models here.
 from unidecode import unidecode
+from django.db import models
+from django.utils.text import slugify
 import os
+import uuid
+from unidecode import unidecode
+from django.templatetags.static import static
+from urllib.parse import urlparse
 
 # Create your models here.
 
@@ -22,7 +29,7 @@ class Team(models.Model):
     # override fungsi save agar membuat slug otomatis dari nama tim
     def save(self, *args, **kwargs):
         if not self.slug and self.name:
-            self.slug = slugify(unidecode(self.name))
+            self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
     @property
@@ -83,6 +90,19 @@ class Player(models.Model):
         if not self.slug and self.name:
             self.slug = slugify(unidecode(self.name))
         super().save(*args, **kwargs)
+
+    @property
+    def image_url(self):
+        if self.image:
+            return self.image.url
+        # Cek apakah ada file static untuk slug tertentu
+        if self.slug:
+            static_file_path = f"static/images/player_pictures/{self.slug}.png"
+            if os.path.exists(static_file_path):
+                return f"/static/images/player_pictures/{self.slug}.png"
+        
+        # Fallback ke default
+        return "/static/images/player_pictures/default.png"
 
     def __str__(self):
         return self.name or "Unnamed Player"
