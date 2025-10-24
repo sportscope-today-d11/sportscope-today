@@ -13,7 +13,10 @@
 </head>
 
 <body>
-    {% block content %}
-    {% endblock %}
+    {% include 'navbar.html' %}
+    <main class="pt-[110px]">
+        {% block content %}
+        {% endblock %}
+    </main>
 </body>
 </html>

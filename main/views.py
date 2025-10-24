@@ -59,3 +59,9 @@ def news_list(request):
 
 def news_detail(request, news_id):
     return HttpResponse('info')
+
+def user_login(request):
+    return 
+
+def user_register(request):
+    return 
