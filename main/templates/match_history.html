@@ -22,12 +22,27 @@
           {% for match in league.list %}
             <a href="{% url 'main:match_detail' match.id %}" 
                class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-100 hover:bg-gray-50 transition">
+
               <div class="flex items-center space-x-3 text-gray-800">
-                <span class="font-medium">{{ match.home_team }}</span>
-                <span class="font-semibold">{{ match.home_score }}</span>
+                <!-- HOME TEAM -->
+                <div class="flex items-center space-x-2">
+                  <img src="{% static 'images/logo/' %}{{ match.home_team|slugify }}.png"
+                       alt="{{ match.home_team }} logo"
+                       class="w-6 h-6 object-contain" />
+                  <span class="font-medium text-sm md:text-base">{{ match.home_team }}</span>
+                </div>
+
+                <span class="font-semibold text-sm md:text-base">{{ match.home_score }}</span>
                 <span class="text-gray-500">-</span>
-                <span class="font-semibold">{{ match.away_score }}</span>
-                <span class="font-medium">{{ match.away_team }}</span>
+                <span class="font-semibold text-sm md:text-base">{{ match.away_score }}</span>
+
+                <!-- AWAY TEAM -->
+                <div class="flex items-center space-x-2">
+                  <img src="{% static 'images/logo/' %}{{ match.away_team|slugify }}.png"
+                       alt="{{ match.away_team }} logo"
+                       class="w-6 h-6 object-contain" />
+                  <span class="font-medium text-sm md:text-base">{{ match.away_team }}</span>
+                </div>
               </div>
 
               <div class="flex items-center space-x-4">
@@ -41,6 +56,7 @@
     </div>
   {% endfor %}
 
+  <!-- PAGINATION -->
   <div class="flex justify-center items-center space-x-2 mt-8">
     {% if page_obj.has_previous %}
       <a href="?page={{ page_obj.previous_page_number }}" 
