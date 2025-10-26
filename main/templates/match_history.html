@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="max-w-5xl mx-auto px-4 py-10">
+  <h1 class="text-2xl font-bold text-[#052962] mb-8">Match History</h1>
+
+  <!-- FILTER FORM -->
+  <form method="get" action="{% url 'main:match_history' %}" class="mb-6 flex flex-wrap gap-3 items-end">
+    <div>
+      <label for="competition" class="block text-sm font-medium text-gray-700">Competition</label>
+      <select name="competition" id="competition" class="border border-gray-300 rounded px-3 py-1">
+        <option value="">All</option>
+        {% for comp in competitions %}
+          <option value="{{ comp }}" {% if request.GET.competition == comp %}selected{% endif %}>{{ comp }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label for="date" class="block text-sm font-medium text-gray-700">Dates</label>
+      <input type="date" name="date" id="date" value="{{ request.GET.date }}" class="border border-gray-300 rounded px-3 py-1">
+    </div>
+
+    <button type="submit" class="bg-[#052962] text-white px-4 py-1 rounded hover:bg-[#063b8b] transition">
+      Filter
+    </button>
+  </form>
+
+  <!-- MATCH LIST -->
+  <div id="loading" class="hidden text-center text-gray-500">Loading...</div>
+  <div id="match-list-container">
+    {% include "partials/match_list_partial.html" %}
+  </div>
+
+  <!-- PAGINATION -->
+  <div class="flex justify-center items-center space-x-2 mt-8">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" 
+         class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition">
+         ‹ Prev
+      </a>
+    {% else %}
+      <span class="px-3 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed">‹ Prev</span>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <span class="px-3 py-1 bg-[#dcd6cc] text-[#052962] font-semibold rounded">{{ num }}</span>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}" 
+           class="px-3 py-1 bg-white text-[#052962] border border-gray-300 rounded hover:bg-[#f6f6f6] transition">
+           {{ num }}
+        </a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" 
+         class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition">
+         Next ›
+      </a>
+    {% else %}
+      <span class="px-3 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed">Next ›</span>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const form = document.querySelector("form");
+  const loader = document.getElementById("loading");
+
+  console.log("✅ Script loaded, form found:", form); // <-- tambahin ini
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    console.log("🚀 Form submitted"); // <-- tambahin ini
+
+    const url = form.getAttribute("action") || window.location.pathname;
+    const params = new URLSearchParams(new FormData(form)).toString();
+
+    console.log("➡️ Fetching:", `${url}?${params}`); // <-- tambahin ini
+
+    loader.classList.remove("hidden");
+
+    fetch(`${url}?${params}`, {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("✅ AJAX success", data); // <-- tambahin ini
+      document.querySelector("#match-list-container").innerHTML = data.html;
+    })
+    .catch(err => console.error("❌ Fetch error:", err)) // <-- tambahin ini
+    .finally(() => loader.classList.add("hidden"));
+  });
+});
+</script>
+{% endblock %}

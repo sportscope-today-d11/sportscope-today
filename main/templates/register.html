@@ -1,0 +1,285 @@
+<!-- Register Modal -->
+<div id="register-modal" class="hidden fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg relative">
+    <!-- Close Button -->
+    <button id="close-register-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+
+    <!-- Modal Content -->
+    <div class="p-8">
+      <!-- Title -->
+      <div class="mb-6">
+        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-3" style="font-family: 'Merriweather', serif;">Create an Account</h2>
+        <p class="text-gray-600 text-base">Join the Sportscope community today</p>
+      </div>
+
+      <!-- Alert Messages -->
+      <div id="register-alert" class="hidden mb-4"></div>
+
+      <!-- Register Form -->
+      <form id="ajax-register-form" class="space-y-5">
+        {% csrf_token %}
+        
+        <!-- Username Field -->
+        <div>
+          <label for="ajax-reg-username" class="block text-sm font-semibold text-gray-700 mb-2">
+            Username <span class="text-red-500">*</span>
+          </label>
+          <input type="text" 
+                 name="username" 
+                 id="ajax-reg-username" 
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                 placeholder="Choose a username" 
+                 required>
+          <p id="reg-username-error" class="text-red-500 text-xs mt-1.5 hidden"></p>
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <label for="ajax-reg-password1" class="block text-sm font-semibold text-gray-700 mb-2">
+            Password <span class="text-red-500">*</span>
+          </label>
+          <input type="password" 
+                 name="password1" 
+                 id="ajax-reg-password1" 
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                 placeholder="Enter your password" 
+                 required>
+          <p id="reg-password1-error" class="text-red-500 text-xs mt-1.5 hidden"></p>
+          <p class="text-xs text-gray-500 mt-1">Password must be at least 8 characters</p>
+        </div>
+
+        <!-- Confirm Password Field -->
+        <div>
+          <label for="ajax-reg-password2" class="block text-sm font-semibold text-gray-700 mb-2">
+            Confirm Password <span class="text-red-500">*</span>
+          </label>
+          <input type="password" 
+                 name="password2" 
+                 id="ajax-reg-password2" 
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                 placeholder="Confirm your password" 
+                 required>
+          <p id="reg-password2-error" class="text-red-500 text-xs mt-1.5 hidden"></p>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit"
+          id="register-submit-btn"
+          class="w-full text-white py-3.5 rounded-xl font-semibold transition-all duration-300 text-base shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 relative overflow-hidden group"
+          style="background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 100%);">
+          <span class="relative z-10">Register</span>
+          <div class="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </button>
+      </form>
+
+      <!-- Bottom Section -->
+      <p class="text-center text-sm text-gray-600 mt-6">
+        Already have an account? 
+        <a href="#" id="switch-to-login" class="font-semibold hover:underline" style="color: #0a2463;">Login</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ==========================================
+  // REGISTER MODAL SETUP
+  // ==========================================
+  const registerUrl = "{% url 'main:register' %}";
+  const ajaxRegisterUrl = "{% url 'main:ajax_register' %}";
+  
+  const registerModal = document.getElementById('register-modal');
+  const closeRegisterModal = document.getElementById('close-register-modal');
+  const ajaxRegisterForm = document.getElementById('ajax-register-form');
+  const registerAlert = document.getElementById('register-alert');
+
+  // Open modal when clicking register links
+  const registerBtns = document.querySelectorAll(`a[href="${registerUrl}"]`);
+  registerBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      registerModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  // Close modal
+  closeRegisterModal.addEventListener('click', () => {
+    registerModal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    clearRegisterForm();
+  });
+
+  // Close modal when clicking outside
+  registerModal.addEventListener('click', (e) => {
+    if (e.target === registerModal) {
+      registerModal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+      clearRegisterForm();
+    }
+  });
+
+  // Switch to login modal
+  document.getElementById('switch-to-login').addEventListener('click', (e) => {
+    e.preventDefault();
+    registerModal.classList.add('hidden');
+    document.getElementById('login-modal').classList.remove('hidden');
+    clearRegisterForm();
+  });
+
+  // ==========================================
+  // HANDLE AJAX REGISTER FORM SUBMIT
+  // ==========================================
+  ajaxRegisterForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('register-submit-btn');
+    const originalText = submitBtn.innerHTML;
+    
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="relative z-10">Loading...</span>';
+    
+    // Clear previous errors
+    document.getElementById('reg-username-error').classList.add('hidden');
+    document.getElementById('reg-password1-error').classList.add('hidden');
+    document.getElementById('reg-password2-error').classList.add('hidden');
+    registerAlert.classList.add('hidden');
+    
+    const formData = new FormData(ajaxRegisterForm);
+    
+    try {
+      const response = await fetch(ajaxRegisterUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrftoken,
+        }
+      });
+      
+      // Check if response is ok
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Show success message
+        showRegisterAlert('success', data.message || 'Account created successfully! Switching to login...');
+        
+        // Switch to login modal after short delay
+        setTimeout(() => {
+          // Get login modal element
+          const loginModalElement = document.getElementById('login-modal');
+          
+          console.log('Register modal element:', registerModal);
+          console.log('Login modal element:', loginModalElement);
+          console.log('Body overflow before switch:', document.body.style.overflow);
+          
+          if (loginModalElement) {
+            // First, clear register form
+            ajaxRegisterForm.reset();
+            document.getElementById('reg-username-error').classList.add('hidden');
+            document.getElementById('reg-password1-error').classList.add('hidden');
+            document.getElementById('reg-password2-error').classList.add('hidden');
+            registerAlert.classList.add('hidden');
+            
+            // Hide register modal
+            registerModal.classList.add('hidden');
+            
+            // Show login modal immediately
+            loginModalElement.classList.remove('hidden');
+            
+            // Force body overflow to stay hidden
+            document.body.style.overflow = 'hidden';
+            
+            console.log('Successfully switched to login modal');
+            console.log('Body overflow after switch:', document.body.style.overflow);
+            console.log('Login modal classes:', loginModalElement.className);
+          } else {
+            console.error('Login modal element not found in DOM!');
+            alert('Error: Login modal not found. Please refresh the page.');
+          }
+        }, 1500);
+      } else {
+        // Show errors
+        if (data.errors) {
+          if (data.errors.username) {
+            const usernameError = document.getElementById('reg-username-error');
+            usernameError.textContent = Array.isArray(data.errors.username) 
+              ? data.errors.username.join(', ') 
+              : data.errors.username;
+            usernameError.classList.remove('hidden');
+          }
+          if (data.errors.password1) {
+            const password1Error = document.getElementById('reg-password1-error');
+            password1Error.textContent = Array.isArray(data.errors.password1) 
+              ? data.errors.password1.join(', ') 
+              : data.errors.password1;
+            password1Error.classList.remove('hidden');
+          }
+          if (data.errors.password2) {
+            const password2Error = document.getElementById('reg-password2-error');
+            password2Error.textContent = Array.isArray(data.errors.password2) 
+              ? data.errors.password2.join(', ') 
+              : data.errors.password2;
+            password2Error.classList.remove('hidden');
+          }
+          if (data.errors.non_field_errors) {
+            showRegisterAlert('error', data.errors.non_field_errors);
+          }
+        } else {
+          showRegisterAlert('error', data.message || 'Registration failed. Please try again.');
+        }
+        
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    } catch (error) {
+      console.error('Registration Error Details:', error);
+      showRegisterAlert('error', 'An error occurred. Please try again. Check console for details.');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+    }
+  });
+
+  // ==========================================
+  // HELPER FUNCTIONS
+  // ==========================================
+  function showRegisterAlert(type, message) {
+    registerAlert.classList.remove('hidden');
+    
+    if (type === 'success') {
+      registerAlert.className = 'bg-green-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded-lg text-sm flex items-start gap-3 mb-4';
+      registerAlert.innerHTML = `
+        <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <span>${message}</span>
+      `;
+    } else {
+      registerAlert.className = 'bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-3 mb-4';
+      registerAlert.innerHTML = `
+        <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+        </svg>
+        <span>${message}</span>
+      `;
+    }
+  }
+
+  function clearRegisterForm() {
+    ajaxRegisterForm.reset();
+    document.getElementById('reg-username-error').classList.add('hidden');
+    document.getElementById('reg-password1-error').classList.add('hidden');
+    document.getElementById('reg-password2-error').classList.add('hidden');
+    registerAlert.classList.add('hidden');
+  }
+</script>

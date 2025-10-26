@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Players</title>
+{% endblock meta %}
+
+{% block content %}
+
+<div class="bg-gray-50 w-full pt-16 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Players</h1>
+            <p class="text-gray-600">Browse all football players</p>
+        </div>
+
+    {% if user.is_authenticated and user.person.role == 'admin' %}
+    <!-- Admin-only: Add Player (AJAX) -->
+    <!-- Button to open modal -->
+    <button onclick="showModal()" class="inline-flex items-center px-4 py-2 bg-white text-green-600 font-semibold outline outline-2 outline-green-600 outline-offset-[-2px] rounded-md hover:bg-green-600 hover:text-white transition-colors mb-4">
+      Add new player by AJAX
+    </button>
+    {% endif %}
+        <!-- Players grid -->
+        <div id="players-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% if players %}
+                {% for player in players %}
+                <div class="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                    <a href="{% url 'main:player_detail' slug=player.slug %}" class="block">
+                        <div class="h-44 bg-gray-100 flex items-center justify-center overflow-hidden">
+                            <!-- GUNAKAN image DARI PROPERTY MODEL -->
+                            <img src="{{ player.image }}" 
+                                 alt="{{ player.name }}" 
+                                 class="object-contain w-full h-full p-2"
+                                >
+                            <!-- Gunakan property image_url agar fallback ke static/default bekerja -->
+                            <img src="{{ player.image_url }}"
+                                 alt="{{ player.name }}"
+                                 class="object-contain w-full h-full p-2" />
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-lg font-semibold text-gray-900">{{ player.name }}</h3>
+                            <p class="text-sm text-gray-600">{{ player.positions }}</p>
+                            <div class="mt-3 flex items-center justify-between">
+                                <span class="text-sm font-bold text-blue-600">⭐ {{ player.overall_rating|default:'N/A' }}</span>
+                                <span class="text-sm text-gray-500">{{ player.nationality }}</span>
+                            </div>
+                            <div class="mt-2 flex items-center justify-between">
+                                <span class="text-xs text-gray-500">Age: {{ player.age|default:'-' }}</span>
+                                <span class="text-xs text-red-500">❤️ {{ player.likes }}</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-span-full text-center text-gray-500 py-16">
+                    <p>No players found.</p>
+                    <p class="text-sm mt-2">Make sure you've loaded the player data first.</p>
+                </div>
+            {% endif %}
+        </div>
+
+
+        <!-- SUPER SIMPLE PAGINATION -->
+        <div class="flex justify-center space-x-4">
+        <div class="flex justify-center space-x-4 mt-8">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="text-blue-600 hover:underline">Previous</a>
+            {% endif %}
+            
+            <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="text-blue-600 hover:underline">Next</a>
+            {% endif %}
+        </div>
+
+
+            <!-- Page Numbers (Simple) -->
+            <div class="flex space-x-1">
+                {% for i in players.paginator.page_range %}
+                    {% if i == players.number %}
+                        <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
+                            {{ i }}
+                        </span>
+                    {% else %}
+                        <a href="?page={{ i }}" 
+                           class="px-3 py-1 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition text-sm font-medium">
+                            {{ i }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        <!-- Page Numbers -->
+        <div class="flex justify-center space-x-1 mt-2">
+            {% for i in page_obj.paginator.page_range %}
+                {% if i == page_obj.number %}
+                    <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">{{ i }}</span>
+                {% else %}
+                    <a href="?page={{ i }}" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition text-sm font-medium">{{ i }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+        </div>
+        
+
+    </div>
+</div>
+
+{% endblock content %}

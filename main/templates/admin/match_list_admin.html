@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-10 px-4">
+  {% if messages %}
+    <div class="mb-6 space-y-2">
+      {% for message in messages %}
+        <div class="
+          px-4 py-3 rounded-lg border
+          {% if message.tags == 'success' %}
+            bg-green-50 border-green-400 text-green-700
+          {% elif message.tags == 'error' %}
+            bg-red-50 border-red-400 text-red-700
+          {% else %}
+            bg-blue-50 border-blue-400 text-blue-700
+          {% endif %}
+        ">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="flex justify-between items-center mb-8">
+    <h2 class="text-2xl font-bold text-[#052962]">Match List</h2>
+    <a href="{% url 'main:add_match' %}" 
+       class="px-4 py-2 bg-[#052962] text-white rounded-lg hover:bg-[#063b8b] transition">
+      + Add Match
+    </a>
+  </div>
+
+  <div class="overflow-x-auto bg-white rounded-xl shadow border border-gray-200">
+    <table class="min-w-full text-sm text-gray-800">
+      <thead class="bg-[#F6F6F6] text-[#052962] uppercase text-xs font-semibold">
+        <tr>
+          <th class="px-4 py-3 text-left">Tanggal</th>
+          <th class="px-4 py-3 text-left">Home</th>
+          <th class="px-4 py-3 text-left">Away</th>
+          <th class="px-4 py-3 text-center">Skor</th>
+          <th class="px-4 py-3 text-left">Liga</th>
+          <th class="px-4 py-3 text-left">Status</th>
+          <th class="px-4 py-3 text-center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for match in page_obj %}
+        <tr class="border-t border-gray-100 hover:bg-gray-50">
+          <td class="px-4 py-3">{{ match.match_date|date:"d M Y" }}</td>
+          <td class="team-column">
+            {% if match.home_team.image_url %}
+              <img src="{{ match.home_team.image_url }}" alt="{{ match.home_team.name }}" class="w-6 h-6 rounded-full object-contain">
+            {% endif %}
+            <span class="font-medium text-gray-800">{{ match.home_team.name }}</span>
+          </td>
+          <td class="team-column away-team">
+            {% if match.away_team.image_url %}
+              <img src="{{ match.away_team.image_url }}" alt="{{ match.away_team.name }}" class="w-6 h-6 rounded-full object-contain">
+            {% endif %}
+            <span class="font-medium text-gray-800">{{ match.away_team.name }}</span>
+          </td>
+          <td class="px-4 py-3 text-center font-semibold">
+            {% if match.full_time_home_goals == 0 and match.full_time_away_goals == 0 %}
+              -
+            {% else %}
+              {{ match.full_time_home_goals }} - {{ match.full_time_away_goals }}
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">{{ match.league }}</td>
+          <td class="px-4 py-3">
+            {% if match.full_time_result == 'H' %}
+              Home Win
+            {% elif match.full_time_result == 'A' %}
+              Away Win
+            {% elif match.full_time_result == 'D' %}
+              Draw
+            {% else %}
+              Pending
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-center space-x-2">
+            <a href="{% url 'main:edit_match' match.id %}" 
+               class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition text-xs">
+              Edit
+            </a>
+            <a href="{% url 'main:delete_match' match.id %}" 
+               class="px-3 py-1 bg-[#C70000] text-white rounded hover:bg-[#a10000] transition text-xs"
+               onclick="return confirm('Yakin ingin menghapus pertandingan ini?');">
+              Delete
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="px-4 py-6 text-center text-gray-500">
+            No matches data available.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex justify-center items-center space-x-2 mt-8">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" 
+         class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition">
+         ‹ Prev
+      </a>
+    {% else %}
+      <span class="px-3 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed">‹ Prev</span>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <span class="px-3 py-1 bg-[#dcd6cc] text-[#052962] font-semibold rounded">{{ num }}</span>
+      {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}" 
+           class="px-3 py-1 bg-white text-[#052962] border border-gray-300 rounded hover:bg-[#f6f6f6] transition">
+           {{ num }}
+        </a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" 
+         class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition">
+         Next ›
+      </a>
+    {% else %}
+      <span class="px-3 py-1 bg-gray-200 text-gray-400 rounded cursor-not-allowed">Next ›</span>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Auto-hide success messages after 3 seconds
+  setTimeout(() => {
+    const alerts = document.querySelectorAll('[class*="bg-green-"], [class*="bg-blue-"], [class*="bg-red-"]');
+    alerts.forEach(alert => {
+      alert.classList.add('opacity-0', 'transition', 'duration-700');
+      setTimeout(() => alert.remove(), 700);
+    });
+  }, 3000);
+</script>
+
+{% endblock %}
