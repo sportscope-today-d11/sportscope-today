@@ -15,11 +15,11 @@ urlpatterns = [
     path('matches/<date>/', views.matches_by_date, name='matches_by_date'),
     path('matches/detail/<uuid:match_id>/', views.match_detail, name='match_detail'),
 
-    # ADMIN URLS
-    path('admin/matches/', views.match_list_admin, name='admin_match_list'),
-    path('admin/matches/add/', views.add_match, name='add_match'),
-    path('admin/matches/<uuid:match_id>/edit/', views.edit_match, name='edit_match'),
-    path('admin/matches/<uuid:match_id>/delete/', views.delete_match, name='delete_match'),
+    # DASHBOARD / CUSTOM ADMIN URLS
+    path('dashboard/matches/', views.match_list_admin, name='admin_match_list'),
+    path('dashboard/matches/add/', views.add_match, name='add_match'),
+    path('dashboard/matches/<uuid:match_id>/edit/', views.edit_match, name='edit_match'),
+    path('dashboard/matches/<uuid:match_id>/delete/', views.delete_match, name='delete_match'),
 
     # PLAYER
     path('player/',views.player_list ,name='player_list'),

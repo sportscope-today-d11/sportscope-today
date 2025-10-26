@@ -137,7 +137,7 @@ def match_list_admin(request):
     paginator = Paginator(matches, 10)  # 10 pertandingan per halaman
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'match_list_admin.html', {'page_obj': page_obj})
+    return render(request, 'admin/match_list_admin.html', {'page_obj': page_obj})
 
 @user_passes_test(is_admin)
 def add_match(request):
@@ -145,11 +145,11 @@ def add_match(request):
         form = MatchForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Pertandingan berhasil ditambahkan!')
+            messages.success(request, 'Match successfully added!')
             return redirect('main:admin_match_list')
     else:
         form = MatchForm()
-    return render(request, 'match_form.html', {'form': form, 'title': 'Tambah Pertandingan'})
+    return render(request, 'admin/match_form.html', {'form': form, 'title': 'Add Match'})
 
 @user_passes_test(is_admin)
 def edit_match(request, match_id):
@@ -158,17 +158,17 @@ def edit_match(request, match_id):
         form = MatchForm(request.POST, instance=match)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Data pertandingan berhasil diperbarui!')
+            messages.success(request, 'Match data successfully updated!')
             return redirect('main:admin_match_list')
     else:
         form = MatchForm(instance=match)
-    return render(request, 'match_form.html', {'form': form, 'title': 'Edit Pertandingan'})
+    return render(request, 'admin/match_form.html', {'form': form, 'title': 'Match Edit'})
 
 @user_passes_test(is_admin)
 def delete_match(request, match_id):
     match = get_object_or_404(Match, id=match_id)
     match.delete()
-    messages.success(request, 'Pertandingan berhasil dihapus!')
+    messages.success(request, 'This match is deleted!')
     return redirect('main:admin_match_list')
 
 # View untuk halaman home yang menampilkan daftar pemain

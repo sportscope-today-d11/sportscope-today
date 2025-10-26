@@ -21,10 +21,10 @@
   {% endif %}
 
   <div class="flex justify-between items-center mb-8">
-    <h2 class="text-2xl font-bold text-[#052962]">Daftar Pertandingan</h2>
+    <h2 class="text-2xl font-bold text-[#052962]">Match List</h2>
     <a href="{% url 'main:add_match' %}" 
        class="px-4 py-2 bg-[#052962] text-white rounded-lg hover:bg-[#063b8b] transition">
-      + Tambah Pertandingan
+      + Add Match
     </a>
   </div>
 
@@ -33,7 +33,6 @@
       <thead class="bg-[#F6F6F6] text-[#052962] uppercase text-xs font-semibold">
         <tr>
           <th class="px-4 py-3 text-left">Tanggal</th>
-          <th class="px-4 py-3 text-left">Waktu</th>
           <th class="px-4 py-3 text-left">Home</th>
           <th class="px-4 py-3 text-left">Away</th>
           <th class="px-4 py-3 text-center">Skor</th>
@@ -45,10 +44,15 @@
       <tbody>
         {% for match in page_obj %}
         <tr class="border-t border-gray-100 hover:bg-gray-50">
-          <td class="px-4 py-3">{{ match.date }}</td>
-          <td class="px-4 py-3">{{ match.time }}</td>
-          <td class="px-4 py-3 font-medium text-gray-900">{{ match.home_team }}</td>
-          <td class="px-4 py-3 font-medium text-gray-900">{{ match.away_team }}</td>
+          <td class="px-4 py-3">{{ match.match_date|date:"d M Y" }}</td>
+          <td class="px-4 py-3 flex items-center gap-2 font-medium text-gray-900">
+            <img src="{{ match.home_team.image_url }}" alt="{{ match.home_team.name }}" class="w-6 h-6 rounded-full">
+              {{ match.home_team.name }}
+          </td>
+          <td class="px-4 py-3 flex items-center gap-2 font-medium text-gray-900">
+            <img src="{{ match.away_team.image_url }}" alt="{{ match.away_team.name }}" class="w-6 h-6 rounded-full">
+              {{ match.away_team.name }}
+          </td>
           <td class="px-4 py-3 text-center font-semibold">{{ match.score_home }} - {{ match.score_away }}</td>
           <td class="px-4 py-3">{{ match.league }}</td>
           <td class="px-4 py-3">{{ match.status }}</td>
@@ -60,14 +64,14 @@
             <a href="{% url 'main:delete_match' match.id %}" 
                class="px-3 py-1 bg-[#C70000] text-white rounded hover:bg-[#a10000] transition text-xs"
                onclick="return confirm('Yakin ingin menghapus pertandingan ini?');">
-              Hapus
+              Delete
             </a>
           </td>
         </tr>
         {% empty %}
         <tr>
           <td colspan="8" class="px-4 py-6 text-center text-gray-500">
-            Belum ada data pertandingan.
+            No matches data available.
           </td>
         </tr>
         {% endfor %}
