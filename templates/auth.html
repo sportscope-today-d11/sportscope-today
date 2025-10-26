@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block meta %}
+        <title>Sportscope Today - Auth</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% endblock meta %}
+    {% load static %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/global.css' %}"/>
+    
+    <style>
+        .auth-bg {
+            background-image: url('{% static "images/sports_auth_bg.jpg" %}');
+        }
+        
+        .form-container-3d {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 
+                0 10px 25px -5px rgba(0, 0, 0, 0.1),
+                0 4px 6px -2px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            transform: perspective(1000px) rotateY(0deg) translateZ(0);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .form-container-3d::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+        }
+        
+        .form-container-3d:hover {
+            transform: perspective(1000px) rotateY(-2deg) translateZ(10px);
+            box-shadow: 
+                0 20px 40px -10px rgba(0, 0, 0, 0.15),
+                0 8px 12px -4px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Untuk mobile, efek lebih subtle */
+        @media (max-width: 768px) {
+            .form-container-3d {
+                box-shadow: 
+                    0 8px 20px -4px rgba(0, 0, 0, 0.1),
+                    0 2px 4px -1px rgba(0, 0, 0, 0.05),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                transform: none;
+                min-height: 450px;
+            }
+            
+            .form-container-3d:hover {
+                transform: translateY(-2px);
+                box-shadow: 
+                    0 12px 25px -5px rgba(0, 0, 0, 0.15),
+                    0 4px 6px -2px rgba(0, 0, 0, 0.08),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        .brand-text {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .sportscope-text {
+            color: #FFD700;
+        }
+
+        .today-text {
+            color: white;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <div class="flex min-h-screen">
+        <!-- Left side branding dengan background image - FULL HEIGHT -->
+        <div class="hidden md:flex w-1/2 relative text-white flex-col items-center justify-center p-12" style="background: linear-gradient(135deg, #0a2463 0%, #1e3a8a 100%);">
+            <!-- Background Image dengan Blur -->
+            <div class="absolute inset-0 bg-cover bg-center auth-bg"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-900/90 via-blue-800/85 to-blue-900/90 backdrop-blur-sm"></div>
+            
+            <!-- Content di atas background -->
+            <div class="relative z-10 text-center max-w-md">
+                <!-- Logo/Icon bisa diganti dengan logo sportscope -->
+                <div class="mb-6 mx-auto flex items-center justify-center">
+                    <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                </div>
+                
+                <h1 class="brand-text text-4xl md:text-5xl font-extrabold mb-6 tracking-tight leading-tight">
+                    <span class="sportscope-text">Sportscope</span> <span class="today-text">Today</span>
+                </h1>
+                
+                <p class="text-lg font-inter leading-relaxed text-gray-200 mb-4">
+                    Your Ultimate Sports News Hub
+                </p>
+                
+                <p class="text-base font-inter leading-relaxed text-gray-300">
+                    Get the latest updates on transfers, match results, injury reports, and exclusive insights from the world of sports.
+                </p>
+                
+                <!-- Optional: Stats atau features -->
+                <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold sportscope-text">24/7</div>
+                        <div class="text-xs text-gray-300">Coverage</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold sportscope-text">Live</div>
+                        <div class="text-xs text-gray-300">Updates</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold sportscope-text">Expert</div>
+                        <div class="text-xs text-gray-300">Analysis</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right side form - FULL HEIGHT & WIDTH dengan efek 3D -->
+        <div class="w-full md:w-1/2 flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12">
+            <div class="w-full max-w-none mx-4 sm:mx-6 md:mx-8 lg:mx-12 form-container-3d p-6 sm:p-8 md:p-10 lg:p-12">
+                <div class="mb-6 sm:mb-8">
+                    {% block title %}
+                    <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 brand-text mb-3">Welcome Back</h2>
+                    <p class="text-gray-600 text-base sm:text-lg font-inter">Please sign in to continue</p>
+                    {% endblock title %}
+                </div>
+
+                <!-- Form block -->
+                <div class="space-y-4 sm:space-y-6">
+                    {% block content %}
+                    <!-- form login/register disini -->
+                    {% endblock content %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
