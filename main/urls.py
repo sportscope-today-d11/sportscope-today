@@ -1,17 +1,13 @@
 from django.conf import settings
 from django.urls import path
 from . import views
-<<<<<<< HEAD
-=======
 from .views import *
->>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
 from django.conf.urls.static import static
 
 
 app_name = 'main'
 
 urlpatterns = [
-<<<<<<< HEAD
     # TEAM URLS
     path('teams/', views.team_list, name='team_list'),
     path('teams/<slug:slug>/', views.team_detail, name='team_detail'),
@@ -36,10 +32,13 @@ urlpatterns = [
     path('user/login/', views.user_login, name='login'),
     path('user/register/', views.user_register, name='register'),
     path('user/logout/', views.user_logout, name='logout'),
-=======
     # PLAYER
     path('player',views.player_list ,name='player_list'),
     path('player/<slug:slug>', views.player_detail, name='player_detail'),
+    # PLAYER
+    path('player',views.player_list ,name='player_list'),
+    path('player/<slug:slug>', views.player_detail, name='player_detail'),
+    path('player/add', views.player_add_ajax, name='player_add_ajax'),
     path('', homepage, name="homepage"),
     path('news/', news_list, name='news_list'),
     path('news/<int:news_id>/', news_detail, name='news_detail'),
@@ -53,7 +52,6 @@ urlpatterns = [
     path('team/add/', add_team, name='add_team'),
     path('team/edit/<slug:team_slug>/', edit_team, name='edit_team'),
     path('team/delete/<slug:team_slug>/', delete_team, name='delete_team'),
->>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
 ]
 
 if settings.DEBUG:

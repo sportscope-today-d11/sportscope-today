@@ -1,20 +1,14 @@
-from django.db import models
-
 # Create your models here.
 from unidecode import unidecode
 from django.db import models
 from django.utils.text import slugify
 import os
 import uuid
-from unidecode import unidecode
-<<<<<<< HEAD
-=======
 from django.templatetags.static import static
 from urllib.parse import urlparse
->>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
+from django.contrib.staticfiles import finders
 from django.contrib.auth.models import User
 
-# Create your models here.
 
 class Team(models.Model):
     slug = models.SlugField(unique=True, primary_key=True)
@@ -47,7 +41,6 @@ class Team(models.Model):
         # Jika ada uploaded image
         if self.image and hasattr(self.image, 'url'):
             return self.image.url
-<<<<<<< HEAD
 
         # cek logo di static/images/logo
         static_path = f"/static/images/logo/{self.slug}.png" if self.slug else None
@@ -126,7 +119,6 @@ class Match(models.Model):
 
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name} ({self.match_date})"
-=======
         
         # Coba cari di static folder
         if self.slug:
@@ -141,7 +133,6 @@ class Match(models.Model):
 
     def __str__(self):
         return self.name or "Unnamed Team"
->>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
 
 class Player(models.Model):
     slug = models.SlugField(unique=True, primary_key=True)
@@ -181,6 +172,7 @@ class Player(models.Model):
     standing_tackle = models.PositiveIntegerField(null=True, blank=True)
     sliding_tackle = models.PositiveIntegerField(null=True, blank=True)
     likes = models.PositiveIntegerField(default=0)
+    image = models.ImageField(upload_to="players/", null=True, blank=True)
 
     # override fungsi save agar membuat slug otomatis dari nama pemain
     def save(self, *args, **kwargs):
@@ -188,11 +180,9 @@ class Player(models.Model):
             self.slug = slugify(unidecode(self.name))
         super().save(*args, **kwargs)
 
-<<<<<<< HEAD
     def __str__(self):
         return self.name or "Unnamed Player"
 
-=======
     @property
     def image_url(self):
         if self.image:
@@ -205,6 +195,24 @@ class Player(models.Model):
         
         # Fallback ke default
         return "/static/images/player_pictures/default.png"
+    @property
+    def image_url(self):
+        img = getattr(self, "image", None)
+        if img:
+            try:
+                return img.url
+            except Exception:
+                pass
+
+        # Use staticfiles finders to locate a matching file by slug
+        if self.slug:
+            for ext in (".png", ".jpg", ".jpeg", ".webp"):
+                rel = f"images/player_pictures/{self.slug}{ext}"
+                if finders.find(rel):
+                    return static(rel)
+
+        # Default placeholder
+        return static("images/player_pictures/default.png")
 
     def __str__(self):
         return self.name or "Unnamed Player"
@@ -258,27 +266,18 @@ class News(models.Model):
         else:
             return static(self.thumbnail)
         
->>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
 class Person(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
         ('user', 'User'),
     ]
-<<<<<<< HEAD
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-=======
-
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
->>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"
 
-<<<<<<< HEAD
     def is_admin(self):
         return self.role == 'admin'
 
@@ -288,7 +287,7 @@ class Person(models.Model):
             return cls.objects.get(user=user).role
         except cls.DoesNotExist:
             return 'user'
-=======
+          
 class Match(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     season = models.CharField(max_length=20)
@@ -324,4 +323,4 @@ class Match(models.Model):
 
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name} ({self.match_date})"
->>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
+
