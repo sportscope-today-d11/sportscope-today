@@ -32,6 +32,18 @@
     .menu-link:hover::after {
       width: 100%;
     }
+    
+    /* Offset scroll - Desktop */
+    section[id] {
+      scroll-margin-top: 110px;
+    }
+    
+    /* Offset scroll - Mobile (navbar lebih pendek) */
+    @media (max-width: 768px) {
+      section[id] {
+        scroll-margin-top: 40px;
+      }
+  }
   </style>
 </head>
 
@@ -96,11 +108,13 @@
 
     <!-- Submenu -->
     <div class="hidden md:flex bg-[#031a42] border-t border-[#FFD700]/20 text-sm font-medium px-8 py-2 overflow-x-auto space-x-6 whitespace-nowrap">
-      <a href="#" class="hover:text-[#FFD700]">Transfer</a>
-      <a href="#" class="hover:text-[#FFD700]">Injury Update</a>
-      <a href="#" class="hover:text-[#FFD700]">Match Result</a>
-      <a href="#" class="hover:text-[#FFD700]">Manager News</a>
-      <a href="#" class="hover:text-[#FFD700]">Thoughts</a>
+      <a href="{% url 'main:homepage' %}#transfer" class="py-2.5 hover:text-[#FFD700] transition text-sm">Transfer</a>
+      <a href="{% url 'main:homepage' %}#injury-update" class="py-2.5 hover:text-[#FFD700] transition text-sm">Injury Update</a>
+      <a href="{% url 'main:homepage' %}#match-result" class="py-2.5 hover:text-[#FFD700] transition text-sm">Match Result</a>
+      <a href="{% url 'main:homepage' %}#manager-news" class="py-2.5 hover:text-[#FFD700] transition text-sm">Manager News</a>
+      <a href="{% url 'main:homepage' %}#thoughts" class="py-2.5 hover:text-[#FFD700] transition text-sm">Thoughts</a>
+      <a href="{% url 'main:homepage' %}#statistics" class="py-2.5 hover:text-[#FFD700] transition text-sm">Statistics</a>
+      <a href="{% url 'main:homepage' %}#hits" class="py-2.5 hover:text-[#FFD700] transition text-sm">Hits</a>
     </div>
   </nav>
 
@@ -137,11 +151,11 @@
 
     <!-- Submenu Items -->
     <div class="flex flex-col py-4 px-6 space-y-1">
-      <a href="#" class="py-2.5 hover:text-[#FFD700] transition text-sm">Transfer</a>
-      <a href="#" class="py-2.5 hover:text-[#FFD700] transition text-sm">Injury Update</a>
-      <a href="#" class="py-2.5 hover:text-[#FFD700] transition text-sm">Match Result</a>
-      <a href="#" class="py-2.5 hover:text-[#FFD700] transition text-sm">Manager News</a>
-      <a href="#" class="py-2.5 hover:text-[#FFD700] transition text-sm">Thoughts</a>
+      <a href="{% url 'main:homepage' %}#transfer" class="py-2.5 hover:text-[#FFD700] transition text-sm">Transfer</a>
+      <a href="{% url 'main:homepage' %}#injury-update" class="py-2.5 hover:text-[#FFD700] transition text-sm">Injury Update</a>
+      <a href="{% url 'main:homepage' %}#match-result" class="py-2.5 hover:text-[#FFD700] transition text-sm">Match Result</a>
+      <a href="{% url 'main:homepage' %}#manager-news" class="py-2.5 hover:text-[#FFD700] transition text-sm">Manager News</a>
+      <a href="{% url 'main:homepage' %}#thoughts" class="py-2.5 hover:text-[#FFD700] transition text-sm">Thoughts</a>
     </div>
 
     <!-- Bottom Section -->

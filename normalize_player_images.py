@@ -9,7 +9,7 @@ django.setup()
 
 from main.models import Team, Player, Match, News  # pastiin ini app lu
 
-base_path = Path("dataset/json")
+base_path = Path("main/fixtures")
 
 # ---------------------- TEAMS ----------------------
 with open(base_path / "team_stats.json", "r", encoding="utf-8") as f:
