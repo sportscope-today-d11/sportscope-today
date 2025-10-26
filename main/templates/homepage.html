@@ -15,7 +15,6 @@
 
     {% if hero_main %}
     <div class="grid md:grid-cols-12 gap-6">
-
       <!-- Left Column -->
       <div class="hidden md:flex flex-col gap-4 md:col-span-3 overflow-y-auto max-h-[800px] pr-2">
         {% for news in left_news %}
@@ -30,7 +29,6 @@
 
       <!-- Center (Hero + 2 mids below) -->
       <div class="md:col-span-6 flex flex-col gap-6 pr-2">
-        <!-- Hero utama -->
         <a href="{% url 'main:news_detail' hero_main.id %}" class="block group">
           <img src="{{ hero_main.thumbnail_url }}" alt="{{ hero_main.title }}" class="w-full h-80 object-cover shadow">
           <div class="mt-3">
@@ -45,7 +43,6 @@
           </div>
         </a>
 
-        <!-- Dua berita bawah -->
         <div class="grid sm:grid-cols-2 gap-4 border-t border-gray-200 pt-4">
           {% for news in hero_bottom %}
           <a href="{% url 'main:news_detail' news.id %}" class="block group">
@@ -90,11 +87,9 @@
   <section id="{{ category|slugify }}" class="max-w-7xl mx-auto px-8 py-10 border-b border-gray-300">
     <h2 class="text-2xl font-bold text-[#c70000] mb-6 border-b border-gray-200 pb-2">{{ category }}</h2>
 
-    <!-- ubah dari 3 kolom jadi 4 -->
     <div class="grid md:grid-cols-4 sm:grid-cols-2 gap-5">
       {% for news in news_list %}
       <a href="{% url 'main:news_detail' news.id %}" class="block group">
-        <!-- kecilin dikit tinggi image -->
         <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="w-full h-36 object-cover mb-3">
         
         <h3 class="text-m font-[Merriweather] font-bold leading-snug group-hover:underline">
@@ -110,56 +105,273 @@
   </section>
   {% endfor %}
 
-
-
   <!-- ===== PREMIER LEAGUE TABLE ===== -->
-  <section id="statistics" class="max-w-6xl mx-auto px-4 py-10">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-2xl font-bold text-[#052962]">Premier League Table</h2>
-      <div>
-        <button class="px-3 py-1 bg-[#052962] text-white text-sm rounded hover:bg-[#c70000]" onclick="filterTeams(10)">Top 10</button>
-        <button class="px-3 py-1 bg-gray-200 text-sm rounded ml-2 hover:bg-gray-300" onclick="filterTeams(5)">Top 5</button>
+  <section id="statistics" class="max-w-7xl mx-auto px-8 py-10 border-b border-gray-300">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-2xl font-bold border-l-4 border-[#052962] pl-3 font-[Merriweather]">
+        Premier League Table
+      </h2>
+      
+      {% if not user.is_authenticated or user.person.role != 'admin' %}
+      <div class="relative">
+        <button id="filterDropdownBtn" class="px-4 py-2 bg-[#052962] text-white text-sm font-semibold rounded hover:bg-[#c70000] transition-colors flex items-center gap-2">
+          <span id="filterText">Show All</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        
+        <div id="filterDropdown" class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded shadow-lg z-10">
+          <button onclick="filterTeams('all')" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors font-medium">
+            Show All
+          </button>
+          <button onclick="filterTeams(10)" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors font-medium border-t border-gray-200">
+            Top 10
+          </button>
+          <button onclick="filterTeams(5)" class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors font-medium border-t border-gray-200">
+            Top 5
+          </button>
+        </div>
       </div>
+      {% endif %}
     </div>
 
-    <div class="overflow-x-auto">
-      <table id="teamTable" class="min-w-full bg-white border rounded-lg overflow-hidden">
-        <thead class="bg-[#052962] text-white text-sm">
-          <tr>
-            <th class="py-2 px-4 text-left">#</th>
-            <th class="py-2 px-4 text-left">Team</th>
-            <th class="py-2 px-4">Goals</th>
-            <th class="py-2 px-4">Assists</th>
-            <th class="py-2 px-4">Yellows</th>
-            <th class="py-2 px-4">Reds</th>
-            <th class="py-2 px-4">Possession (%)</th>
+    <div class="overflow-x-auto bg-white border border-gray-300 shadow-sm">
+      <table id="teamTable" class="min-w-full font-[Lato]">
+        <thead class="bg-[#052962] text-white">
+          <tr class="border-b-2 border-gray-400">
+            <th class="py-4 px-6 text-left font-bold text-sm">#</th>
+            <th class="py-4 px-6 text-left font-bold text-sm">Team</th>
+            <th class="py-4 px-6 text-center font-bold text-sm">Goals</th>
+            <th class="py-4 px-6 text-center font-bold text-sm">Assists</th>
+            <th class="py-4 px-6 text-center font-bold text-sm">Yellows</th>
+            <th class="py-4 px-6 text-center font-bold text-sm">Reds</th>
+            <th class="py-4 px-6 text-center font-bold text-sm">Possession (%)</th>
+            
+            {% if user.is_authenticated and user.person.role == 'admin' %}
+            <th class="py-4 px-6 text-center font-bold text-sm">Actions</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody class="text-sm text-gray-800">
           {% for team in teams %}
-          <tr class="border-b hover:bg-gray-100">
-            <td class="py-2 px-4">{{ forloop.counter }}</td>
-            <td class="flex items-center gap-2 py-2 px-4">
-              <img src="{% static 'images/logo/' %}{{ team.slug }}.png" alt="{{ team.name }}" class="w-6 h-6">
-              {{ team.name }}
+          <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+            <td class="py-4 px-6 font-semibold text-gray-600">{{ forloop.counter }}</td>
+            <td class="py-4 px-6">
+              <div class="flex items-center gap-3">
+                <img src="{{ team.image_url }}" 
+                    alt="{{ team.name }}" 
+                    class="w-8 h-8 object-contain">
+                <span class="font-semibold text-[#052962]">{{ team.name }}</span>
+              </div>
             </td>
-            <td class="text-center">{{ team.goals }}</td>
-            <td class="text-center">{{ team.assists }}</td>
-            <td class="text-center">{{ team.yellows }}</td>
-            <td class="text-center">{{ team.reds }}</td>
-            <td class="text-center">{{ team.possession }}</td>
+            <td class="py-4 px-6 text-center font-medium">{{ team.goals }}</td>
+            <td class="py-4 px-6 text-center font-medium">{{ team.assists }}</td>
+            <td class="py-4 px-6 text-center font-medium">{{ team.yellows }}</td>
+            <td class="py-4 px-6 text-center font-medium">{{ team.reds }}</td>
+            <td class="py-4 px-6 text-center font-medium">{{ team.possession }}</td>
+            
+            {% if user.is_authenticated and user.person.role == 'admin' %}
+            <td class="py-4 px-6">
+              <div class="flex items-center justify-center gap-2">
+                <button onclick="editTeam('{{ team.slug }}', '{{ team.name }}', {{ team.goals }}, {{ team.assists }}, {{ team.yellows }}, {{ team.reds }}, {{ team.possession }})" 
+                        class="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors" 
+                        title="Edit Team">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button onclick="deleteTeam('{{ team.slug }}', '{{ team.name }}')" 
+                        class="p-2 text-red-600 hover:bg-red-50 rounded transition-colors" 
+                        title="Delete Team">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+            {% endif %}
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+
+    <!-- Add Team Button (Admin Only) - FIXED STYLING -->
+    {% if user.is_authenticated and user.person.role == 'admin' %}
+    <div class="mt-6">
+      <button onclick="openAddTeamModal()" 
+              class="w-full py-4 bg-white border-2 border-gray-300 rounded-lg text-gray-700 hover:border-[#052962] hover:text-[#052962] hover:shadow-inner transition-all flex items-center justify-center gap-2 font-semibold shadow-sm active:shadow-inner">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span>Add New Team</span>
+      </button>
+    </div>
+    {% endif %}
   </section>
+
+  <!-- Team Modal (Add/Edit) - FIXED DENGAN IMAGE UPLOAD -->
+  {% if user.is_authenticated and user.person.role == 'admin' %}
+  <div id="teamModal" class="hidden fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeTeamModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition z-10">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <div class="p-8">
+        <h2 id="modalTitle" class="text-2xl font-bold text-[#052962] mb-6 font-[Merriweather]">Add New Team</h2>
+
+        <div id="teamAlert" class="hidden mb-4"></div>
+
+        <form id="teamForm" class="space-y-5" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" id="teamSlug" name="team_slug">
+
+          <!-- Team Name -->
+          <div>
+            <label for="teamName" class="block text-sm font-semibold text-gray-700 mb-2">
+              Team Name <span class="text-red-500">*</span>
+            </label>
+            <input type="text" 
+                  id="teamName" 
+                  name="name" 
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                  placeholder="Enter team name" 
+                  required>
+            <p id="teamName-error" class="text-red-500 text-xs mt-1.5 hidden"></p>
+            <p class="text-xs text-gray-500 mt-1">Slug akan dibuat otomatis dari nama tim</p>
+          </div>
+
+          <!-- Image Upload (hanya saat Add) -->
+          <div id="imageUploadSection">
+            <label for="teamImage" class="block text-sm font-semibold text-gray-700 mb-2">
+              Team Logo
+            </label>
+            <div class="mt-1 flex items-center gap-4">
+              <div id="imagePreview" class="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <input type="file" 
+                      id="teamImage" 
+                      name="image" 
+                      accept="image/*"
+                      class="hidden">
+                <button type="button" 
+                        onclick="document.getElementById('teamImage').click()"
+                        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-medium">
+                  Choose File
+                </button>
+                <p class="text-xs text-gray-500 mt-2">PNG, JPG or WEBP (MAX. 2MB)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats Row 1 -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="teamGoals" class="block text-sm font-semibold text-gray-700 mb-2">
+                Goals <span class="text-red-500">*</span>
+              </label>
+              <input type="number" 
+                    id="teamGoals" 
+                    name="goals" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                    placeholder="0" 
+                    min="0"
+                    required>
+            </div>
+
+            <div>
+              <label for="teamAssists" class="block text-sm font-semibold text-gray-700 mb-2">
+                Assists <span class="text-red-500">*</span>
+              </label>
+              <input type="number" 
+                    id="teamAssists" 
+                    name="assists" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                    placeholder="0" 
+                    min="0"
+                    required>
+            </div>
+          </div>
+
+          <!-- Stats Row 2 -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="teamYellows" class="block text-sm font-semibold text-gray-700 mb-2">
+                Yellow Cards <span class="text-red-500">*</span>
+              </label>
+              <input type="number" 
+                    id="teamYellows" 
+                    name="yellows" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                    placeholder="0" 
+                    min="0"
+                    required>
+            </div>
+
+            <div>
+              <label for="teamReds" class="block text-sm font-semibold text-gray-700 mb-2">
+                Red Cards <span class="text-red-500">*</span>
+              </label>
+              <input type="number" 
+                    id="teamReds" 
+                    name="reds" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                    placeholder="0" 
+                    min="0"
+                    required>
+            </div>
+          </div>
+
+          <!-- Possession -->
+          <div>
+            <label for="teamPossession" class="block text-sm font-semibold text-gray-700 mb-2">
+              Possession (%) <span class="text-red-500">*</span>
+            </label>
+            <input type="number" 
+                  id="teamPossession" 
+                  name="possession" 
+                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                  placeholder="50.0" 
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  required>
+            <p class="text-xs text-gray-500 mt-1">Enter value between 0-100</p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3 pt-4">
+            <button type="submit"
+                    id="submitBtn"
+                    class="flex-1 text-white py-3.5 rounded-lg font-semibold transition-all duration-300 text-base shadow-lg hover:shadow-xl"
+                    style="background: linear-gradient(135deg, #052962 0%, #1e3a8a 100%);">
+              <span id="submitBtnText">Add Team</span>
+            </button>
+            <button type="button"
+                    onclick="closeTeamModal()"
+                    class="px-6 py-3.5 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   <!-- ===== TOP 10 MOST LOVED PLAYERS ===== -->
   <section id="hits" class="max-w-6xl mx-auto px-4 py-10">
     <h2 class="text-2xl font-bold text-[#052962] mb-8">Top 10 Most Loved Players All Time</h2>
 
-    <!-- TOP 3 Podium (Smaller) -->
+    <!-- TOP 3 Podium -->
     <div class="flex flex-col items-center gap-6 sm:flex-row sm:justify-center sm:items-end mb-10">
       {% with first=top_players.0 second=top_players.1 third=top_players.2 %}
       {% if first %}
@@ -201,40 +413,255 @@
       {% endwith %}
     </div>
 
-      <!-- 4–10 -->
-      <div class="divide-y divide-gray-200 border-t border-b">
+    <!-- 4–10 -->
+    <div class="divide-y divide-gray-200 border-t border-b">
       {% for player in top_players|slice:"3:" %}
       <div class="flex items-center justify-between py-3 px-2 hover:bg-gray-50 transition">
-          <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4">
           <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100">
-              <!-- Ganti inisial dengan gambar pemain -->
-              <img src="{% static 'images/player_pictures/' %}{{ player.slug }}.png" 
-                  alt="{{ player.name }}" class="w-8 h-8 object-contain rounded-full">
+            <img src="{% static 'images/player_pictures/' %}{{ player.slug }}.png" 
+                alt="{{ player.name }}" class="w-8 h-8 object-contain rounded-full">
           </div>
           <div>
-              <p class="font-semibold text-[#052962]">{{ player.name }}</p>
-              <p class="text-xs text-gray-600">{{ player.national_team }}</p>
+            <p class="font-semibold text-[#052962]">{{ player.name }}</p>
+            <p class="text-xs text-gray-600">{{ player.national_team }}</p>
           </div>
-          </div>
-          <p class="text-gray-600 font-medium flex items-center gap-1">
+        </div>
+        <p class="text-gray-600 font-medium flex items-center gap-1">
           ❤️ <span>{{ player.likes|intcomma }}</span>
-          </p>
+        </p>
       </div>
       {% endfor %}
-      </div>
+    </div>
   </section>
-
 
 </main>
 
-<!-- ===== JS FILTER TABLE ===== -->
 <script>
+// Filter Teams Function
 function filterTeams(limit) {
   const rows = document.querySelectorAll("#teamTable tbody tr");
-  rows.forEach((row, idx) => {
-    row.style.display = idx < limit ? "" : "none";
+  const filterText = document.getElementById('filterText');
+  
+  if (limit === 'all') {
+    rows.forEach((row) => {
+      row.style.display = "";
+    });
+    if (filterText) filterText.textContent = 'Show All';
+  } else {
+    rows.forEach((row, idx) => {
+      row.style.display = idx < limit ? "" : "none";
+    });
+    if (filterText) filterText.textContent = `Top ${limit}`;
+  }
+  
+  const dropdown = document.getElementById('filterDropdown');
+  if (dropdown) dropdown.classList.add('hidden');
+}
+
+// Dropdown Toggle
+const filterBtn = document.getElementById('filterDropdownBtn');
+const filterDropdown = document.getElementById('filterDropdown');
+
+if (filterBtn && filterDropdown) {
+  filterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    filterDropdown.classList.toggle('hidden');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!filterBtn.contains(e.target) && !filterDropdown.contains(e.target)) {
+      filterDropdown.classList.add('hidden');
+    }
+  });
+}
+
+// Image Preview
+const imageInput = document.getElementById('teamImage');
+if (imageInput) {
+  imageInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('imagePreview');
+    
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-contain">`;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+// Modal Functions
+function openAddTeamModal() {
+  document.getElementById('teamModal').classList.remove('hidden');
+  document.getElementById('modalTitle').textContent = 'Add New Team';
+  document.getElementById('submitBtnText').textContent = 'Add Team';
+  document.getElementById('teamForm').reset();
+  document.getElementById('teamSlug').value = '';
+  
+  // Show image upload section
+  document.getElementById('imageUploadSection').style.display = 'block';
+  
+  // Reset image preview
+  const preview = document.getElementById('imagePreview');
+  preview.innerHTML = `
+    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+    </svg>
+  `;
+  
+  document.body.style.overflow = 'hidden';
+}
+
+function editTeam(slug, name, goals, assists, yellows, reds, possession) {
+  document.getElementById('teamModal').classList.remove('hidden');
+  document.getElementById('modalTitle').textContent = 'Edit Team';
+  document.getElementById('submitBtnText').textContent = 'Update Team';
+  
+  // Hide image upload section saat edit
+  document.getElementById('imageUploadSection').style.display = 'none';
+  
+  document.getElementById('teamSlug').value = slug;
+  document.getElementById('teamName').value = name;
+  document.getElementById('teamGoals').value = goals;
+  document.getElementById('teamAssists').value = assists;
+  document.getElementById('teamYellows').value = yellows;
+  document.getElementById('teamReds').value = reds;
+  document.getElementById('teamPossession').value = possession;
+  
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTeamModal() {
+  document.getElementById('teamModal').classList.add('hidden');
+  document.getElementById('teamForm').reset();
+  document.getElementById('teamAlert').classList.add('hidden');
+  document.body.style.overflow = 'auto';
+}
+
+function deleteTeam(slug, name) {
+  if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+    return;
+  }
+  
+  console.log('Deleting team:', { slug, name });
+  console.log('URL:', `/team/delete/${slug}/`);
+  
+  fetch(`/team/delete/${slug}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': csrftoken,
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    console.log('Response status:', response.status);
+    return response.json();
+  })
+  .then(data => {
+    console.log('Response data:', data);
+    if (data.success) {
+      alert('Team deleted successfully!');
+      window.location.reload();
+    } else {
+      alert('Error: ' + (data.message || 'Failed to delete team'));
+    }
+  })
+  .catch(error => {
+    console.error('Delete error:', error);
+    alert('An error occurred while deleting the team. Check console for details.');
+  });
+}
+
+// Team Form Submit
+const teamForm = document.getElementById('teamForm');
+if (teamForm) {
+  teamForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    const teamSlug = document.getElementById('teamSlug').value;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>Processing...</span>';
+    
+    const formData = new FormData(teamForm);
+    const url = teamSlug ? `/team/edit/${teamSlug}/` : '/team/add/';
+    
+    console.log('Form submit:', {
+      isEdit: !!teamSlug,
+      slug: teamSlug,
+      url: url,
+      name: formData.get('name')
+    });
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': csrftoken,
+        }
+      });
+      
+      console.log('Response status:', response.status);
+      
+      const data = await response.json();
+      console.log('Response data:', data);
+      
+      if (data.success) {
+        showTeamAlert('success', data.message || 'Team saved successfully!');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        showTeamAlert('error', data.message || 'Failed to save team');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    } catch (error) {
+      console.error('Form submit error:', error);
+      showTeamAlert('error', 'An error occurred. Please try again. Check console for details.');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+    }
+  });
+}
+
+function showTeamAlert(type, message) {
+  const alert = document.getElementById('teamAlert');
+  alert.classList.remove('hidden');
+  
+  if (type === 'success') {
+    alert.className = 'bg-green-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded-lg text-sm flex items-start gap-3 mb-4';
+    alert.innerHTML = `
+      <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+      </svg>
+      <span>${message}</span>
+    `;
+  } else {
+    alert.className = 'bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-3 mb-4';
+    alert.innerHTML = `
+      <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+      </svg>
+      <span>${message}</span>
+    `;
+  }
+}
+
+// Close modal when clicking outside
+const teamModal = document.getElementById('teamModal');
+if (teamModal) {
+  teamModal.addEventListener('click', (e) => {
+    if (e.target === teamModal) {
+      closeTeamModal();
+    }
   });
 }
 </script>
-
 {% endblock %}

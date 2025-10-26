@@ -17,7 +17,15 @@ urlpatterns = [
     path('user/login/', user_login, name='login'),
     path('user/register/', user_register, name='register'),
     path('user/logout/', user_logout, name='logout'),
+    path('user/ajax-login/', ajax_login, name='ajax_login'),
+    path('user/ajax-register/', ajax_register, name='ajax_register'),
+    
+    # Team CRUD (Admin only)
+    path('team/add/', add_team, name='add_team'),
+    path('team/edit/<slug:team_slug>/', edit_team, name='edit_team'),
+    path('team/delete/<slug:team_slug>/', delete_team, name='delete_team'),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
