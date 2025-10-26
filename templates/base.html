@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Sportscope Forum{% endblock %}</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    /* === GLOBAL === */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background-color: #f6f6f6;
+      font-family: 'Lato', sans-serif;
+      color: #121212;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* === HEADER === */
+    header {
+      background-color: #052962;
+      color: white;
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .site-title {
+      font-family: 'Merriweather', serif;
+      font-size: 1.9rem;
+      font-weight: 700;
+    }
+
+    nav a {
+      color: #fff;
+      margin-left: 22px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: opacity 0.2s ease;
+    }
+    nav a:hover { opacity: 0.8; }
+
+    /* === MAIN === */
+    main {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+      min-height: 70vh;
+    }
+
+    /* === FOOTER === */
+    footer {
+      background-color: #052962;
+      color: #fff;
+      text-align: center;
+      padding: 25px 10px;
+      font-size: 0.9rem;
+      margin-top: 60px;
+    }
+
+    footer a {
+      color: #dcdcdc;
+      text-decoration: underline;
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+  <header>
+    <h1 class="site-title">
+      <a href="{% url 'category_list' %}" style="color:white;">Sportscope</a>
+    </h1>
+    <nav>
+      <a href="{% url 'category_list' %}">Categories</a>
+      <a href="{% url 'all_threads' %}">All Threads</a>
+      <a href="#">Login</a>
+      <a href="#">Register</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Sportscope Forum — Inspired by <a href="https://www.theguardian.com/international" target="_blank">The Guardian</a>.</p>
+  </footer>
+</body>
+</html>

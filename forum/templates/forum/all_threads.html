@@ -1,15 +1,18 @@
-<h1>Semua Thread</h1>
+{% extends "forum/forum_base.html" %}
+{% block title %}All Threads | Sportscope{% endblock %}
+{% block content %}
+<h1 style="text-align:center;font-family:'Merriweather',serif;font-size:2.2rem;color:#052962;">All Threads</h1>
 
-{% for thread in threads %}
-<div class="thread-card">
-    <h2>{{ thread.title }}</h2>
-    <p>{{ thread.content|truncatewords:30 }}</p>
-    <p>Kategori: {{ thread.category.name }}</p>
-    <p>Oleh: {{ thread.author_name }}</p>
-    <p>Dibuat: {{ thread.created_at|date:"d M Y H:i" }}</p>
-    <a href="{% url 'thread_detail' thread.slug %}">Baca selengkapnya</a>
+<div style="max-width:900px;margin:40px auto;">
+  {% for thread in threads %}
+  <div style="background:white;border-radius:10px;padding:24px;margin-bottom:20px;box-shadow:0 3px 10px rgba(0,0,0,0.06);">
+    <h2 style="font-family:'Merriweather',serif;color:#052962;"><a href="{% url 'thread_detail' thread.slug %}">{{ thread.title }}</a></h2>
+    <p style="color:#444;">{{ thread.content|truncatewords:30 }}</p>
+    <p style="font-size:0.9rem;color:#666;">Category: {{ thread.category.name }} | Author: {{ thread.author_name }}</p>
+    <p style="font-size:0.85rem;color:#999;">{{ thread.created_at|date:"d M Y H:i" }}</p>
+  </div>
+  {% empty %}
+  <p style="text-align:center;">No threads yet.</p>
+  {% endfor %}
 </div>
-<hr>
-{% empty %}
-<p>Belum ada thread.</p>
-{% endfor %}
+{% endblock %}

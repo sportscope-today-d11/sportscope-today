@@ -1,0 +1,19 @@
+<nav style="
+  background-color:#052962;
+  color:white;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 40px;
+  font-family:'Merriweather',serif;">
+  
+  <a href="{% url 'forum:all_threads' %}" style="text-decoration:none;color:white;font-weight:bold;font-size:1.1rem;">
+    Sportscope Forum
+  </a>
+
+  <div style="display:flex;gap:20px;">
+    <a href="{% url 'forum:all_threads' %}" style="color:white;text-decoration:none;">All Threads</a>
+    <a href="{% url 'forum:category_list' %}" style="color:white;text-decoration:none;">Categories</a>
+    <a href="#" style="color:white;text-decoration:none;">About</a>
+  </div>
+</nav>

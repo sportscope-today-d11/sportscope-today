@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Create New Thread</title>
+  <meta charset="UTF-8">
+  <title>Create New Thread | Sportscope Forum</title>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Lato&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
+      font-family: 'Lato', sans-serif;
+      background-color: #f6f6f6;
       margin: 0;
       padding: 0;
       display: flex;
@@ -16,18 +18,21 @@
 
     .container {
       background-color: #ffffff;
-      padding: 30px;
-      margin-top: 50px;
+      padding: 40px;
+      margin-top: 60px;
       border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      width: 400px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      width: 420px;
+      border-top: 6px solid #052962;
     }
 
     h1 {
       text-align: center;
-      color: #333333;
-      margin-bottom: 20px;
+      color: #052962;
+      margin-bottom: 30px;
       font-family: 'Merriweather', serif;
+      font-size: 1.8rem;
+      line-height: 1.3;
     }
 
     form {
@@ -37,54 +42,76 @@
 
     input[type="text"],
     textarea {
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #cccccc;
+      padding: 12px;
+      margin-bottom: 18px;
+      border: 1px solid #d1d1d1;
       border-radius: 6px;
-      font-size: 14px;
-      resize: vertical;
+      font-size: 15px;
+      font-family: 'Lato', sans-serif;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: #052962;
+      box-shadow: 0 0 4px rgba(5,41,98,0.3);
+      outline: none;
     }
 
     button {
       padding: 12px;
-      background-color: #007BFF; /* biru */
+      background-color: #052962;
       color: white;
       border: none;
       border-radius: 6px;
       font-size: 16px;
+      font-family: 'Lato', sans-serif;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      font-weight: bold;
+      transition: background-color 0.3s ease, transform 0.2s ease;
     }
 
     button:hover {
-      background-color: #0056b3; /* biru gelap saat hover */
+      background-color: #001f4d;
+      transform: translateY(-1px);
     }
 
     a {
       display: block;
       text-align: center;
-      margin-top: 15px;
+      margin-top: 20px;
       text-decoration: none;
-      color: #555555;
-      font-size: 14px;
+      color: #052962;
+      font-weight: bold;
+      transition: color 0.3s ease;
     }
 
     a:hover {
-      color: #000000;
+      color: #ffce00;
+    }
+
+    /* Tambahan: efek editorial garis atas */
+    .headline-bar {
+      width: 100%;
+      height: 6px;
+      background-color: #ffce00;
+      border-radius: 3px 3px 0 0;
+      margin-bottom: 25px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Create New Thread in {{ category.name }}</h1>
+    <div class="headline-bar"></div>
+    <h1>Create a New Thread in {{ category.name }}</h1>
 
     <form method="post">
       {% csrf_token %}
       {{ form.as_p }}
-      <button type="submit">Create</button>
+      <button type="submit">Publish Thread</button>
     </form>
 
-    <a href="{% url 'thread_list' category.slug %}">Back to Threads</a>
+    <a href="{% url 'forum:thread_list' category.slug %}">← Back to Threads</a>
   </div>
 </body>
 </html>

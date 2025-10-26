@@ -1,63 +1,61 @@
-{% extends 'base.html' %}
-<style>
-    body {
-      font-family: 'Merriweather', sans-serif;
-      background-color: #f7f7f7;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-    }
-    .category {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #fafafa;
-      border: 1px solid #ddd;
-      padding: 10px 15px;
-      margin-top: 10px;
-      border-radius: 8px;
-    }
-    a.button {
-      background-color: #007bff;
-      color: white;
-      padding: 6px 12px;
-      border-radius: 5px;
-      text-decoration: none;
-    }
-    a.button:hover {
-      background-color: #0056b3;
-    }
-    .add-btn {
-      display: inline-block;
-      margin-bottom: 15px;
-    }
-  </style>
-{% block title %}Forum Categories{% endblock %}
-
+{% extends "forum/forum_base.html" %}
+{% block title %}Forum Categories | Sportscope{% endblock %}
 {% block content %}
-  <div class="container">
-    <h2>Forum Categories</h2>
 
-    <a href="{% url 'create_category' %}" class="button add-btn">+ Add Category</a>
+<header style="background-color:#052962;color:white;text-align:center;padding:40px 20px;font-family:'Merriweather',serif;">
+  <h1 style="margin:0;font-size:2.4rem;">Forum Categories</h1>
+</header>
 
-    {% for category in categories %}
-      <div class="category" style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; border: 1px solid #ddd; padding: 10px 15px; margin-top: 10px; border-radius: 8px;">
-        <a href="{% url 'thread_list' category.slug %}">{{ category.name }}</a>
-        <a href="{% url 'create_thread' category.slug %}" class="button">Create Thread</a>
-      </div>
-    {% empty %}
-      <p>No categories yet.</p>
-    {% endfor %}
-  </div>
+<a href="{% url 'forum:create_category' %}" style="display:block;text-align:center;background-color:#052962;color:white;padding:10px 20px;border-radius:6px;width:fit-content;margin:30px auto;text-decoration:none;font-weight:bold;">+ Add Category</a>
+
+<!-- Container to hold categories -->
+<div id="categories-container"
+     style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;max-width:1100px;margin:0 auto;padding:20px;">
+  <p style="text-align:center;">Loading categories...</p>
+</div>
+
+<!-- AJAX Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  fetch("{% url 'forum:category_list_json' %}")
+    .then(response => response.json())
+    .then(data => {
+      const container = document.getElementById("categories-container");
+      container.innerHTML = ""; // clear loading message
+
+      if (data.categories.length === 0) {
+        container.innerHTML = "<p style='text-align:center;'>No categories yet.</p>";
+        return;
+      }
+
+      data.categories.forEach(category => {
+        const card = document.createElement("div");
+        card.style.cssText = `
+          background:white;
+          border-radius:10px;
+          box-shadow:0 4px 10px rgba(0,0,0,0.05);
+          padding:24px;
+        `;
+
+        card.innerHTML = `
+          <a href="${category.thread_list_url}"
+            style="font-family:'Merriweather',serif;font-size:1.3rem;color:#052962;text-decoration:none;font-weight:700;">
+            ${category.name}
+          </a>
+          ${category.description ? `<p style="color:#555;font-size:0.95rem;margin-top:10px;">${category.description}</p>` : ""}
+          <a href="${category.create_thread_url}"
+            style="display:inline-block;margin-top:10px;background-color:#052962;color:white;padding:8px 14px;border-radius:5px;text-decoration:none;">
+            Create Thread
+          </a>
+        `;
+        container.appendChild(card);
+      });
+    })
+    .catch(error => {
+      console.error("Error loading categories:", error);
+      document.getElementById("categories-container").innerHTML = "<p style='text-align:center;color:red;'>Failed to load categories.</p>";
+    });
+});
+</script>
+
 {% endblock %}
-

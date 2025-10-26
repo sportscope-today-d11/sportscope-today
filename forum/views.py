@@ -4,12 +4,29 @@ from forum.models import Category, Thread, Comment
 from forum.forms import ThreadForm, CommentForm, CategoryForm
 from django.contrib.auth.models import User
 from django.db.models import Q
-
+from django.http import JsonResponse
+from django.urls import reverse
 
 
 def category_list(request):
     categories = Category.objects.all()
     return render(request, 'forum/category_list.html', {'categories': categories})
+
+def category_list_json(request):
+    categories = Category.objects.all()
+    data = {
+        "categories": [
+            {
+                "id": category.id,
+                "name": category.name,
+                "slug": category.slug,
+                "thread_list_url": reverse("forum:thread_list", args=[category.slug]),
+                "create_thread_url": reverse("forum:create_thread", args=[category.slug]),
+            }
+            for category in categories
+        ]
+    }
+    return JsonResponse(data)
 
 def thread_list(request, category_slug):
     category = get_object_or_404(Category, slug=category_slug)
@@ -33,7 +50,7 @@ def thread_detail(request, slug):
             if parent_id:
                 comment.parent = Comment.objects.get(id=parent_id)
             comment.save()
-            return redirect('thread_detail', slug=thread.slug)
+            return redirect('forum:thread_detail', slug=thread.slug)
     else:
         comment_form = CommentForm()
     
@@ -57,7 +74,7 @@ def create_thread(request, category_slug):
             thread.author = dummy_user
             thread.category = category
             thread.save()
-            return redirect('thread_detail', slug=thread.slug)
+            return redirect('forum:thread_detail', slug=thread.slug)
     else:
         form = ThreadForm()
 
@@ -82,7 +99,7 @@ def create_category(request):
         form = CategoryForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('category_list')
+            return redirect('forum:category_list')
     else:
         form = CategoryForm()
     return render(request, 'forum/create_category.html', {'form': form})

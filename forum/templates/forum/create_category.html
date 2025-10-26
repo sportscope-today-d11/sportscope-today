@@ -1,17 +1,51 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Create Category</title>
-</head>
-<body>
-  <h2>Create New Category</h2>
+{% extends "forum/forum_base.html" %}
+{% block title %}Create New Category | Sportscope{% endblock %}
+{% block content %}
 
-  <form method="post">
+<header style="background-color:#052962;color:white;text-align:center;padding:40px 20px;font-family:'Merriweather',serif;">
+  <h1 style="margin:0;font-size:2.4rem;">Create New Category</h1>
+</header>
+
+<section style="max-width:700px;margin:40px auto;background:white;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:40px 50px;font-family:'Lato',sans-serif;">
+  <form method="post" style="display:flex;flex-direction:column;gap:20px;">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add Category</button>
+
+    {{ form.non_field_errors }}
+    
+    {% for field in form %}
+      <div style="display:flex;flex-direction:column;">
+        <label for="{{ field.id_for_label }}" style="font-weight:bold;color:#052962;font-family:'Merriweather',serif;margin-bottom:8px;">
+          {{ field.label }}
+        </label>
+        {{ field }}
+        {% if field.help_text %}
+          <small style="color:#666;">{{ field.help_text }}</small>
+        {% endif %}
+        {% for error in field.errors %}
+          <span style="color:red;font-size:0.9rem;">{{ error }}</span>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+    <button type="submit" style="
+      background-color:#052962;
+      color:white;
+      border:none;
+      padding:12px 20px;
+      font-size:1rem;
+      font-weight:bold;
+      border-radius:6px;
+      cursor:pointer;
+      transition:background-color 0.2s ease;">
+      Add Category
+    </button>
   </form>
 
-  <a href="{% url 'category_list' %}">Back to Categories</a>
-</body>
-</html>
+  <div style="text-align:center;margin-top:30px;">
+    <a href="{% url 'forum:category_list' %}" style="color:#052962;text-decoration:none;font-weight:bold;font-family:'Merriweather',serif;">
+      ← Back to Categories
+    </a>
+  </div>
+</section>
+
+{% endblock %}

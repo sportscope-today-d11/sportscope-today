@@ -1,19 +1,53 @@
-<div class="comment">
-  <strong>{{ comment.author.username }}</strong>
-  <p>{{ comment.content }}</p>
-  <small>{{ comment.created_at }}</small>
+<div class="comment-block" style="margin-top:20px;">
+  <div class="comment"
+       style="background-color:#ffffff;
+              border-left:4px solid #052962;
+              padding:15px 20px;
+              border-radius:6px;
+              box-shadow:0 2px 6px rgba(0,0,0,0.05);
+              margin-bottom:12px;">
 
-  <!-- reply form -->
-  <form method="post" style="margin-top: 5px;">
-    {% csrf_token %}
-    <input type="hidden" name="parent_id" value="{{ comment.id }}">
-    {{ comment_form.as_p }}
-    <button type="submit">Reply</button>
-  </form>
+    <strong style="font-family:'Merriweather',serif;
+                   color:#052962;
+                   font-size:1.05rem;">
+      {{ comment.author.username }}
+    </strong>
 
-  <!-- tampilkan replies -->
+    <p style="margin:8px 0 4px 0;
+              font-size:0.95rem;
+              line-height:1.6;
+              color:#222;">
+      {{ comment.content }}
+    </p>
+
+    <small style="color:#777;font-size:0.85rem;">
+      {{ comment.created_at }}
+    </small>
+
+    <!-- Reply form -->
+    <form method="post" style="margin-top:10px;">
+      {% csrf_token %}
+      <input type="hidden" name="parent_id" value="{{ comment.id }}">
+      <div style="margin-bottom:8px;">{{ comment_form.as_p }}</div>
+      <button type="submit"
+              style="background-color:#052962;
+                     color:white;
+                     border:none;
+                     padding:6px 12px;
+                     border-radius:5px;
+                     font-size:0.85rem;
+                     cursor:pointer;">
+        Reply
+      </button>
+    </form>
+  </div>
+
+  <!-- Nested replies -->
   {% for reply in comment.replies.all %}
-    <div class="reply" style="margin-left: 30px; border-left: 2px solid #ddd; padding-left: 10px;">
+    <div class="reply"
+         style="margin-left:40px;
+                border-left:2px solid #dcdcdc;
+                padding-left:18px;">
       {% include "forum/_comment.html" with comment=reply comment_form=comment_form %}
     </div>
   {% endfor %}

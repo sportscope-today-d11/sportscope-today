@@ -6,7 +6,7 @@ from forum.models import Category
 class ThreadForm(forms.ModelForm):
     class Meta:
         model = Thread
-        fields = ['category', 'title', 'content']
+        fields = ['title', 'content']
 
 class CategoryForm(forms.ModelForm):
     class Meta:
