@@ -172,7 +172,7 @@ class Player(models.Model):
     standing_tackle = models.PositiveIntegerField(null=True, blank=True)
     sliding_tackle = models.PositiveIntegerField(null=True, blank=True)
     likes = models.PositiveIntegerField(default=0)
-    image = models.ImageField(upload_to="players/", null=True, blank=True)
+    image = models.ImageField(upload_to="player_pictures/", null=True, blank=True)
 
     # override fungsi save agar membuat slug otomatis dari nama pemain
     def save(self, *args, **kwargs):

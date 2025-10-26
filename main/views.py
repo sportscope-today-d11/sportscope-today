@@ -240,33 +240,6 @@ def player_add_ajax(request):
         slug = f"{base}-{i}"
         i += 1
 
-    # helpers to coerce types safely
-    def to_int(v):
-        try:
-            if v is None:
-                return None
-            s = str(v).strip()
-            if s == '':
-                return None
-            return int(float(s))
-        except Exception:
-            return None
-
-    def to_float(v):
-        try:
-            if v is None:
-                return None
-            s = str(v).strip()
-            if s == '':
-                return None
-            return float(s)
-        except Exception:
-            return None
-
-    preferred_foot = (payload.get('preferred_foot') or '').strip()
-    if preferred_foot not in ('Left', 'Right'):
-        preferred_foot = None
-
     defaults = {
         'slug': slug,
         'name': name,
