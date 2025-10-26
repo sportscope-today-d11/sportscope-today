@@ -7,12 +7,12 @@
         {{ day.grouper|date:"j F Y" }}
       </h2>
 
-      {% regroup day.list by competition as league_groups %}
-      {% for league in league_groups %}
-        <div class="mb-3 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-          <div class="bg-[#F6F6F6] px-4 py-2 text-[#052962] font-semibold text-sm">
-            {{ league.grouper }}
-          </div>
+      {% regroup day.list by league as league_groups %}
+        {% for league in league_groups %}
+          <div class="mb-3 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+            <div class="bg-[#F6F6F6] px-4 py-2 text-[#052962] font-semibold text-sm">
+              {{ league.grouper }}
+            </div>
 
           {% for match in league.list %}
             <a href="{% url 'main:match_detail' match.id %}" 
@@ -21,10 +21,12 @@
               <div class="flex items-center space-x-3 text-gray-800">
                 <!-- HOME TEAM -->
                 <div class="flex items-center space-x-2">
-                  <img src="/static/images/logo/{{ match.home_team|slugify }}.png"
-                       alt="{{ match.home_team }} logo"
-                       class="w-6 h-6 object-contain" />
-                  <span class="font-medium text-sm md:text-base">{{ match.home_team }}</span>
+                  {% if match.home_team.image_url %}
+                    <img src="{{ match.home_team.image_url }}"
+                         alt="{{ match.home_team.name }} logo"
+                         class="w-6 h-6 object-contain" />
+                  {% endif %}
+                  <span class="font-medium text-sm md:text-base">{{ match.home_team.name }}</span>
                 </div>
 
                 <span class="font-semibold text-sm md:text-base">{{ match.home_score }}</span>
@@ -33,10 +35,12 @@
 
                 <!-- AWAY TEAM -->
                 <div class="flex items-center space-x-2">
-                  <img src="{% static 'images/logo/' %}{{ match.away_team|slugify }}.png"
-                       alt="{{ match.away_team }} logo"
-                       class="w-6 h-6 object-contain" />
-                  <span class="font-medium text-sm md:text-base">{{ match.away_team }}</span>
+                  {% if match.away_team.image_url %}
+                    <img src="{{ match.away_team.image_url }}"
+                         alt="{{ match.away_team.name }} logo"
+                         class="w-6 h-6 object-contain" />
+                  {% endif %}
+                  <span class="font-medium text-sm md:text-base">{{ match.away_team.name }}</span>
                 </div>
               </div>
 

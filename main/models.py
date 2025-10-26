@@ -31,15 +31,16 @@ class Team(models.Model):
     def image_url(self):
         if self.image:
             return self.image.url
-        static_path = f"/static/images/teams/{self.slug}.png" if self.slug else None
-        default_path = "/static/images/teams/default.png"
-        static_file = f"static/images/teams/{self.slug}.png" if self.slug else None
+
+        # cek logo di static/images/logo
+        static_path = f"/static/images/logo/{self.slug}.png" if self.slug else None
+        static_file = f"static/images/logo/{self.slug}.png" if self.slug else None
+
         if static_file and os.path.exists(static_file):
             return static_path
-        return default_path
 
-    def __str__(self):
-        return self.name or "Unnamed Team"
+        # kalau gak ada logo, gausah tampil apa-apa
+        return None
 
 class News(models.Model):
     CATEGORY_CHOICES = [

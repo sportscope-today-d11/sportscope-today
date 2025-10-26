@@ -13,7 +13,7 @@ urlpatterns = [
     # MATCH URLS
     path('matches/history/', views.match_history, name='match_history'),
     path('matches/<date>/', views.matches_by_date, name='matches_by_date'),
-    path('matches/<uuid:match_id>/', views.match_detail, name='match_detail'),
+    path('matches/detail/<uuid:match_id>/', views.match_detail, name='match_detail'),
 
     # ADMIN URLS
     path('admin/matches/', views.match_list_admin, name='admin_match_list'),

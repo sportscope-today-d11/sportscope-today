@@ -1,5 +1,11 @@
+import os
+import django
 import json
 from datetime import datetime
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "sportscope_today.settings")
+django.setup()
+
 from main.models import Team, Match
 
 # Path ke file JSON (ubah kalau folder kamu beda)
@@ -24,6 +30,9 @@ for item in data:
         home_team = Team.objects.get(slug=home_slug)
         away_team = Team.objects.get(slug=away_slug)
 
+        # Ambil league dari dataset, default ke Premier League kalau gak ada
+        league = item.get("League", "Premier League")
+
         # Buat atau skip kalau sudah ada match serupa
         match, created = Match.objects.get_or_create(
             season=item["Season"],
@@ -31,7 +40,7 @@ for item in data:
             home_team=home_team,
             away_team=away_team,
             defaults={
-                "league": "Premier League",
+                "league": league,  # <--- tambahan fix disini
                 "full_time_home_goals": item["FullTimeHomeGoals"],
                 "full_time_away_goals": item["FullTimeAwayGoals"],
                 "full_time_result": item["FullTimeResult"],
@@ -65,3 +74,4 @@ for item in data:
         print(f"❌ Error pada data {item}: {e}")
 
 print(f"\n✅ Selesai import. Tambah: {added}, Lewati: {skipped}")
+
