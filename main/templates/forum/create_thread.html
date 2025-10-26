@@ -1,7 +1,90 @@
-<h1>Create new thread in {{ category.name }}</h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create New Thread</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
 
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Create</button>
-</form>
+    .container {
+      background-color: #ffffff;
+      padding: 30px;
+      margin-top: 50px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      width: 400px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333333;
+      margin-bottom: 20px;
+      font-family: 'Merriweather', serif;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    input[type="text"],
+    textarea {
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #cccccc;
+      border-radius: 6px;
+      font-size: 14px;
+      resize: vertical;
+    }
+
+    button {
+      padding: 12px;
+      background-color: #007BFF; /* biru */
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3; /* biru gelap saat hover */
+    }
+
+    a {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      text-decoration: none;
+      color: #555555;
+      font-size: 14px;
+    }
+
+    a:hover {
+      color: #000000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Create New Thread in {{ category.name }}</h1>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Create</button>
+    </form>
+
+    <a href="{% url 'thread_list' category.slug %}">Back to Threads</a>
+  </div>
+</body>
+</html>

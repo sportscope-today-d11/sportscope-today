@@ -1,8 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Category, Thread, Comment
-from .forms import ThreadForm, CommentForm
+from .forms import ThreadForm, CommentForm, CategoryForm
 from django.contrib.auth.models import User
+from django.db.models import Q
+
 
 
 def category_list(request):
@@ -62,3 +64,28 @@ def create_thread(request, category_slug):
         form = ThreadForm()
 
     return render(request, 'forum/create_thread.html', {'form': form, 'category': category})
+
+def all_threads(request):
+    category_slug = request.GET.get('category')  # Ambil slug dari query string
+    if category_slug:
+        threads = Thread.objects.filter(category__slug=category_slug).order_by('-created_at')
+    else:
+        threads = Thread.objects.all().order_by('-created_at')
+
+    categories = Category.objects.all()
+    return render(request, 'forum/all_threads.html', {
+        'threads': threads,
+        'categories': categories,
+        'selected_category': category_slug,
+    })
+
+def create_category(request):
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('category_list')
+    else:
+        form = CategoryForm()
+    return render(request, 'forum/create_category.html', {'form': form})
+

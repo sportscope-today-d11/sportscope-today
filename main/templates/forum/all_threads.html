@@ -1,0 +1,15 @@
+<h1>Semua Thread</h1>
+
+{% for thread in threads %}
+<div class="thread-card">
+    <h2>{{ thread.title }}</h2>
+    <p>{{ thread.content|truncatewords:30 }}</p>
+    <p>Kategori: {{ thread.category.name }}</p>
+    <p>Oleh: {{ thread.author_name }}</p>
+    <p>Dibuat: {{ thread.created_at|date:"d M Y H:i" }}</p>
+    <a href="{% url 'thread_detail' thread.slug %}">Baca selengkapnya</a>
+</div>
+<hr>
+{% empty %}
+<p>Belum ada thread.</p>
+{% endfor %}

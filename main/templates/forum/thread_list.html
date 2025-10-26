@@ -1,14 +1,107 @@
-<h1>{{ category.name }}</h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ category.name }} Threads</title>
+  <!-- ✅ Import Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Merriweather:wght@700&display=swap" rel="stylesheet">
 
-<a href="{% url 'create_thread' category.slug %}">+ Create Thread</a>
+  <style>
+    body {
+      font-family: 'Lato', sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-family: 'Merriweather', serif;
+      font-weight: 700;
+    }
+    .thread {
+      background-color: #fafafa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+      transition: box-shadow 0.2s;
+    }
+    .thread:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .thread a.title {
+      text-decoration: none;
+      color: #007bff;
+      font-weight: 700;
+      font-size: 20px;
+      font-family: 'Merriweather', serif;
+    }
+    .thread small {
+      display: block;
+      color: #888;
+      margin-top: 5px;
+      font-size: 13px;
+    }
+    .thread p {
+      color: #444;
+      margin-top: 8px;
+      font-size: 15px;
+      font-family: 'Lato', sans-serif;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3; /* Maksimal 3 baris */
+      -webkit-box-orient: vertical;
+    }
+    .button {
+      background-color: #007bff;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-family: 'Lato', sans-serif;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+    .top-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    .read-more {
+      font-size: 13px;
+      text-decoration: none;
+      color: #007bff;
+      font-family: 'Lato', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>{{ category.name }} Threads</h1>
 
-<ul>
-  {% for thread in threads %}
-    <li>
-      <a href="{% url 'thread_detail' thread.slug %}">{{ thread.title }}</a> 
-      by {{ thread.author.username }}
-    </li>
-  {% empty %}
-    <li>No threads yet.</li>
-  {% endfor %}
-</ul>
+    <div class="top-buttons">
+      <a href="{% url 'category_list' %}" class="button">⬅ Back to Categories</a>
+    </div>
+
+    {% for thread in threads %}
+      <div class="thread">
+        <a href="{% url 'thread_detail' thread.slug %}" class="title">{{ thread.title }}</a>
+        <p>{{ thread.content|truncatechars:200 }}</p>
+        <a href="{% url 'thread_detail' thread.slug %}" class="read-more">Read more →</a>
+        <small>Created on {{ thread.created_at|date:"M d, Y H:i" }}</small>
+      </div>
+    {% empty %}
+      <p>No threads yet in this category. Be the first to post!</p>
+    {% endfor %}
+  </div>
+</body>
+</html>

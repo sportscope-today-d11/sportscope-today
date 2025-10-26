@@ -1,10 +1,17 @@
 from django import forms
 from .models import Thread, Comment
+from .models import Category
+
 
 class ThreadForm(forms.ModelForm):
     class Meta:
         model = Thread
-        fields = ['title', 'content']
+        fields = ['category', 'title', 'content']
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['name']
 
 class CommentForm(forms.ModelForm):
     class Meta:
