@@ -1,0 +1,57 @@
+{% load static %}
+
+{% regroup page_obj by match_date as date_groups %}
+  {% for day in date_groups %}
+    <div class="mb-10">
+      <h2 class="text-xl font-semibold text-[#052962] mb-4">
+        {{ day.grouper|date:"j F Y" }}
+      </h2>
+
+      {% regroup day.list by league as league_groups %}
+        {% for league in league_groups %}
+          <div class="mb-3 border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+            <div class="bg-[#F6F6F6] px-4 py-2 text-[#052962] font-semibold text-sm">
+              {{ league.grouper }}
+            </div>
+
+          {% for match in league.list %}
+            <a href="{% url 'main:match_detail' match.id %}" 
+               class="flex justify-between items-center px-4 py-3 bg-white border-t border-gray-100 hover:bg-gray-50 transition">
+
+              <div class="flex items-center space-x-3 text-gray-800">
+                <!-- HOME TEAM -->
+                <div class="flex items-center space-x-2">
+                  {% if match.home_team.image_url %}
+                    <img src="{{ match.home_team.image_url }}"
+                         alt="{{ match.home_team.name }} logo"
+                         class="w-6 h-6 object-contain" />
+                  {% endif %}
+                  <span class="font-medium text-sm md:text-base">{{ match.home_team.name }}</span>
+                </div>
+
+                <span class="font-semibold text-sm md:text-base">{{ match.home_score }}</span>
+                <span class="text-gray-500">-</span>
+                <span class="font-semibold text-sm md:text-base">{{ match.away_score }}</span>
+
+                <!-- AWAY TEAM -->
+                <div class="flex items-center space-x-2">
+                  {% if match.away_team.image_url %}
+                    <img src="{{ match.away_team.image_url }}"
+                         alt="{{ match.away_team.name }} logo"
+                         class="w-6 h-6 object-contain" />
+                  {% endif %}
+                  <span class="font-medium text-sm md:text-base">{{ match.away_team.name }}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <span class="text-gray-600 text-sm">{{ match.time|default:"-" }}</span>
+                <span class="text-green-600 text-sm font-medium">Detail ›</span>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+  
