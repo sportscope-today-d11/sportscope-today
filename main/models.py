@@ -3,6 +3,7 @@ from django.utils.text import slugify
 import os
 import uuid
 from unidecode import unidecode
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -61,6 +62,7 @@ class News(models.Model):
         default="https://akcdn.detik.net.id/community/media/visual/2020/02/25/3833496a-a1b8-428f-9202-79f8671928b7_169.jpeg?w=700&q=90",
         blank=True
     )
+    featured = models.BooleanField(default=False)
     
     category = models.CharField(
         max_length=50,
@@ -154,3 +156,26 @@ class Player(models.Model):
 
     def __str__(self):
         return self.name or "Unnamed Player"
+
+class Person(models.Model):
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('user', 'User'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} ({self.role})"
+
+    def is_admin(self):
+        return self.role == 'admin'
+
+    @classmethod
+    def get_user_role(cls, user):
+        try:
+            return cls.objects.get(user=user).role
+        except cls.DoesNotExist:
+            return 'user'
