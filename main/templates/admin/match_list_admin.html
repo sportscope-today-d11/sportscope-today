@@ -45,17 +45,37 @@
         {% for match in page_obj %}
         <tr class="border-t border-gray-100 hover:bg-gray-50">
           <td class="px-4 py-3">{{ match.match_date|date:"d M Y" }}</td>
-          <td class="px-4 py-3 flex items-center gap-2 font-medium text-gray-900">
-            <img src="{{ match.home_team.image_url }}" alt="{{ match.home_team.name }}" class="w-6 h-6 rounded-full">
-              {{ match.home_team.name }}
+          <td class="team-column">
+            {% if match.home_team.image_url %}
+              <img src="{{ match.home_team.image_url }}" alt="{{ match.home_team.name }}" class="w-6 h-6 rounded-full object-contain">
+            {% endif %}
+            <span class="font-medium text-gray-800">{{ match.home_team.name }}</span>
           </td>
-          <td class="px-4 py-3 flex items-center gap-2 font-medium text-gray-900">
-            <img src="{{ match.away_team.image_url }}" alt="{{ match.away_team.name }}" class="w-6 h-6 rounded-full">
-              {{ match.away_team.name }}
+          <td class="team-column away-team">
+            {% if match.away_team.image_url %}
+              <img src="{{ match.away_team.image_url }}" alt="{{ match.away_team.name }}" class="w-6 h-6 rounded-full object-contain">
+            {% endif %}
+            <span class="font-medium text-gray-800">{{ match.away_team.name }}</span>
           </td>
-          <td class="px-4 py-3 text-center font-semibold">{{ match.score_home }} - {{ match.score_away }}</td>
+          <td class="px-4 py-3 text-center font-semibold">
+            {% if match.full_time_home_goals == 0 and match.full_time_away_goals == 0 %}
+              -
+            {% else %}
+              {{ match.full_time_home_goals }} - {{ match.full_time_away_goals }}
+            {% endif %}
+          </td>
           <td class="px-4 py-3">{{ match.league }}</td>
-          <td class="px-4 py-3">{{ match.status }}</td>
+          <td class="px-4 py-3">
+            {% if match.full_time_result == 'H' %}
+              Home Win
+            {% elif match.full_time_result == 'A' %}
+              Away Win
+            {% elif match.full_time_result == 'D' %}
+              Draw
+            {% else %}
+              Pending
+            {% endif %}
+          </td>
           <td class="px-4 py-3 text-center space-x-2">
             <a href="{% url 'main:edit_match' match.id %}" 
                class="px-3 py-1 bg-[#052962] text-white rounded hover:bg-[#063b8b] transition text-xs">
