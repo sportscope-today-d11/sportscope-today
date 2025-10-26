@@ -6,6 +6,15 @@
   <h1 class="text-2xl font-bold text-gray-800">Latest News</h1>
 
   <div class="flex items-center gap-4">
+    <select id="category-filter" class="border border-gray-300 rounded px-3 py-2">
+      <option value="">All Categories</option>
+      <option value="Transfer">Transfer</option>
+      <option value="Injury Update">Injury Update</option>
+      <option value="Match Result">Match Result</option>
+      <option value="Manager News">Manager News</option>
+      <option value="Thoughts">Thoughts</option>
+    </select>
+    
     <select id="sort" class="border border-gray-300 rounded px-3 py-2">
       <option value="latest">Latest to Oldest</option>
       <option value="oldest">Oldest to Latest</option>
@@ -24,70 +33,179 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const newsContainer = document.getElementById("news-container");
-  const sortSelect = document.getElementById("sort");
-  const bookmarkToggle = document.getElementById("toggle-bookmark-view");
-  const categoryLinks = document.querySelectorAll("nav a[href*='?category=']");
-  let showingBookmarks = false; // state
+document.addEventListener("DOMContentLoaded", function () {
+  const categoryFilter = document.getElementById("category-filter"); // kalau ada
+  const sortSelect = document.getElementById("sort"); // sesuai template kamu
+  const toggleBookmarkViewBtn = document.getElementById("toggle-bookmark-view");
 
-  async function loadNews(params = {}) {
-    const url = new URL("{% url 'main:news_list_ajax' %}", window.location.origin);
-    if (showingBookmarks) url.searchParams.append("bookmarked", "1");
+  // url AJAX (pakai reverse dari Django)
+  const ajaxUrl = "{% url 'main:news_list_ajax' %}";
 
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) url.searchParams.append(key, value);
-    });
-
-    const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
-    const data = await res.json();
-
-    newsContainer.innerHTML = data.html;
-    attachNewsEvents();
-  }
-
-  // Re-attach events setelah konten berubah
-  function attachNewsEvents() {
-    document.querySelectorAll(".bookmark-news").forEach(button => {
-      button.addEventListener("click", async function() {
-        const id = this.dataset.id;
-        const res = await fetch(`/news/${id}/toggle_bookmark/`, {
-          method: "POST",
-          headers: {
-            "X-Requested-With": "XMLHttpRequest",
-            "X-CSRFToken": "{{ csrf_token }}",
-          },
-        });
-        const result = await res.json();
-        if (result.success) {
-          this.textContent = result.status === "added" ? "★" : "☆";
+  // fungsi untuk ambil cookie CSRF
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
         }
+      }
+    }
+    return cookieValue;
+  }
+
+  // fetch berita (bisa dipanggil ulang)
+  function fetchNews({ page = 1, category = "", sort = "", bookmarked = false, q = "" } = {}) {
+    const params = new URLSearchParams();
+    if (category) params.set("category", category);
+    if (sort) params.set("sort", sort);
+    if (page) params.set("page", page);
+    if (bookmarked) params.set("bookmarked", "1");
+    if (q) params.set("q", q);
+
+    fetch(`${ajaxUrl}?${params.toString()}`)
+      .then(response => {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
+      })
+      .then(data => {
+        document.getElementById("news-container").innerHTML = data.html;
+        attachBookmarkListeners();
+        attachPaginationListeners();
+        attachDeleteListeners();
+      })
+      .catch(err => {
+        console.error("Fetch news error:", err);
       });
+  }
+
+  // pasang listener bookmark pada tombol-tombol yang ada
+  function attachBookmarkListeners() {
+    document.querySelectorAll(".bookmark-news").forEach(btn => {
+      // Hati-hati: tombol bookmark di template menggunakan data-id
+      btn.removeEventListener("click", bookmarkHandler);
+      btn.addEventListener("click", bookmarkHandler);
     });
   }
 
-  // Sorting handler
-  sortSelect.addEventListener("change", () => loadNews({ sort: sortSelect.value }));
-
-  // Kategori handler
-  categoryLinks.forEach(link => {
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      showingBookmarks = false;
-      bookmarkToggle.textContent = "My Bookmarks";
-      const category = new URL(link.href).searchParams.get("category");
-      loadNews({ category, sort: sortSelect.value });
+  function bookmarkHandler(e) {
+    const btn = e.currentTarget;
+    const newsId = btn.dataset.id;
+    fetch(`/news/${newsId}/toggle_bookmark/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": getCookie("csrftoken"),
+        "Accept": "application/json",
+      },
+    })
+    .then(res => {
+      if (!res.ok) return res.json().then(j => Promise.reject(j));
+      return res.json();
+    })
+    .then(data => {
+      // server mengembalikan {success: True, status: 'added'/'removed'}
+      if (data.status === "added") {
+        btn.textContent = "★";
+        btn.classList.add("text-yellow-500");
+      } else {
+        btn.textContent = "☆";
+        btn.classList.remove("text-yellow-500");
+      }
+    })
+    .catch(err => {
+      console.error("Bookmark error:", err);
+      // opsional: tampilkan pesan ke user
     });
-  });
+  }
 
-  // Tombol "My Bookmarks"
-  bookmarkToggle.addEventListener("click", () => {
-    showingBookmarks = !showingBookmarks;
-    bookmarkToggle.textContent = showingBookmarks ? "All News" : "My Bookmarks";
-    loadNews({ sort: sortSelect.value });
-  });
+  // pagination
+  function attachPaginationListeners() {
+    document.querySelectorAll(".page-btn").forEach(btn => {
+      btn.removeEventListener("click", pageBtnHandler);
+      btn.addEventListener("click", pageBtnHandler);
+    });
+  }
 
-  attachNewsEvents();
+  function pageBtnHandler(e) {
+    const page = e.currentTarget.dataset.page;
+    const category = categoryFilter ? categoryFilter.value : "";
+    const sort = sortSelect ? sortSelect.value : "";
+    const bookmarkedViewActive = toggleBookmarkViewBtn && toggleBookmarkViewBtn.dataset.view === "bookmarks";
+    fetchNews({ page, category, sort, bookmarked: bookmarkedViewActive });
+  }
+
+  // optional: jika ada tombol delete untuk staff (tetap pasang agar dynamic content aman)
+  function attachDeleteListeners() {
+    document.querySelectorAll(".delete-news").forEach(btn => {
+      btn.removeEventListener("click", deleteHandler);
+      btn.addEventListener("click", deleteHandler);
+    });
+  }
+  function deleteHandler(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!confirm("Delete this news?")) return;
+    fetch(`/news/${id}/delete/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": getCookie("csrftoken"),
+        "Accept": "application/json",
+      },
+    })
+    .then(res => {
+      if (!res.ok) return res.json().then(j => Promise.reject(j));
+      return res.json();
+    })
+    .then(data => {
+      // selesai hapus: reload current page of news
+      const currentPage = document.querySelector("#pagination .page-btn[data-page]")?.dataset.page || 1;
+      fetchNews({ page: currentPage });
+    })
+    .catch(err => {
+      console.error("Delete error:", err);
+    });
+  }
+
+  // listener untuk sort
+  if (sortSelect) {
+    sortSelect.addEventListener("change", function () {
+      const sort = this.value;
+      const category = categoryFilter ? categoryFilter.value : "";
+      fetchNews({ page: 1, category, sort });
+    });
+  }
+
+  // listener untuk category kalau ada
+  if (categoryFilter) {
+    categoryFilter.addEventListener("change", function () {
+      const category = this.value;
+      const sort = sortSelect ? sortSelect.value : "";
+      fetchNews({ page: 1, category, sort });
+    });
+  }
+
+  // toggle bookmark view (My Bookmarks button) — optional behaviour
+  if (toggleBookmarkViewBtn) {
+    toggleBookmarkViewBtn.addEventListener("click", function () {
+      const isBookmarks = this.dataset.view === "bookmarks";
+      if (isBookmarks) {
+        // balik ke semua berita
+        this.dataset.view = "";
+        this.textContent = "My Bookmarks";
+        fetchNews({ page: 1, category: categoryFilter ? categoryFilter.value : "", sort: sortSelect ? sortSelect.value : "" });
+      } else {
+        // tampilkan hanya bookmarked
+        this.dataset.view = "bookmarks";
+        this.textContent = "All News";
+        fetchNews({ page: 1, bookmarked: true });
+      }
+    });
+  }
+
+  // first load
+  fetchNews({ page: 1, category: categoryFilter ? categoryFilter.value : "", sort: sortSelect ? sortSelect.value : "" });
 });
 </script>
 

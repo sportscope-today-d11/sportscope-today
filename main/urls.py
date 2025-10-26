@@ -17,6 +17,10 @@ urlpatterns = [
     path('news/<int:news_id>/edit/', news_update, name='news_update'),
     path('news/<int:news_id>/delete/', news_delete, name='news_delete'),
     path('ajax/', news_list_ajax, name='news_list_ajax'),
+
+    path('', homepage, name="homepage"),
+    path('user/login', user_login, name='login'),
+    path('user/register', user_register, name='register'),
 ]
 
 if settings.DEBUG:
