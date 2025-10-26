@@ -16,6 +16,7 @@ urlpatterns = [
     path('news/create/', news_create, name='news_create'),
     path('news/<int:news_id>/edit/', news_update, name='news_update'),
     path('news/<int:news_id>/delete/', news_delete, name='news_delete'),
+    path('ajax/', news_list_ajax, name='news_list_ajax'),
 ]
 
 if settings.DEBUG:

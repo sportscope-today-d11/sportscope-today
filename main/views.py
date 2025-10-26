@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.templatetags.static import static
 from urllib.parse import urlparse
+from django.template.loader import render_to_string
 
 from .models import News
 from .forms import NewsForm
@@ -50,6 +51,41 @@ def news_list(request):
         'bookmarked_ids': [int(x) for x in bookmarks],
     }
     return render(request, 'news_list.html', context)
+
+def news_list_ajax(request):
+    q = request.GET.get('q', '')
+    category = request.GET.get('category', '')
+    sort = request.GET.get('sort', 'latest')
+    bookmarked = request.GET.get('bookmarked', '')
+
+    news_qs = News.objects.all()
+
+    # Jika user klik "My Bookmarks"
+    if bookmarked:
+        bookmark_ids = request.session.get('bookmarks', [])
+        news_qs = news_qs.filter(id__in=bookmark_ids)
+    else:
+        if q:
+            news_qs = news_qs.filter(
+                Q(title__icontains=q) | Q(content__icontains=q) | Q(source__icontains=q)
+            )
+        if category:
+            news_qs = news_qs.filter(category__iexact=category)
+
+    # Sorting
+    news_qs = news_qs.order_by('publish_time' if sort == 'oldest' else '-publish_time')
+
+    paginator = Paginator(news_qs, 9)
+    page = request.GET.get('page')
+    all_news = paginator.get_page(page)
+
+    html = render_to_string('news_cards.html', {
+        'all_news': all_news,
+        'bookmarked_ids': [int(x) for x in request.session.get('bookmarks', [])],
+        'user': request.user,
+    })
+
+    return JsonResponse({'html': html})
 
 def news_detail(request, news_id):
     news = get_object_or_404(News, id=news_id)
