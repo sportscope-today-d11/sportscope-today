@@ -8,6 +8,7 @@ import os
 import uuid
 from unidecode import unidecode
 from django.templatetags.static import static
+from django.contrib.staticfiles import finders
 from urllib.parse import urlparse
 from django.contrib.auth.models import User
 
@@ -85,6 +86,7 @@ class Player(models.Model):
     standing_tackle = models.PositiveIntegerField(null=True, blank=True)
     sliding_tackle = models.PositiveIntegerField(null=True, blank=True)
     likes = models.PositiveIntegerField(default=0)
+    image = models.ImageField(upload_to="players/", null=True, blank=True)
 
     # override fungsi save agar membuat slug otomatis dari nama pemain
     def save(self, *args, **kwargs):
@@ -94,16 +96,22 @@ class Player(models.Model):
 
     @property
     def image_url(self):
-        if self.image:
-            return self.image.url
-        # Cek apakah ada file static untuk slug tertentu
+        img = getattr(self, "image", None)
+        if img:
+            try:
+                return img.url
+            except Exception:
+                pass
+
+        # Use staticfiles finders to locate a matching file by slug
         if self.slug:
-            static_file_path = f"static/images/player_pictures/{self.slug}.png"
-            if os.path.exists(static_file_path):
-                return f"/static/images/player_pictures/{self.slug}.png"
-        
-        # Fallback ke default
-        return "/static/images/player_pictures/default.png"
+            for ext in (".png", ".jpg", ".jpeg", ".webp"):
+                rel = f"images/player_pictures/{self.slug}{ext}"
+                if finders.find(rel):
+                    return static(rel)
+
+        # Default placeholder
+        return static("images/player_pictures/default.png")
 
     def __str__(self):
         return self.name or "Unnamed Player"

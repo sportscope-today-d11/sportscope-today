@@ -8,7 +8,9 @@ from django.urls import reverse, reverse_lazy
 import datetime
 from django.contrib import messages
 from django.shortcuts import render, get_object_or_404
-from main.models import Player
+from main.models import Player, Person
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.core.paginator import Paginator
 
 # View untuk halaman home yang menampilkan daftar pemain
@@ -27,6 +29,126 @@ def player_detail(request, slug):
     player = get_object_or_404(Player, slug=slug)
     context = {'player': player}
     return render(request, 'player_detail.html', context)
+
+
+@login_required
+@require_POST
+def player_add_ajax(request):
+    """Add a Player via AJAX (expects JSON). Admin-only (Person.role == 'admin')."""
+    # role check
+    try:
+        person = Person.objects.get(user=request.user)
+    except Person.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "No role assigned"}, status=403)
+    if person.role != 'admin':
+        return JsonResponse({"status": "error", "message": "Admin only"}, status=403)
+
+    import json
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError:
+        return JsonResponse({"status": "error", "message": "Invalid JSON"}, status=400)
+
+    name = (payload.get('name') or '').strip()
+    if not name:
+        return JsonResponse({"status": "error", "message": "Name is required"}, status=400)
+
+    from unidecode import unidecode
+    from django.utils.text import slugify
+
+    base = slugify(unidecode(name)) or 'player'
+    slug = base
+    i = 1
+    while Player.objects.filter(slug=slug).exists():
+        slug = f"{base}-{i}"
+        i += 1
+
+    # helpers to coerce types safely
+    def to_int(v):
+        try:
+            if v is None:
+                return None
+            s = str(v).strip()
+            if s == '':
+                return None
+            return int(float(s))
+        except Exception:
+            return None
+
+    def to_float(v):
+        try:
+            if v is None:
+                return None
+            s = str(v).strip()
+            if s == '':
+                return None
+            return float(s)
+        except Exception:
+            return None
+
+    preferred_foot = (payload.get('preferred_foot') or '').strip()
+    if preferred_foot not in ('Left', 'Right'):
+        preferred_foot = None
+
+    defaults = {
+        'slug': slug,
+        'name': name,
+        'full_name': (payload.get('full_name') or '')[:255],
+        'positions': (payload.get('positions') or '')[:100],
+        'nationality': (payload.get('nationality') or '')[:100],
+        'overall_rating': to_int(payload.get('overall_rating')),
+        'age': to_int(payload.get('age')),
+        'preferred_foot': preferred_foot,
+        'height_cm': to_float(payload.get('height_cm')),
+        'weight_kgs': to_float(payload.get('weight_kgs')),
+        'international_reputation': to_int(payload.get('international_reputation')),
+        # Shooting
+        'finishing': to_int(payload.get('finishing')),
+        'long_shots': to_int(payload.get('long_shots')),
+        'penalties': to_int(payload.get('penalties')),
+        # Passing
+        'short_passing': to_int(payload.get('short_passing')),
+        'long_passing': to_int(payload.get('long_passing')),
+        'vision': to_int(payload.get('vision')),
+        # Dribbling
+        'dribbling': to_int(payload.get('dribbling')),
+        'ball_control': to_int(payload.get('ball_control')),
+        'agility': to_int(payload.get('agility')),
+        # Pace
+        'acceleration': to_int(payload.get('acceleration')),
+        'sprint_speed': to_int(payload.get('sprint_speed')),
+        # Physical
+        'stamina': to_int(payload.get('stamina')),
+        'strength': to_int(payload.get('strength')),
+        'jumping': to_int(payload.get('jumping')),
+        # Defending
+        'marking': to_int(payload.get('marking')),
+        'standing_tackle': to_int(payload.get('standing_tackle')),
+        'sliding_tackle': to_int(payload.get('sliding_tackle')),
+        # Market
+        'value_euro': to_float(payload.get('value_euro')),
+        'wage_euro': to_float(payload.get('wage_euro')),
+        'release_clause_euro': to_float(payload.get('release_clause_euro')),
+        # Likes (optional)
+        'likes': max(0, to_int(payload.get('likes')) or 0),
+    }
+
+    player = Player.objects.create(**defaults)
+
+    return JsonResponse({
+        'status': 'success',
+        'player': {
+            'slug': player.slug,
+            'name': player.name,
+            'positions': player.positions,
+            'nationality': player.nationality,
+            'overall_rating': player.overall_rating,
+            'age': player.age,
+            'likes': player.likes,
+            'image_url': player.image_url,
+            'detail_url': reverse('main:player_detail', kwargs={'slug': player.slug}),
+        }
+    }, status=201)
 from django.shortcuts import render
 from django.http import HttpResponse
 

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load static %}
+{% load humanize %}
 
 {% block meta %}
 <title>{{ player.name }} — Player</title>
@@ -15,55 +16,110 @@
 	<a href="{% url 'main:player_list' %}" class="text-sm text-blue-600 hover:underline">← Back to players</a>
 
 		<div class="bg-white shadow rounded-lg mt-4 p-6">
+			<!-- HEADER -->
 			<div class="flex flex-col md:flex-row gap-6">
-				<div class="w-full md:w-1/3 bg-gray-100 flex items-center justify-center">
-					{% if player.image %}
-						<img src="{{ player.image }}" alt="{{ player.name }}" class="object-cover w-full h-full" />
-					{% else %}
-						<div class="p-8 text-gray-400">No image</div>
-					{% endif %}
+				<div class="w-full md:w-1/3 bg-gray-100 flex items-center justify-center rounded-lg overflow-hidden">
+					<img src="{{ player.image_url }}" alt="{{ player.name }}" class="object-cover w-full h-full" />
 				</div>
-
 				<div class="w-full md:w-2/3">
-					<h1 class="text-2xl font-bold">{{ player.name }}</h1>
-					{% if player.full_name %}<p class="text-sm text-gray-600">{{ player.full_name }}</p>{% endif %}
-					<p class="mt-2 text-sm text-gray-700">{{ player.positions }} • {{ player.nationality }}</p>
-
-					<div class="mt-4 grid grid-cols-2 gap-4">
-						<div>
-							<p class="text-xs text-gray-500">Overall</p>
-							<p class="text-lg font-semibold">{{ player.overall_rating|default:'-' }}</p>
-						</div>
-						<div>
-							<p class="text-xs text-gray-500">Value</p>
-							<p class="text-lg">€{{ player.value_euro|default:'-' }}</p>
-						</div>
-						<div>
-							<p class="text-xs text-gray-500">Wage</p>
-							<p class="text-lg">€{{ player.wage_euro|default:'-' }}</p>
-						</div>
-						<div>
-							<p class="text-xs text-gray-500">Likes</p>
-							<p class="text-lg">{{ player.likes }}</p>
-						</div>
-					</div>
-
-					<hr class="my-4" />
-
-					<h2 class="text-sm font-semibold mb-2">Attributes</h2>
-					<div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-						<div class="bg-gray-50 p-2 rounded">Finishing<br><span class="font-bold">{{ player.finishing|default:'-' }}</span></div>
-						<div class="bg-gray-50 p-2 rounded">Dribbling<br><span class="font-bold">{{ player.dribbling|default:'-' }}</span></div>
-						<div class="bg-gray-50 p-2 rounded">Passing<br><span class="font-bold">{{ player.short_passing|default:'-' }}</span></div>
-						<div class="bg-gray-50 p-2 rounded">Vision<br><span class="font-bold">{{ player.vision|default:'-' }}</span></div>
-						<div class="bg-gray-50 p-2 rounded">Acceleration<br><span class="font-bold">{{ player.acceleration|default:'-' }}</span></div>
-						<div class="bg-gray-50 p-2 rounded">Sprint Speed<br><span class="font-bold">{{ player.sprint_speed|default:'-' }}</span></div>
-						<div class="bg-gray-50 p-2 rounded">Stamina<br><span class="font-bold">{{ player.stamina|default:'-' }}</span></div>
-						<div class="bg-gray-50 p-2 rounded">Strength<br><span class="font-bold">{{ player.strength|default:'-' }}</span></div>
-					</div>
-
+					<h1 class="text-3xl font-extrabold text-slate-900">{{ player.full_name|default:player.name }}</h1>
+					<p class="mt-2 text-sm text-slate-600">
+						<span class="uppercase tracking-wide text-slate-500">{{ player.nationality }}</span>
+						• Age {{ player.age|default:'-' }}
+						• Preferred foot: {{ player.preferred_foot|default:'-' }}
+					</p>
+					<p class="mt-1 text-sm text-slate-700">Positions: {{ player.positions|default:'-' }}</p>
+					<p class="mt-2 font-semibold text-amber-600">Overall Rating: {{ player.overall_rating|default:'-' }}</p>
 				</div>
 			</div>
+
+			<!-- PROFILE -->
+			<div class="mt-8">
+				<h2 class="text-lg font-semibold text-slate-900">Profile</h2>
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-3 text-sm">
+					<div>
+						<p class="text-slate-500">Full Name</p>
+						<p class="font-medium">{{ player.full_name|default:player.name }}</p>
+					</div>
+					<div>
+						<p class="text-slate-500">Height</p>
+						<p class="font-medium">{{ player.height_cm|floatformat:0|default:'-' }} cm</p>
+					</div>
+					<div>
+						<p class="text-slate-500">Weight</p>
+						<p class="font-medium">{{ player.weight_kgs|floatformat:0|default:'-' }} kg</p>
+					</div>
+					<div>
+						<p class="text-slate-500">International Rep.</p>
+						<p class="font-medium">{{ player.international_reputation|default:'-' }}/5</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- KEY ATTRIBUTES -->
+			<div class="mt-8">
+				<h2 class="text-lg font-semibold text-slate-900">Key Attributes</h2>
+				<div class="mt-3 space-y-4 text-sm">
+					<div>
+						<p class="text-slate-600 font-semibold">Shooting</p>
+						<p>
+							{{ player.finishing|default:'-' }} (Finishing)
+							· Long shots {{ player.long_shots|default:'-' }}
+							· Penalties {{ player.penalties|default:'-' }}
+						</p>
+					</div>
+					<div>
+						<p class="text-slate-600 font-semibold">Passing</p>
+						<p>
+							{{ player.short_passing|default:'-' }} (Short)
+							· Long {{ player.long_passing|default:'-' }}
+							· Vision {{ player.vision|default:'-' }}
+						</p>
+					</div>
+					<div>
+						<p class="text-slate-600 font-semibold">Dribbling</p>
+						<p>
+							{{ player.dribbling|default:'-' }} (Dribbling)
+							· Ball control {{ player.ball_control|default:'-' }}
+							· Agility {{ player.agility|default:'-' }}
+						</p>
+					</div>
+					<div>
+						<p class="text-slate-600 font-semibold">Pace</p>
+						<p>
+							Acceleration {{ player.acceleration|default:'-' }}
+							· Sprint speed {{ player.sprint_speed|default:'-' }}
+						</p>
+					</div>
+					<div>
+						<p class="text-slate-600 font-semibold">Physical</p>
+						<p>
+							Stamina {{ player.stamina|default:'-' }}
+							· Strength {{ player.strength|default:'-' }}
+							· Jumping {{ player.jumping|default:'-' }}
+						</p>
+					</div>
+					<div>
+						<p class="text-slate-600 font-semibold">Defending</p>
+						<p>
+							Marking {{ player.marking|default:'-' }}
+							· Standing tackle {{ player.standing_tackle|default:'-' }}
+							· Sliding tackle {{ player.sliding_tackle|default:'-' }}
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- MARKET INFO -->
+			<div class="mt-8">
+				<h2 class="text-lg font-semibold text-slate-900">Market</h2>
+				<div class="mt-3 space-y-1 text-sm">
+					<p>Value: <span class="font-semibold">€{{ player.value_euro|floatformat:0|intcomma|default:'-' }}</span></p>
+					<p>Wage: <span class="font-semibold">€{{ player.wage_euro|floatformat:0|intcomma|default:'-' }}</span></p>
+					<p>Release clause: <span class="font-semibold">€{{ player.release_clause_euro|floatformat:0|intcomma|default:'-' }}</span></p>
+				</div>
+			</div>
+
 		</div>
 	</div>
 </div>
