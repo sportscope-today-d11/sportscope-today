@@ -1,17 +1,21 @@
 from django.conf import settings
 from django.urls import path
 from . import views
+from .views import *
 from django.conf.urls.static import static
+
 
 app_name = 'main'
 
 urlpatterns = [
     # NEWS URLS
-    path('news/', views.news_list, name='news_list'),
-    path('news/<int:news_id>/', views.news_detail, name='news_detail'),
-    path('news/create/', views.news_create, name='news_create'),
-    path('news/<int:news_id>/edit/', views.news_update, name='news_update'),
-    path('news/<int:news_id>/delete/', views.news_delete, name='news_delete'),
+    path('news/', news_list, name='news_list'),
+    path('news/<int:news_id>/', news_detail, name='news_detail'),
+    path('news/<int:news_id>/toggle_bookmark/', toggle_bookmark, name='toggle_bookmark'),
+    path('news/bookmarked/', bookmarked_news, name='bookmarked_news'),
+    path('news/create/', news_create, name='news_create'),
+    path('news/<int:news_id>/edit/', news_update, name='news_update'),
+    path('news/<int:news_id>/delete/', news_delete, name='news_delete'),
 ]
 
 if settings.DEBUG:
