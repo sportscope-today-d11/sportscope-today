@@ -704,4 +704,4 @@ def delete_team(request, team_slug):
         return JsonResponse({
             'success': False,
             'message': f'An error occurred: {str(e)}'
-
+        })
