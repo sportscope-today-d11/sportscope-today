@@ -17,12 +17,12 @@ class Team(models.Model):
     slug = models.SlugField(unique=True, primary_key=True)
     name = models.CharField(max_length=255)
     players = models.IntegerField()
-    age = models.FloatField()
+    age = models.FloatField(null=True)
     possession = models.FloatField()
     goals = models.IntegerField()
     assists = models.IntegerField()
-    penalty_kicks = models.IntegerField()
-    penalty_kick_attempts = models.IntegerField()
+    penalty_kicks = models.IntegerField(null=True)
+    penalty_kick_attempts = models.IntegerField(null=True)
     yellows = models.IntegerField()
     reds = models.IntegerField()
     image = models.ImageField(upload_to="teams/", null=True, blank=True)
@@ -35,14 +35,26 @@ class Team(models.Model):
 
     @property
     def image_url(self):
-        if self.image:
+        """
+        Priority:
+        1. Uploaded image di media/teams/
+        2. Static image di static/images/logo/
+        3. Default image
+        """
+        # Jika ada uploaded image
+        if self.image and hasattr(self.image, 'url'):
             return self.image.url
-        static_path = f"/static/images/teams/{self.slug}.png" if self.slug else None
-        default_path = "/static/images/teams/default.png"
-        static_file = f"static/images/teams/{self.slug}.png" if self.slug else None
-        if static_file and os.path.exists(static_file):
-            return static_path
-        return default_path
+        
+        # Coba cari di static folder
+        if self.slug:
+            static_path = f"images/logo/{self.slug}.png"
+            # Cek apakah file ada di static folder
+            static_file_path = os.path.join('static', static_path)
+            if os.path.exists(static_file_path):
+                return static(static_path)
+        
+        # Return default image
+        return static("images/teams/default.png")
 
     def __str__(self):
         return self.name or "Unnamed Team"
