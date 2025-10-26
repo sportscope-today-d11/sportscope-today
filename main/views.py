@@ -20,30 +20,67 @@ def is_admin(user):
 def news_list(request):
     q = request.GET.get('q', '')
     category = request.GET.get('category', '')
-    news_qs = News.objects.all().order_by('-publish_time')
+    sort = request.GET.get('sort', 'latest')
+
+    news_qs = News.objects.all()
 
     if q:
         news_qs = news_qs.filter(
             Q(title__icontains=q) | Q(content__icontains=q) | Q(source__icontains=q)
         )
+
     if category:
-        news_qs = news_qs.filter(category=category)
+        news_qs = news_qs.filter(category__iexact=category)
+
+    # Sorting
+    if sort == 'oldest':
+        news_qs = news_qs.order_by('publish_time')
+    else:
+        news_qs = news_qs.order_by('-publish_time')
 
     paginator = Paginator(news_qs, 9)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page = request.GET.get('page')
+    all_news = paginator.get_page(page)
 
-    return render(request, 'news/news_list.html', {
-        'all_news': page_obj,
-        'q': q,
+    bookmarks = request.session.get('bookmarks', [])
+    context = {
+        'all_news': all_news,
+        'sort': sort,
         'category': category,
-    })
-
+        'bookmarked_ids': [int(x) for x in bookmarks],
+    }
+    return render(request, 'news_list.html', context)
 
 def news_detail(request, news_id):
     news = get_object_or_404(News, id=news_id)
-    return render(request, 'news/news_detail.html', {'news': news})
+    return render(request, 'news_detail.html', {'news': news})
 
+def toggle_bookmark(request, news_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Login required'}, status=401)
+
+    bookmarks = request.session.get('bookmarks', [])
+    news_id = str(news_id)
+
+    if news_id in bookmarks:
+        bookmarks.remove(news_id)
+        status = 'removed'
+    else:
+        bookmarks.append(news_id)
+        status = 'added'
+
+    request.session['bookmarks'] = bookmarks
+    request.session.modified = True
+    return JsonResponse({'success': True, 'status': status})
+
+def bookmarked_news(request):
+    bookmarks = request.session.get('bookmarks', [])
+    news_qs = News.objects.filter(id__in=bookmarks)
+    return render(request, 'news_list.html', {
+        'all_news': news_qs,
+        'is_bookmark_page': True,
+        'bookmarked_ids': [int(x) for x in bookmarks],
+    })
 
 @login_required
 @user_passes_test(is_admin)
@@ -66,7 +103,7 @@ def news_create(request):
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     else:
         form = NewsForm()
-    return render(request, 'news/news_form.html', {'form': form, 'mode': 'create'})
+    return render(request, 'news_form.html', {'form': form, 'mode': 'create'})
 
 
 @login_required
@@ -85,7 +122,7 @@ def news_update(request, news_id):
                 return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     else:
         form = NewsForm(instance=news)
-    return render(request, 'news/news_form.html', {'form': form, 'mode': 'edit'})
+    return render(request, 'news_form.html', {'form': form, 'mode': 'edit'})
 
 
 @login_required
@@ -97,4 +134,4 @@ def news_delete(request, news_id):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'success': True})
         return redirect('main:news_list')
-    return render(request, 'news/news_confirm_delete.html', {'news': news})
+    return render(request, 'news_confirm_delete.html', {'news': news})
