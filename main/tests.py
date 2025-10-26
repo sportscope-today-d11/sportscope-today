@@ -5,6 +5,7 @@ from .models import News
 import datetime
 import json
 
+
 class NewsModelTest(TestCase):
     def setUp(self):
         self.news = News.objects.create(
@@ -20,15 +21,16 @@ class NewsModelTest(TestCase):
         )
 
     def test_str_representation(self):
+        """__str__() harus menampilkan judul berita"""
         self.assertEqual(str(self.news), "Test News")
 
     def test_thumbnail_url_default(self):
-        """Kalau thumbnail = 'default', maka pakai static default image"""
+        """Jika thumbnail='default', gunakan path static default"""
         self.news.thumbnail = "default"
         self.assertIn("images/thumbnails/default.png", self.news.thumbnail_url)
 
     def test_thumbnail_url_http(self):
-        """Kalau thumbnail pakai URL langsung"""
+        """Jika thumbnail berupa URL, gunakan langsung"""
         self.news.thumbnail = "https://cdn.example.com/news.png"
         self.assertEqual(self.news.thumbnail_url, "https://cdn.example.com/news.png")
 
@@ -39,19 +41,94 @@ class NewsViewTest(TestCase):
         self.admin = User.objects.create_user(
             username="admin", password="adminpass", is_staff=True
         )
+        self.user = User.objects.create_user(
+            username="user", password="userpass", is_staff=False
+        )
 
-        self.news = News.objects.create(
+        self.news1 = News.objects.create(
             title="News 1",
             link="https://example.com/1",
             author="Admin",
             source="Sportscope",
-            publish_time=datetime.date.today(),
-            content="Sample content",
+            publish_time=datetime.date(2024, 1, 1),
+            content="Content 1",
             thumbnail="images/thumbnails/thumb.png",
-            category="Match Result",
-            featured=False,
+            category="Transfer",
         )
 
-    def test_news_list_view(self):
-        """Halaman list news bisa diakses"""
+        self.news2 = News.objects.create(
+            title="News 2",
+            link="https://example.com/2",
+            author="Admin",
+            source="Sportscope",
+            publish_time=datetime.date(2024, 1, 5),
+            content="Content 2",
+            thumbnail="images/thumbnails/thumb.png",
+            category="Match Result",
+        )
+
+    # -----------------------------
+    # LIST VIEW
+    # -----------------------------
+    def test_news_list_view_accessible(self):
+        """Halaman news_list bisa diakses dan berisi berita"""
         response = self.client.get(reverse("main:news_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "News 1")
+        self.assertContains(response, "News 2")
+
+    def test_news_list_filter_by_category(self):
+        """Filter kategori harus menampilkan hanya berita dengan kategori itu"""
+        response = self.client.get(reverse("main:news_list") + "?category=Transfer")
+        self.assertContains(response, "News 1")
+        self.assertNotContains(response, "News 2")
+
+    def test_news_list_sort_oldest(self):
+        """Sort 'oldest' harus urut dari tanggal paling lama"""
+        response = self.client.get(reverse("main:news_list") + "?sort=oldest")
+        news_list = list(response.context["all_news"])
+        self.assertEqual(news_list[0].title, "News 1")
+        self.assertEqual(news_list[-1].title, "News 2")
+
+    def test_news_list_sort_latest(self):
+        """Sort 'latest' harus urut dari tanggal terbaru"""
+        response = self.client.get(reverse("main:news_list") + "?sort=latest")
+        news_list = list(response.context["all_news"])
+        self.assertEqual(news_list[0].title, "News 2")
+
+    # -----------------------------
+    # BOOKMARK TESTS
+    # -----------------------------
+    def test_toggle_bookmark_requires_login(self):
+        """User belum login tidak boleh toggle bookmark"""
+        url = reverse("main:toggle_bookmark", args=[self.news1.id])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 401)
+
+    def test_toggle_bookmark_add_and_remove(self):
+        """User login bisa tambah dan hapus bookmark"""
+        self.client.login(username="user", password="userpass")
+        url = reverse("main:toggle_bookmark", args=[self.news1.id])
+
+        # Tambah bookmark
+        response = self.client.post(url, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
+        data = json.loads(response.content)
+        self.assertTrue(data["success"])
+        self.assertEqual(data["status"], "added")
+
+        # Hapus bookmark
+        response = self.client.post(url, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
+        data = json.loads(response.content)
+        self.assertTrue(data["success"])
+        self.assertEqual(data["status"], "removed")
+
+    def test_bookmarked_news_view(self):
+        """Bookmark page hanya tampilkan berita yang disimpan"""
+        session = self.client.session
+        session["bookmarks"] = [str(self.news1.id)]
+        session.save()
+
+        response = self.client.get(reverse("main:bookmarked_news"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "News 1")
+        self.assertNotContains(response, "News 2")
