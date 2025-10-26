@@ -70,7 +70,7 @@ class News(models.Model):
     publish_time = models.DateField()
     content = models.TextField()
     thumbnail = models.URLField(
-        default="https://akcdn.detik.net.id/community/media/visual/2020/02/25/3833496a-a1b8-428f-9202-79f8671928b7_169.jpeg?w=700&q=90",
+        default="images/thumbnails/default.png",
         blank=True
     )
     featured = models.BooleanField(default=False)
@@ -83,6 +83,24 @@ class News(models.Model):
 
     def __str__(self):
         return self.title
+    
+    @property
+    def thumbnail_url(self):
+        """
+        Kembalikan URL untuk thumbnail:
+        - Kalau field thumbnail isinya 'default' atau kosong → pakai default static image.
+        - Kalau field thumbnail isinya URL valid (http/https) → pakai URL tersebut.
+        - Kalau field thumbnail isinya path lokal (images/thumbnails/...) → pakai static().
+        """
+        if not self.thumbnail or self.thumbnail.lower() == "default":
+            return static("images/thumbnails/default.png")
+
+        parsed = urlparse(self.thumbnail)
+        if parsed.scheme in ("http", "https"):
+            return self.thumbnail
+        else:
+            return static(self.thumbnail)
+
 
 class Match(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Person, Match, Team
+from .models import Person, Match, Team, News
 
 class RegisterForm(UserCreationForm):
     # Hidden field dengan default value 'user'
@@ -65,3 +65,23 @@ class MatchForm(forms.ModelForm):
                 attrs={'class': 'form-select'}
             ),
         }
+
+class NewsForm(forms.ModelForm):
+    class Meta:
+        model = News
+        fields = [
+            'title',
+            'link',
+            'author',
+            'source',
+            'publish_time',
+            'content',
+            'thumbnail',
+            'category',
+        ]
+
+        widgets = {
+            'publish_time': forms.DateInput(attrs={'type': 'date'}),
+            'content': forms.Textarea(attrs={'rows': 5}),
+        }
+        
