@@ -195,24 +195,6 @@ class Player(models.Model):
         
         # Fallback ke default
         return "/static/images/player_pictures/default.png"
-    @property
-    def image_url(self):
-        img = getattr(self, "image", None)
-        if img:
-            try:
-                return img.url
-            except Exception:
-                pass
-
-        # Use staticfiles finders to locate a matching file by slug
-        if self.slug:
-            for ext in (".png", ".jpg", ".jpeg", ".webp"):
-                rel = f"images/player_pictures/{self.slug}{ext}"
-                if finders.find(rel):
-                    return static(rel)
-
-        # Default placeholder
-        return static("images/player_pictures/default.png")
 
     def __str__(self):
         return self.name or "Unnamed Player"
