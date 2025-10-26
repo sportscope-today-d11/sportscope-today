@@ -6,7 +6,7 @@
   <h1 class="text-2xl font-bold text-[#052962] mb-8">History Pertandingan</h1>
 
   <!-- FILTER FORM -->
-  <form method="get" class="mb-6 flex flex-wrap gap-3 items-end">
+  <form method="get" action="{% url 'main:match_history' %}" class="mb-6 flex flex-wrap gap-3 items-end">
     <div>
       <label for="competition" class="block text-sm font-medium text-gray-700">Kompetisi</label>
       <select name="competition" id="competition" class="border border-gray-300 rounded px-3 py-1">
@@ -74,10 +74,16 @@ document.addEventListener("DOMContentLoaded", function() {
   const form = document.querySelector("form");
   const loader = document.getElementById("loading");
 
+  console.log("✅ Script loaded, form found:", form); // <-- tambahin ini
+
   form.addEventListener("submit", function(e) {
     e.preventDefault();
+    console.log("🚀 Form submitted"); // <-- tambahin ini
+
     const url = form.getAttribute("action") || window.location.pathname;
     const params = new URLSearchParams(new FormData(form)).toString();
+
+    console.log("➡️ Fetching:", `${url}?${params}`); // <-- tambahin ini
 
     loader.classList.remove("hidden");
 
@@ -86,8 +92,10 @@ document.addEventListener("DOMContentLoaded", function() {
     })
     .then(response => response.json())
     .then(data => {
+      console.log("✅ AJAX success", data); // <-- tambahin ini
       document.querySelector("#match-list-container").innerHTML = data.html;
     })
+    .catch(err => console.error("❌ Fetch error:", err)) // <-- tambahin ini
     .finally(() => loader.classList.add("hidden"));
   });
 });

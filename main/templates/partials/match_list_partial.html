@@ -1,4 +1,4 @@
-{% regroup page_obj by date as date_groups %}
+{% regroup page_obj by match_date as date_groups %}
   {% for day in date_groups %}
     <div class="mb-10">
       <h2 class="text-xl font-semibold text-[#052962] mb-4">

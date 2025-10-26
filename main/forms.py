@@ -44,48 +44,28 @@ class MatchForm(forms.ModelForm):
         }
 
 class RegisterForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    
-    # FIX: Syntax error diperbaiki
-    role = forms.ChoiceField(
-        choices=Person.ROLE_CHOICES,
+    # Hidden field dengan default value 'user'
+    role = forms.CharField(
         initial='user',
-        required=False,
-        widget=forms.HiddenInput(),  # Default hidden untuk user biasa
-        label='Role'
+        widget=forms.HiddenInput(),
+        required=False
     )
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        fields = ['username', 'password1', 'password2']
 
-    def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request', None)
-        super().__init__(*args, **kwargs)
-        
-        # Jika admin yang membuat user, tampilkan pilihan role
-        if self.request and self.request.user.is_authenticated:
-            try:
-                if self.request.user.person.is_admin():
-                    self.fields['role'].widget = forms.RadioSelect(attrs={'class': 'form-radio'})
-                    self.fields['role'].required = True
-            except Person.DoesNotExist:
-                # Jika user tidak punya Person, tetap hidden
-                pass
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.email = self.cleaned_data['email']
-        
         if commit:
             user.save()
-            # Buat Person dengan role yang dipilih
             Person.objects.create(
                 user=user,
-                role=self.cleaned_data.get('role', 'user')
+                role='user'
             )
         return user
-
+    
 # Form khusus untuk admin membuat user
 class AdminUserCreationForm(RegisterForm):
     def __init__(self, *args, **kwargs):

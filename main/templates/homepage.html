@@ -87,7 +87,7 @@
 
   <!-- ===== NEWS BY CATEGORY ===== -->
   {% for category, news_list in news_by_category.items %}
-  <section class="max-w-7xl mx-auto px-8 py-10 border-b border-gray-300">
+  <section id="{{ category|slugify }}" class="max-w-7xl mx-auto px-8 py-10 border-b border-gray-300">
     <h2 class="text-2xl font-bold text-[#c70000] mb-6 border-b border-gray-200 pb-2">{{ category }}</h2>
 
     <!-- ubah dari 3 kolom jadi 4 -->
@@ -95,7 +95,7 @@
       {% for news in news_list %}
       <a href="{% url 'main:news_detail' news.id %}" class="block group">
         <!-- kecilin dikit tinggi image -->
-        <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="w-full h-36 object-cover mb-3 rounded">
+        <img src="{{ news.thumbnail_url }}" alt="{{ news.title }}" class="w-full h-36 object-cover mb-3">
         
         <h3 class="text-m font-[Merriweather] font-bold leading-snug group-hover:underline">
           {{ news.title }}
@@ -113,7 +113,7 @@
 
 
   <!-- ===== PREMIER LEAGUE TABLE ===== -->
-  <section class="max-w-6xl mx-auto px-4 py-10">
+  <section id="statistics" class="max-w-6xl mx-auto px-4 py-10">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-2xl font-bold text-[#052962]">Premier League Table</h2>
       <div>
@@ -156,7 +156,7 @@
   </section>
 
   <!-- ===== TOP 10 MOST LOVED PLAYERS ===== -->
-  <section class="max-w-6xl mx-auto px-4 py-10">
+  <section id="hits" class="max-w-6xl mx-auto px-4 py-10">
     <h2 class="text-2xl font-bold text-[#052962] mb-8">Top 10 Most Loved Players All Time</h2>
 
     <!-- TOP 3 Podium (Smaller) -->

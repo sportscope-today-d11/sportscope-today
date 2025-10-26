@@ -65,7 +65,7 @@ def match_history(request):
     if competition:
         matches = matches.filter(league__iexact=competition)
     if date:
-        matches = matches.filter(match_date__date=date)
+        matches = matches.filter(match_date=date)
 
     # Pagination
     paginator = Paginator(matches, 10)
@@ -89,7 +89,6 @@ def match_history(request):
     # Render normal (HTML utuh)
     return render(request, 'match_history.html', context)
 
-
 def matches_by_date(request, date):
     """Tampilkan semua pertandingan berdasarkan tanggal (format YYYY-MM-DD)"""
     try:
@@ -100,7 +99,7 @@ def matches_by_date(request, date):
         match_date = localtime().date()
 
     # Ambil match sesuai tanggal
-    matches = Match.objects.filter(match_date__date=match_date).select_related('home_team', 'away_team')
+    matches = Match.objects.filter(match_date=match_date).select_related('home_team', 'away_team')
 
     # Kelompokkan berdasarkan liga
     matches_by_league = {}
@@ -169,7 +168,7 @@ def player_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     # pass both page_obj (for pagination controls) and players (iterable used in template)
-    context = {'page_obj': page_obj, 'players': page_obj.object_list, 'request':request}
+    context = {'page_obj': page_obj, 'players': page_obj.object_list}
     
     return render(request, 'player.html', context)
 
@@ -193,16 +192,25 @@ def homepage(request):
     # Pisahkan berita berdasarkan thumbnail (default dan bukan default)
     left_featured = [news for news in featured_news if news.thumbnail == "default"][:12]
     
+   # Ambil 8 berita hero
     hero_featured = [news for news in featured_news if news.thumbnail != "default"][:8]
 
-    hero_main = None
-    hero_bottom = []
-    hero_right = []
-
-    if hero_featured:
+    if len(hero_featured) >= 8:
         hero_main = hero_featured[0]
         hero_bottom = hero_featured[1:3]
         hero_right = hero_featured[3:8]
+    elif len(hero_featured) >= 3:
+        hero_main = hero_featured[0]
+        hero_bottom = hero_featured[1:3]
+        hero_right = hero_featured[3:]
+    elif len(hero_featured) > 0:
+        hero_main = hero_featured[0]
+        hero_bottom = []
+        hero_right = []
+    else:
+        hero_main = None
+        hero_bottom = []
+        hero_right = []
 
     # Kategori aktif
     categories = [
@@ -264,7 +272,7 @@ def user_login(request):
             user = form.get_user()
             login(request, user)
             response = HttpResponseRedirect(reverse('main:homepage'))
-            response.set_cookie('last_login', str(datetime.datetime.now()))
+            response.set_cookie('last_login', str(datetime.now()))
             messages.success(request, f'Welcome back, {user.username}!')
             return response
         else:
@@ -281,44 +289,3 @@ def user_logout(request):
     response.delete_cookie('last_login')
     messages.info(request, 'You have been logged out successfully.')
     return response
-
-def login_ajax(request):
-    if request.method == "POST":
-        import json
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({
-                "status": "error", 
-                "message": "Invalid request format!"
-            })
-
-        username = data.get("username")
-        password = data.get("password")
-
-        if not username or not password:
-            return JsonResponse({
-                "status": "error",
-                "message": "Username and password are required!"
-            })
-
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            return JsonResponse({
-                "status": "success",
-                "redirect_url": reverse("main:homepage")
-            })
-
-        return JsonResponse({
-            "status": "error", 
-            "message": "Invalid username or password."
-        })
-
-    return JsonResponse({
-        "status": "error", 
-        "message": "Only POST method allowed."
-    })
-def user_register(request):
-    return 
