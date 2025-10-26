@@ -50,8 +50,19 @@ def team_detail(request, slug):
 
 def match_detail(request, match_id):
     """Tampilkan detail satu pertandingan"""
-    match = get_object_or_404(Match.objects.select_related('home_team', 'away_team'), id=match_id)
-    return render(request, 'match_detail.html', {'match': match})
+    match = get_object_or_404(
+        Match.objects.select_related('home_team', 'away_team'), 
+        id=match_id
+    )
+
+    # Fallback kalau league kosong
+    if not match.league or match.league.strip() == "":
+        match.league = "Premier League"
+
+    context = {
+        "match": match,
+    }
+    return render(request, "match_detail.html", context)
 
 def match_history(request):
     # Ambil semua data pertandingan, urutkan dari terbaru
