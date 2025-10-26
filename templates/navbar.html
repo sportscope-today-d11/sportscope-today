@@ -1,0 +1,279 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sportscope Today</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Lato', sans-serif;
+    }
+    .brand-font {
+      font-family: 'Merriweather', serif;
+    }
+    .menu-link {
+      position: relative;
+      padding: 0.75rem 1rem;
+      transition: color 0.2s ease-in-out;
+      font-family: 'Lato', sans-serif;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .menu-link::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background-color: #FFD700;
+      transition: width 0.25s ease-in-out;
+    }
+    .menu-link:hover::after {
+      width: 100%;
+    }
+    
+    /* Offset scroll - Desktop */
+    section[id] {
+      scroll-margin-top: 110px;
+    }
+    
+    /* Offset scroll - Mobile (navbar lebih pendek) */
+    @media (max-width: 768px) {
+      section[id] {
+        scroll-margin-top: 40px;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-[#f9fafb] text-gray-900">
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="fixed top-0 left-0 w-full bg-[#052962] text-white z-50 shadow">
+    <div class="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
+
+      <!-- Logo -->
+      <a href="{% url 'main:homepage' %}" class="brand-font text-2xl md:text-3xl font-bold tracking-tight">
+        <span class="text-[#FFD700]">Sportscope</span> Today
+      </a>
+
+      <!-- Desktop Menu -->
+      <div class="hidden md:flex items-center text-sm font-medium uppercase divide-x divide-gray-500/40">
+        <a href="{% url 'main:news_list' %}" class="menu-link hover:text-[#FFD700]">News</a>
+        {% if user.is_staff %}
+          <a href="{% url 'main:admin_match_list' %}" class="menu-link hover:text-[#FFD700]">Manage Matches</a>
+        {% else %}
+          <a href="{% url 'main:match_history' %}" class="menu-link hover:text-[#FFD700]">Matches</a>
+        {% endif %}
+        <a href="{% url 'main:player_list' %}" class="menu-link hover:text-[#FFD700]">Players</a>
+        <a href="#" class="menu-link hover:text-[#FFD700]">Forum</a>
+      </div>
+
+      <!-- Right Side -->
+      <div class="hidden md:flex items-center space-x-4">
+        {% if user.is_authenticated %}
+          <!-- Username & Avatar -->
+          <div class="relative">
+            <button id="profile-btn" class="flex items-center space-x-2 hover:opacity-80 transition">
+              <div class="w-7 h-7 rounded-full overflow-hidden">
+                <img src="{% static 'images/profile/default.png' %}" alt="Profile" class="w-full h-full object-cover">
+              </div>
+              <span class="text-white font-medium capitalize font-bold">{{ user.username }}</span>
+            </button>
+            
+            <!-- Profile Dropdown Modal -->
+            <div id="profile-modal" class="hidden absolute right-0 top-full mt-2 bg-white rounded-md shadow-lg w-52 overflow-hidden z-50 border border-gray-200">
+              <!-- User Info -->
+              <div class="px-4 py-3 border-b border-gray-200">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                    <img src="{% static 'images/profile/default.png' %}" alt="Profile" class="w-full h-full object-cover">
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-sm text-gray-800 truncate capitalize">{{ user.username }}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Menu Items -->
+              <div class="py-1">
+                <a href="#" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                  My Forums
+                </a>
+                <a href="{% url 'main:logout' %}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                  Sign Out
+                </a>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <a href="{% url 'main:login' %}" class="px-4 py-2 bg-[#FFD700] text-[#052962] font-semibold rounded hover:bg-yellow-400 transition">
+            Sign In
+          </a>
+        {% endif %}
+      </div>
+
+      <!-- Mobile Menu Toggle -->
+      <button id="menu-toggle" class="md:hidden text-[#FFD700] text-2xl font-bold">☰</button>
+    </div>
+
+    <!-- Submenu -->
+    <div class="hidden md:flex bg-[#031a42] border-t border-[#FFD700]/20 text-sm font-medium px-8 py-2 overflow-x-auto space-x-6 whitespace-nowrap">
+      <a href="{% url 'main:homepage' %}#transfer" class="py-2.5 hover:text-[#FFD700] transition text-sm">Transfer</a>
+      <a href="{% url 'main:homepage' %}#injury-update" class="py-2.5 hover:text-[#FFD700] transition text-sm">Injury Update</a>
+      <a href="{% url 'main:homepage' %}#match-result" class="py-2.5 hover:text-[#FFD700] transition text-sm">Match Result</a>
+      <a href="{% url 'main:homepage' %}#manager-news" class="py-2.5 hover:text-[#FFD700] transition text-sm">Manager News</a>
+      <a href="{% url 'main:homepage' %}#thoughts" class="py-2.5 hover:text-[#FFD700] transition text-sm">Thoughts</a>
+      <a href="{% url 'main:homepage' %}#statistics" class="py-2.5 hover:text-[#FFD700] transition text-sm mobile-link">Team Statistics</a>
+      <a href="{% url 'main:homepage' %}#hits" class="py-2.5 hover:text-[#FFD700] transition text-sm mobile-link">Hits Player</a>
+    </div>
+  </nav>
+
+  <!-- Backdrop overlay -->
+  <div id="mobile-backdrop" class="hidden fixed inset-0 bg-black/50 z-[55]"></div>
+
+  <!-- ===== MOBILE MENU ===== -->
+  <div id="mobile-menu" class="fixed top-0 right-0 h-full w-3/4 bg-[#052962] text-white hidden flex-col shadow-2xl z-[60] transition-all overflow-y-auto">
+    <!-- Header Section -->
+    <div class="p-6 pb-4 border-b border-[#FFD700]/30">
+      {% if user.is_authenticated %}
+        <!-- User Profile -->
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+            <img src="{% static 'images/profile/default.png' %}" alt="Profile" class="w-full h-full object-cover">
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="font-semibold text-base truncate capitalize">{{ user.username }}</p>
+            <p class="text-xs text-gray-300 truncate">{{ user.email }}</p>
+          </div>
+        </div>
+      {% else %}
+        <!-- Welcome Message -->
+        <div>
+          <h3 class="text-xl font-bold text-[#FFD700] mb-1">Welcome!</h3>
+          <p class="text-sm text-gray-300">Explore the latest football news & updates</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Menu Items -->
+    <div class="flex flex-col py-4 px-6 space-y-1">
+      <a href="{% url 'main:news_list' %}" class="py-3 hover:text-[#FFD700] transition text-base font-medium mobile-link">News</a>
+      <a href="#" class="py-3 hover:text-[#FFD700] transition text-base font-medium mobile-link">Matches</a>
+      <a href="{% url 'main:player_list' %}" class="py-3 hover:text-[#FFD700] transition text-base font-medium mobile-link">Players</a>
+      <a href="#" class="py-3 hover:text-[#FFD700] transition text-base font-medium mobile-link">Forum</a>
+    </div>
+
+    <hr class="border-[#FFD700]/30 mx-6">
+
+    <!-- Submenu Items -->
+    <div class="flex flex-col py-4 px-6 space-y-1">
+      <a href="{% url 'main:homepage' %}#transfer" class="py-2.5 hover:text-[#FFD700] transition text-sm mobile-link">Transfer</a>
+      <a href="{% url 'main:homepage' %}#injury-update" class="py-2.5 hover:text-[#FFD700] transition text-sm mobile-link">Injury Update</a>
+      <a href="{% url 'main:homepage' %}#match-result" class="py-2.5 hover:text-[#FFD700] transition text-sm mobile-link">Match Result</a>
+      <a href="{% url 'main:homepage' %}#manager-news" class="py-2.5 hover:text-[#FFD700] transition text-sm mobile-link">Manager News</a>
+      <a href="{% url 'main:homepage' %}#thoughts" class="py-2.5 hover:text-[#FFD700] transition text-sm mobile-link">Thoughts</a>
+      <a href="{% url 'main:homepage' %}#statistics" class="py-2.5 hover:text-[#FFD700] transition text-sm mobile-link">Team Statistics</a>
+      <a href="{% url 'main:homepage' %}#hits" class="py-2.5 hover:text-[#FFD700] transition text-sm mobile-link">Hits Player</a>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="mt-auto p-6 border-t border-[#FFD700]/30">
+      {% if user.is_authenticated %}
+        <a href="{% url 'main:logout' %}" class="block w-full text-center py-2.5 text-white hover:text-[#FFD700] transition font-medium text-sm border border-gray-500 rounded-md hover:border-[#FFD700]">
+          Sign Out
+        </a>
+      {% else %}
+        <a href="{% url 'main:login' %}" class="block w-full text-center py-2.5 bg-[#FFD700] text-[#052962] rounded-md hover:bg-yellow-400 transition font-semibold text-sm">
+          Sign In
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Include AJAX Login Modal -->
+  {% include 'login.html' %}
+  <!-- Include AJAX Register Modal -->
+  {% include 'register.html' %}
+
+    <script>
+    // ==========================================
+    // GLOBAL CSRF TOKEN FUNCTION
+    // ==========================================
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    // Declare CSRF token globally (used by login and register modals)
+    const csrftoken = getCookie('csrftoken');
+  </script>
+
+  <script>
+    // Toggle mobile menu
+    const toggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const backdrop = document.getElementById('mobile-backdrop');
+    
+    toggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      backdrop.classList.toggle('hidden');
+    });
+
+    // Close mobile menu when clicking backdrop
+    backdrop.addEventListener('click', () => {
+      mobileMenu.classList.add('hidden');
+      backdrop.classList.add('hidden');
+    });
+
+    // Close menu when clicking any link inside mobile menu
+    const mobileLinks = document.querySelectorAll('.mobile-link');
+    mobileLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+        backdrop.classList.add('hidden');
+      });
+    });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!toggle.contains(e.target) && !mobileMenu.contains(e.target) && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        backdrop.classList.add('hidden');
+      }
+    });
+
+    {% if user.is_authenticated %}
+    // Profile dropdown toggle
+    const profileBtn = document.getElementById('profile-btn');
+    const profileModal = document.getElementById('profile-modal');
+
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileModal.classList.toggle('hidden');
+    });
+
+    // Close modal when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!profileBtn.contains(e.target) && !profileModal.contains(e.target)) {
+        profileModal.classList.add('hidden');
+      }
+    });
+    {% endif %}
+  </script>
+</body>
+</html>

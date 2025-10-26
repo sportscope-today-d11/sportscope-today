@@ -1,8 +1,17 @@
 from django.db import models
+
+# Create your models here.
+from unidecode import unidecode
+from django.db import models
 from django.utils.text import slugify
 import os
 import uuid
 from unidecode import unidecode
+<<<<<<< HEAD
+=======
+from django.templatetags.static import static
+from urllib.parse import urlparse
+>>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
 from django.contrib.auth.models import User
 
 # Create your models here.
@@ -11,12 +20,12 @@ class Team(models.Model):
     slug = models.SlugField(unique=True, primary_key=True)
     name = models.CharField(max_length=255)
     players = models.IntegerField()
-    age = models.FloatField()
+    age = models.FloatField(null=True)
     possession = models.FloatField()
     goals = models.IntegerField()
     assists = models.IntegerField()
-    penalty_kicks = models.IntegerField()
-    penalty_kick_attempts = models.IntegerField()
+    penalty_kicks = models.IntegerField(null=True)
+    penalty_kick_attempts = models.IntegerField(null=True)
     yellows = models.IntegerField()
     reds = models.IntegerField()
     image = models.ImageField(upload_to="teams/", null=True, blank=True)
@@ -29,8 +38,16 @@ class Team(models.Model):
 
     @property
     def image_url(self):
-        if self.image:
+        """
+        Priority:
+        1. Uploaded image di media/teams/
+        2. Static image di static/images/logo/
+        3. Default image
+        """
+        # Jika ada uploaded image
+        if self.image and hasattr(self.image, 'url'):
             return self.image.url
+<<<<<<< HEAD
 
         # cek logo di static/images/logo
         static_path = f"/static/images/logo/{self.slug}.png" if self.slug else None
@@ -109,6 +126,22 @@ class Match(models.Model):
 
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name} ({self.match_date})"
+=======
+        
+        # Coba cari di static folder
+        if self.slug:
+            static_path = f"images/logo/{self.slug}.png"
+            # Cek apakah file ada di static folder
+            static_file_path = os.path.join('static', static_path)
+            if os.path.exists(static_file_path):
+                return static(static_path)
+        
+        # Return default image
+        return static("images/teams/default.png")
+
+    def __str__(self):
+        return self.name or "Unnamed Team"
+>>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
 
 class Player(models.Model):
     slug = models.SlugField(unique=True, primary_key=True)
@@ -155,22 +188,97 @@ class Player(models.Model):
             self.slug = slugify(unidecode(self.name))
         super().save(*args, **kwargs)
 
+<<<<<<< HEAD
     def __str__(self):
         return self.name or "Unnamed Player"
 
+=======
+    @property
+    def image_url(self):
+        if self.image:
+            return self.image.url
+        # Cek apakah ada file static untuk slug tertentu
+        if self.slug:
+            static_file_path = f"static/images/player_pictures/{self.slug}.png"
+            if os.path.exists(static_file_path):
+                return f"/static/images/player_pictures/{self.slug}.png"
+        
+        # Fallback ke default
+        return "/static/images/player_pictures/default.png"
+
+    def __str__(self):
+        return self.name or "Unnamed Player"
+
+class News(models.Model):
+    CATEGORY_CHOICES = [
+        ("Transfer", "Transfer"),
+        ("Injury Update", "Injury Update"),
+        ("Match Result", "Match Result"),
+        ("Manager News", "Manager News"),
+        ("Player Award", "Player Award"),
+        ("Thoughts", "Thoughts"),
+        ("Other", "Other"),
+    ]
+
+    title = models.CharField(max_length=255)
+    link = models.URLField()
+    author = models.CharField(max_length=100)
+    source = models.CharField(max_length=100)
+    publish_time = models.DateField()
+    content = models.TextField()
+    thumbnail = models.URLField(
+        default="images/thumbnails/default.png",
+        blank=True
+    )
+    featured = models.BooleanField(default=False)
+    
+    category = models.CharField(
+        max_length=50,
+        choices=CATEGORY_CHOICES,
+        default="Other"
+    )
+
+    def __str__(self):
+        return self.title
+    
+    @property
+    def thumbnail_url(self):
+        """
+        Kembalikan URL untuk thumbnail:
+        - Kalau field thumbnail isinya 'default' atau kosong → pakai default static image.
+        - Kalau field thumbnail isinya URL valid (http/https) → pakai URL tersebut.
+        - Kalau field thumbnail isinya path lokal (images/thumbnails/...) → pakai static().
+        """
+        if not self.thumbnail or self.thumbnail.lower() == "default":
+            return static("images/thumbnails/default.png")
+
+        parsed = urlparse(self.thumbnail)
+        if parsed.scheme in ("http", "https"):
+            return self.thumbnail
+        else:
+            return static(self.thumbnail)
+        
+>>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
 class Person(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
         ('user', 'User'),
     ]
+<<<<<<< HEAD
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+=======
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+>>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
 
     def __str__(self):
         return f"{self.user.username} ({self.role})"
 
+<<<<<<< HEAD
     def is_admin(self):
         return self.role == 'admin'
 
@@ -180,3 +288,40 @@ class Person(models.Model):
             return cls.objects.get(user=user).role
         except cls.DoesNotExist:
             return 'user'
+=======
+class Match(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    season = models.CharField(max_length=20)
+    match_date = models.DateField()
+    league = models.CharField(max_length=100, default="Unknown")
+
+    home_team = models.ForeignKey(Team, related_name="home_matches", on_delete=models.CASCADE)
+    away_team = models.ForeignKey(Team, related_name="away_matches", on_delete=models.CASCADE)
+
+    # Full-time results
+    full_time_home_goals = models.IntegerField()
+    full_time_away_goals = models.IntegerField()
+    full_time_result = models.CharField(max_length=1)  # 'H' (home), 'A' (away), 'D' (draw)
+
+    # Half-time results
+    half_time_home_goals = models.IntegerField()
+    half_time_away_goals = models.IntegerField()
+    half_time_result = models.CharField(max_length=1)
+
+    # Stats
+    home_shots = models.IntegerField()
+    away_shots = models.IntegerField()
+    home_shots_on_target = models.IntegerField()
+    away_shots_on_target = models.IntegerField()
+    home_corners = models.IntegerField()
+    away_corners = models.IntegerField()
+    home_fouls = models.IntegerField()
+    away_fouls = models.IntegerField()
+    home_yellow_cards = models.IntegerField()
+    away_yellow_cards = models.IntegerField()
+    home_red_cards = models.IntegerField()
+    away_red_cards = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.home_team.name} vs {self.away_team.name} ({self.match_date})"
+>>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3

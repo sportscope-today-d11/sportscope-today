@@ -1,4 +1,5 @@
 from django.contrib import admin
+<<<<<<< HEAD
 from .models import Team, News, Match, Player
 
 @admin.register(Team)
@@ -28,3 +29,12 @@ class PlayerAdmin(admin.ModelAdmin):
     search_fields = ('name', 'nationality', 'positions')
     list_filter = ('nationality', 'overall_rating')
     ordering = ('-overall_rating',)
+=======
+from .models import Player, News, Team, Person
+
+# Register your models here.
+admin.site.register(Player)
+admin.site.register(News)
+admin.site.register(Team)
+admin.site.register(Person)
+>>>>>>> a0a90bd67e981b27d28007091ac62da3a4377fb3
