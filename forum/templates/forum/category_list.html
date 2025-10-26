@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+<style>
+    body {
+      font-family: 'Merriweather', sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    .category {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fafafa;
+      border: 1px solid #ddd;
+      padding: 10px 15px;
+      margin-top: 10px;
+      border-radius: 8px;
+    }
+    a.button {
+      background-color: #007bff;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+    a.button:hover {
+      background-color: #0056b3;
+    }
+    .add-btn {
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+  </style>
+{% block title %}Forum Categories{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h2>Forum Categories</h2>
+
+    <a href="{% url 'create_category' %}" class="button add-btn">+ Add Category</a>
+
+    {% for category in categories %}
+      <div class="category" style="display: flex; justify-content: space-between; align-items: center; background: #fafafa; border: 1px solid #ddd; padding: 10px 15px; margin-top: 10px; border-radius: 8px;">
+        <a href="{% url 'thread_list' category.slug %}">{{ category.name }}</a>
+        <a href="{% url 'create_thread' category.slug %}" class="button">Create Thread</a>
+      </div>
+    {% empty %}
+      <p>No categories yet.</p>
+    {% endfor %}
+  </div>
+{% endblock %}
+
