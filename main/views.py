@@ -25,7 +25,7 @@ def player_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     # pass both page_obj (for pagination controls) and players (iterable used in template)
-    context = {'page_obj': page_obj, 'players': page_obj.object_list}
+    context = {'page_obj': page_obj, 'players': page_obj.object_list, 'request':request}
     
     return render(request, 'player.html', context)
 
