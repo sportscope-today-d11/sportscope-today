@@ -1,3 +1,5 @@
+{% load static %}
+
 {% regroup page_obj by match_date as date_groups %}
   {% for day in date_groups %}
     <div class="mb-10">
@@ -19,7 +21,7 @@
               <div class="flex items-center space-x-3 text-gray-800">
                 <!-- HOME TEAM -->
                 <div class="flex items-center space-x-2">
-                  <img src="{% static 'images/logo/' %}{{ match.home_team|slugify }}.png"
+                  <img src="/static/images/logo/{{ match.home_team|slugify }}.png"
                        alt="{{ match.home_team }} logo"
                        class="w-6 h-6 object-contain" />
                   <span class="font-medium text-sm md:text-base">{{ match.home_team }}</span>

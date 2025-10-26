@@ -55,7 +55,7 @@ def match_detail(request, match_id):
 
 def match_history(request):
     # Ambil semua data pertandingan, urutkan dari terbaru
-    matches = Match.objects.all().order_by('-match_date', '-time')
+    matches = Match.objects.all().order_by('-match_date')
 
     # Ambil parameter filter dari query GET
     competition = request.GET.get('competition')

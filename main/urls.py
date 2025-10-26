@@ -11,9 +11,9 @@ urlpatterns = [
     path('teams/<slug:slug>/', views.team_detail, name='team_detail'),
 
     # MATCH URLS
+    path('matches/history/', views.match_history, name='match_history'),
     path('matches/<date>/', views.matches_by_date, name='matches_by_date'),
     path('matches/<uuid:match_id>/', views.match_detail, name='match_detail'),
-    path('matches/history/', views.match_history, name='match_history'),
 
     # ADMIN URLS
     path('admin/matches/', views.match_list_admin, name='admin_match_list'),
@@ -21,11 +21,8 @@ urlpatterns = [
     path('admin/matches/<uuid:match_id>/edit/', views.edit_match, name='edit_match'),
     path('admin/matches/<uuid:match_id>/delete/', views.delete_match, name='delete_match'),
 
-    # Hompage
-    path('', views.homepage, name='homepage'), 
-
     # PLAYER
-    path('player',views.player_list ,name='player_list'),
+    path('player/',views.player_list ,name='player_list'),
     path('player/<slug:slug>', views.player_detail, name='player_detail'),
     path('', views.homepage, name="homepage"),
     path('news/', views.news_list, name='news_list'),
