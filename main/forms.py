@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Person
+from .models import Person, Match, Team
 
 class RegisterForm(UserCreationForm):
     # Hidden field dengan default value 'user'
@@ -65,12 +65,3 @@ class MatchForm(forms.ModelForm):
                 attrs={'class': 'form-select'}
             ),
         }
-    
-# Form khusus untuk admin membuat user
-class AdminUserCreationForm(RegisterForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Tampilkan pilihan role untuk admin
-        self.fields['role'].widget = forms.RadioSelect(attrs={'class': 'form-radio'})
-        self.fields['role'].required = True
-        self.fields['role'].initial = 'user'
