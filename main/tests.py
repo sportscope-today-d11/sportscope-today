@@ -5,7 +5,6 @@ from .models import News
 import datetime
 import json
 
-
 class NewsModelTest(TestCase):
     def setUp(self):
         self.news = News.objects.create(
@@ -96,6 +95,12 @@ class NewsViewTest(TestCase):
         news_list = list(response.context["all_news"])
         self.assertEqual(news_list[0].title, "News 2")
 
+    def test_news_search(self):
+        """Search query harus menampilkan berita yang cocok"""
+        response = self.client.get(reverse("main:news_list") + "?q=News 1")
+        self.assertContains(response, "News 1")
+        self.assertNotContains(response, "News 2")
+
     # -----------------------------
     # BOOKMARK TESTS
     # -----------------------------
@@ -132,3 +137,63 @@ class NewsViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "News 1")
         self.assertNotContains(response, "News 2")
+
+    # -----------------------------
+    # DETAIL VIEW
+    # -----------------------------
+    def test_news_detail_page(self):
+        """Halaman detail berita bisa diakses"""
+        url = reverse("main:news_detail", args=[self.news1.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "News 1")
+        self.assertContains(response, "Content 1")
+
+    # -----------------------------
+    # ADMIN CREATE / UPDATE / DELETE
+    # -----------------------------
+    def test_news_create_requires_admin(self):
+        """Hanya admin yang bisa buka form create"""
+        # Non-admin
+        self.client.login(username="user", password="userpass")
+        response = self.client.get(reverse("main:news_create"))
+        self.assertEqual(response.status_code, 403)
+
+        # Admin
+        self.client.login(username="admin", password="adminpass")
+        response = self.client.get(reverse("main:news_create"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_news_update_requires_admin(self):
+        """Update hanya boleh admin"""
+        self.client.login(username="user", password="userpass")
+        response = self.client.get(reverse("main:news_update", args=[self.news1.id]))
+        self.assertEqual(response.status_code, 403)
+
+        self.client.login(username="admin", password="adminpass")
+        response = self.client.get(reverse("main:news_update", args=[self.news1.id]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_news_delete_requires_admin(self):
+        """Delete hanya boleh admin"""
+        self.client.login(username="user", password="userpass")
+        response = self.client.get(reverse("main:news_delete", args=[self.news1.id]))
+        self.assertEqual(response.status_code, 403)
+
+        self.client.login(username="admin", password="adminpass")
+        response = self.client.get(reverse("main:news_delete", args=[self.news1.id]))
+        self.assertEqual(response.status_code, 200)
+
+    # -----------------------------
+    # AJAX VIEW
+    # -----------------------------
+    def test_news_list_ajax_returns_html(self):
+        """AJAX view (news_list_ajax) harus kembalikan HTML snippet"""
+        response = self.client.get(
+            reverse("main:news_list_ajax"), {"category": "Transfer"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertIn("html", data)
+        self.assertIn("News 1", data["html"])
