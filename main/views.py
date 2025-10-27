@@ -681,9 +681,6 @@ def delete_team(request, team_slug):
             'message': f'An error occurred: {str(e)}'
         })
 
-def is_admin(user):
-    return user.is_staff
-
 # ------------------------------
 # NEWS VIEWS
 # ------------------------------
