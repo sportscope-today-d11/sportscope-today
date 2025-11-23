@@ -7,7 +7,7 @@ from main.models import Person
 from django.utils.html import strip_tags
 from django.contrib.auth import logout as auth_logout
 
-# Create your views here.
+# VIEWS AUTENTIKASI
 @csrf_exempt
 def login(request):
     username = request.POST['username']
@@ -105,3 +105,18 @@ def logout(request):
             "status": False,
             "message": f"Logout failed: {str(e)}"
         }, status=401)
+    
+
+# VIEWS MODUL TEAM
+
+
+# VIEWS MODUL NEWS
+
+
+# VIEWS MODUL PLAYER
+
+
+# VIEWS MODUL MATCH RESULTS
+
+
+# VIEWS MODUL FORUM
