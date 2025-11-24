@@ -17,9 +17,10 @@ urlpatterns = [
     path('team/delete/<slug:team_slug>/', views.delete_team, name='delete_team'),
     
     # MATCH URLS
-    path('matches/history/', views.match_history, name='match_history'),
+    path('match/match_history/', views.api_match_history, name='api_match_history'),
     path('matches/<str:date>/', views.matches_by_date, name='matches_by_date'),
-    path('matches/detail/<uuid:match_id>/', views.match_detail, name='match_detail'),
+    path('match/history/<uuid:match_id>/', views.api_match_detail, name='api_match_detail'),
+    path('matches/edit/<uuid:match_id>/', views.edit_match, name='edit_match'),
     path('matches/delete/<uuid:match_id>/', views.delete_match, name='delete_match'),
 
     path('api/matches_detail/', views.api_match_detail, name='api_match_detail'),

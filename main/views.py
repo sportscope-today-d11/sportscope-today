@@ -297,57 +297,103 @@ def delete_team(request, team_slug):
 # MATCH VIEWS
 # ------------------------------
 
-def match_detail(request, match_id):
-    """Tampilkan detail satu pertandingan"""
+def api_match_detail(request, match_id):
     match = get_object_or_404(
-        Match.objects.select_related('home_team', 'away_team'), 
+        Match.objects.select_related("home_team", "away_team"),
         id=match_id
     )
 
-    # Fallback kalau league kosong
-    if not match.league or match.league.strip() == "":
-        match.league = "Premier League"
+    return JsonResponse({
+        "success": True,
+        "match": {
+            "id": str(match.id),
+            "date": str(match.match_date),
+            "competition": match.league,
+            "home_team": match.home_team.name,
+            "away_team": match.away_team.name,
+            "score": f"{match.full_time_home_goals} - {match.full_time_away_goals}",
+            "half_time_score": f"{match.half_time_home_goals} - {match.half_time_away_goals}",
+            "stats": {
+                "shots": {
+                    "home": match.home_shots,
+                    "away": match.away_shots
+                },
+                "shots_on_target": {
+                    "home": match.home_shots_on_target,
+                    "away": match.away_shots_on_target
+                },
+                "corners": {
+                    "home": match.home_corners,
+                    "away": match.away_corners
+                },
+                "fouls": {
+                    "home": match.home_fouls,
+                    "away": match.away_fouls
+                },
+                "cards": {
+                    "yellow": {
+                        "home": match.home_yellow_cards,
+                        "away": match.away_yellow_cards
+                    },
+                    "red": {
+                        "home": match.home_red_cards,
+                        "away": match.away_red_cards
+                    }
+                },
+            }
+        }
+    })
 
-    context = {
-        "match": match,
-    }
-    return render(request, "match_detail.html", context)
+def api_match_history(request):
+    matches = Match.objects.select_related("home_team", "away_team").all()
 
-def match_history(request):
-    # Ambil semua data pertandingan, urutkan dari terbaru
-    matches = Match.objects.all().order_by('-match_date')
+    team_id = request.GET.get("team_id")
+    competition_id = request.GET.get("competition_id") 
 
-    # Ambil parameter filter dari query GET
-    competition = request.GET.get('competition')
-    date = request.GET.get('date')
+    # ---------------------------------
+    # FILTER: TEAM
+    # ---------------------------------
+    if team_id:
+        if not Team.objects.filter(slug=team_id).exists():
+            return JsonResponse({
+                "success": False,
+                "message": "team_id not found"
+            }, status=404)
 
-    # Terapkan filter kalau ada input dari user
-    if competition:
-        matches = matches.filter(league__iexact=competition)
-    if date:
-        matches = matches.filter(match_date=date)
+        matches = matches.filter(
+            Q(home_team_id=team_id) | Q(away_team_id=team_id)
+        )
 
-    # Pagination
-    paginator = Paginator(matches, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # ---------------------------------
+    # FILTER: COMPETITION
+    # ---------------------------------
+    if competition_id:
+        if not matches.filter(league__iexact=competition_id).exists():
+            return JsonResponse({
+                "success": False,
+                "message": "competition_id not found"
+            }, status=404)
 
-    # Ambil daftar kompetisi unik untuk dropdown
-    competitions = Match.objects.values_list('league', flat=True).distinct()
+        matches = matches.filter(league__iexact=competition_id)
 
-    context = {
-        'page_obj': page_obj,
-        'competitions': competitions,
-        'request': request,
-    }
-
-    # Kalau AJAX (filter via JS), kirim partial HTML aja
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        html = render_to_string('partials/match_list_partial.html', context, request=request)
-        return JsonResponse({'html': html})
-
-    # Render normal (HTML utuh)
-    return render(request, 'match_history.html', context)
+    # ---------------------------------
+    # RETURN JSON
+    # ---------------------------------
+    return JsonResponse({
+        "success": True,
+        "count": matches.count(),
+        "matches": [
+            {
+                "id": str(m.id),
+                "date": str(m.match_date),
+                "competition": m.league,
+                "home_team": m.home_team.name,
+                "away_team": m.away_team.name,
+                "score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
+            }
+            for m in matches.order_by("-match_date")
+        ]
+    })
 
 def matches_by_date(request, date):
     """Tampilkan semua pertandingan berdasarkan tanggal (format YYYY-MM-DD)"""
