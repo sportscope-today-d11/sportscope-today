@@ -409,6 +409,64 @@ def delete_match(request, match_id):
     messages.success(request, 'This match is deleted!')
     return redirect('main:admin_match_list')
 
+#lengkapin 
+def api_match_history(request):
+    matches = Match.objects.select_related("home_team", "away_team").all()
+
+    # Filters
+    team_id = request.GET.get("team_id")
+    competition = request.GET.get("competition_id")
+
+    # Filter by team
+    if team_id:
+        if not Team.objects.filter(id=team_id).exists():
+            return JsonResponse({
+                "success": False,
+                "message": "team_id not found"
+            }, status=400)
+        matches = matches.filter(
+            Q(home_team_id=team_id) | Q(away_team_id=team_id)
+        )
+
+    # Filter by competition
+    if competition:
+        matches = matches.filter(league__iexact=competition)
+
+    return JsonResponse({
+        "success": True,
+        "count": matches.count(),
+        "matches": [
+            {
+                "id": m.id,
+                "home_team": m.home_team.name,
+                "away_team": m.away_team.name,
+                "score": f"{m.home_score} - {m.away_score}",
+                "date": str(m.match_date),
+                "competition": m.league,
+            }
+            for m in matches
+        ]
+    })
+
+def api_match_detail(request, match_id):
+    match = get_object_or_404(
+        Match.objects.select_related("home_team", "away_team"),
+        id=match_id
+    )
+
+    return JsonResponse({
+        "success": True,
+        "match": {
+            "id": match.id,
+            "home_team": match.home_team.name,
+            "away_team": match.away_team.name,
+            "score": f"{match.home_score} - {match.away_score}",
+            "date": str(match.match_date),
+            "competition": match.league,
+        }
+    })
+
+
 # ------------------------------
 # PLAYER VIEWS
 # ------------------------------
