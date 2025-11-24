@@ -151,6 +151,7 @@ def logout(request):
         if request.user.is_authenticated:
             username = request.user.username
             auth_logout(request)
+            request.session.flush()
             return JsonResponse({
                 "username": username,
                 "status": True,
@@ -180,4 +181,4 @@ def logout(request):
 # VIEWS MODUL MATCH RESULTS
 
 
-# VIEWS MODUL FORUM
+# VIEWS MODUL FORUM~
