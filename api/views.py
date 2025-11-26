@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
 import json
-from main.models import Person, Team
+from main.models import Person, Match, Team
 from django.utils.html import strip_tags
 from django.contrib.auth import logout as auth_logout
 
@@ -167,95 +167,123 @@ def logout(request):
             "status": False,
             "message": f"Logout failed: {str(e)}"
         }, status=401)
+    
 
-# ========================== VIEWS MODUL TEAM ==========================
-# List semua teams
-@csrf_exempt
-def team_list(request):
-    try:
-        teams = Team.objects.all()
-        
-        # Build full URL untuk images
-        base_url = request.build_absolute_uri('/')[:-1]  # Removes trailing slash
-        
-        teams_data = []
-        for team in teams:
-            team_dict = {
-                'slug': team.slug,
-                'name': team.name,
-                'players': team.players,
-                'age': team.age,
-                'possession': team.possession,
-                'goals': team.goals,
-                'assists': team.assists,
-                'penalty_kicks': team.penalty_kicks,
-                'penalty_kick_attempts': team.penalty_kick_attempts,
-                'yellows': team.yellows,
-                'reds': team.reds,
-                'image_url': base_url + team.image_url if team.image_url else None
+# VIEWS MODUL TEAM
+
+
+# VIEWS MODUL NEWS
+
+
+# VIEWS MODUL PLAYER
+
+
+# VIEWS MODUL MATCH 
+def api_match_history(request):
+    matches = Match.objects.select_related("home_team", "away_team").all()
+
+    team_id = request.GET.get("team_id")   # expecting team slug
+    competition_id = request.GET.get("competition_id")
+
+    # --------------------------
+    # FILTER BY TEAM (slug)
+    # --------------------------
+    if team_id:
+        if not Team.objects.filter(slug=team_id).exists():
+            return JsonResponse({
+                "success": False,
+                "message": "team_id not found"
+            }, status=404)
+
+        matches = matches.filter(
+            Q(home_team__slug=team_id) | Q(away_team__slug=team_id)
+        )
+
+    # --------------------------
+    # FILTER BY COMPETITION
+    # --------------------------
+    if competition_id:
+        matches = matches.filter(league__iexact=competition_id)
+
+        if not matches.exists():
+            return JsonResponse({
+                "success": False,
+                "message": "competition_id not found"
+            }, status=404)
+
+    # --------------------------
+    # RETURN LIST
+    # --------------------------
+    return JsonResponse({
+        "success": True,
+        "count": matches.count(),
+        "matches": [
+            {
+                "id": str(m.id),
+                "date": str(m.match_date),
+                "competition": m.league,
+                "home_team": m.home_team.name,
+                "away_team": m.away_team.name,
+                "home_team_slug": m.home_team.slug,
+                "away_team_slug": m.away_team.slug,
+                "score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
             }
-            teams_data.append(team_dict)
-        
-        return JsonResponse({
-            'status': 'success',
-            'data': teams_data
-        }, safe=False)
-    
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=500)
+            for m in matches.order_by("-match_date")
+        ]
+    })
 
+def api_match_detail(request, match_id):
+    match = get_object_or_404(
+        Match.objects.select_related("home_team", "away_team"),
+        id=match_id
+    )
 
-# Detail team by slug
-@csrf_exempt
-def team_detail(request, slug):
-    try:
-        team = Team.objects.get(slug=slug)
-        
-        base_url = request.build_absolute_uri('/')[:-1]
-        
-        team_data = {
-            'slug': team.slug,
-            'name': team.name,
-            'players': team.players,
-            'age': team.age,
-            'possession': team.possession,
-            'goals': team.goals,
-            'assists': team.assists,
-            'penalty_kicks': team.penalty_kicks,
-            'penalty_kick_attempts': team.penalty_kick_attempts,
-            'yellows': team.yellows,
-            'reds': team.reds,
-            'image_url': base_url + team.image_url if team.image_url else None
+    return JsonResponse({
+        "success": True,
+        "match": {
+            "id": str(match.id),
+            "season": match.season,
+            "date": str(match.match_date),
+            "competition": match.league,
+
+            "home_team": match.home_team.name,
+            "home_team_slug": match.home_team.slug,
+            "away_team": match.away_team.name,
+            "away_team_slug": match.away_team.slug,
+
+            "full_time_score": f"{match.full_time_home_goals} - {match.full_time_away_goals}",
+            "half_time_score": f"{match.half_time_home_goals} - {match.half_time_away_goals}",
+
+            "stats": {
+                "shots": {
+                    "home": match.home_shots,
+                    "away": match.away_shots,
+                },
+                "shots_on_target": {
+                    "home": match.home_shots_on_target,
+                    "away": match.away_shots_on_target,
+                },
+                "corners": {
+                    "home": match.home_corners,
+                    "away": match.away_corners,
+                },
+                "fouls": {
+                    "home": match.home_fouls,
+                    "away": match.away_fouls,
+                },
+                "cards": {
+                    "yellow": {
+                        "home": match.home_yellow_cards,
+                        "away": match.away_yellow_cards,
+                    },
+                    "red": {
+                        "home": match.home_red_cards,
+                        "away": match.away_red_cards,
+                    }
+                }
+            }
         }
-        
-        return JsonResponse({
-            'status': 'success',
-            'data': team_data
-        })
-    
-    except Team.DoesNotExist:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Team not found'
-        }, status=404)
-    
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=500)
-
-
-# ========================== VIEWS MODUL NEWS ==========================
-
-
-# ========================== VIEWS MODUL PLAYER ==========================
-
-
-# ========================== VIEWS MODUL MATCH RESULTS ==========================
+    })
 
 
 # ========================== VIEWS MODUL FORUM ==========================
