@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
 import json
-from main.models import Person
+from main.models import Person, Match, Team
 from django.utils.html import strip_tags
 from django.contrib.auth import logout as auth_logout
 
@@ -178,7 +178,112 @@ def logout(request):
 # VIEWS MODUL PLAYER
 
 
-# VIEWS MODUL MATCH RESULTS
+# VIEWS MODUL MATCH 
+def api_match_history(request):
+    matches = Match.objects.select_related("home_team", "away_team").all()
+
+    team_id = request.GET.get("team_id")   # expecting team slug
+    competition_id = request.GET.get("competition_id")
+
+    # --------------------------
+    # FILTER BY TEAM (slug)
+    # --------------------------
+    if team_id:
+        if not Team.objects.filter(slug=team_id).exists():
+            return JsonResponse({
+                "success": False,
+                "message": "team_id not found"
+            }, status=404)
+
+        matches = matches.filter(
+            Q(home_team__slug=team_id) | Q(away_team__slug=team_id)
+        )
+
+    # --------------------------
+    # FILTER BY COMPETITION
+    # --------------------------
+    if competition_id:
+        matches = matches.filter(league__iexact=competition_id)
+
+        if not matches.exists():
+            return JsonResponse({
+                "success": False,
+                "message": "competition_id not found"
+            }, status=404)
+
+    # --------------------------
+    # RETURN LIST
+    # --------------------------
+    return JsonResponse({
+        "success": True,
+        "count": matches.count(),
+        "matches": [
+            {
+                "id": str(m.id),
+                "date": str(m.match_date),
+                "competition": m.league,
+                "home_team": m.home_team.name,
+                "away_team": m.away_team.name,
+                "home_team_slug": m.home_team.slug,
+                "away_team_slug": m.away_team.slug,
+                "score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
+            }
+            for m in matches.order_by("-match_date")
+        ]
+    })
+
+def api_match_detail(request, match_id):
+    match = get_object_or_404(
+        Match.objects.select_related("home_team", "away_team"),
+        id=match_id
+    )
+
+    return JsonResponse({
+        "success": True,
+        "match": {
+            "id": str(match.id),
+            "season": match.season,
+            "date": str(match.match_date),
+            "competition": match.league,
+
+            "home_team": match.home_team.name,
+            "home_team_slug": match.home_team.slug,
+            "away_team": match.away_team.name,
+            "away_team_slug": match.away_team.slug,
+
+            "full_time_score": f"{match.full_time_home_goals} - {match.full_time_away_goals}",
+            "half_time_score": f"{match.half_time_home_goals} - {match.half_time_away_goals}",
+
+            "stats": {
+                "shots": {
+                    "home": match.home_shots,
+                    "away": match.away_shots,
+                },
+                "shots_on_target": {
+                    "home": match.home_shots_on_target,
+                    "away": match.away_shots_on_target,
+                },
+                "corners": {
+                    "home": match.home_corners,
+                    "away": match.away_corners,
+                },
+                "fouls": {
+                    "home": match.home_fouls,
+                    "away": match.away_fouls,
+                },
+                "cards": {
+                    "yellow": {
+                        "home": match.home_yellow_cards,
+                        "away": match.away_yellow_cards,
+                    },
+                    "red": {
+                        "home": match.home_red_cards,
+                        "away": match.away_red_cards,
+                    }
+                }
+            }
+        }
+    })
 
 
 # VIEWS MODUL FORUM~
