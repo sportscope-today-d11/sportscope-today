@@ -6,6 +6,7 @@ import json
 from main.models import Person, Match, Team
 from django.utils.html import strip_tags
 from django.contrib.auth import logout as auth_logout
+from django.views.decorators.http import require_GET, require_POST
 
 # VIEWS AUTENTIKASI
 @csrf_exempt
@@ -173,7 +174,97 @@ def logout(request):
 
 
 # VIEWS MODUL NEWS
+@require_GET
+def api_news_list(request):
+    q = request.GET.get('q', '')
+    category = request.GET.get('category', '')
+    sort = request.GET.get('sort', 'latest')
 
+    news_qs = News.objects.all()
+
+    # Search
+    if q:
+        news_qs = news_qs.filter(
+            Q(title__icontains=q) | Q(content__icontains=q) | Q(source__icontains=q)
+        )
+
+    # Filter kategori
+    if category:
+        news_qs = news_qs.filter(category__iexact=category)
+
+    # Sorting
+    news_qs = news_qs.order_by('publish_time' if sort == 'oldest' else '-publish_time')
+
+    # Convert ke JSON
+    data = [
+        {
+            "id": n.id,
+            "title": n.title,
+            "author": n.author,
+            "source": n.source,
+            "publish_time": n.publish_time,
+            "category": n.category,
+            "thumbnail": n.thumbnail_url,
+        }
+        for n in news_qs
+    ]
+
+    return JsonResponse({"news": data})
+
+@require_GET
+def api_news_detail(request, news_id):
+    news = get_object_or_404(News, id=news_id)
+
+    data = {
+        "id": news.id,
+        "title": news.title,
+        "author": news.author,
+        "source": news.source,
+        "publish_time": news.publish_time,
+        "content": news.content,
+        "category": news.category,
+        "thumbnail": news.thumbnail_url,
+    }
+
+    return JsonResponse(data)
+
+@require_POST
+def api_toggle_bookmark(request, news_id):
+    bookmarks = request.session.get('bookmarks', [])
+
+    nid = str(news_id)
+
+    if nid in bookmarks:
+        bookmarks.remove(nid)
+        status = "removed"
+    else:
+        bookmarks.append(nid)
+        status = "added"
+
+    request.session['bookmarks'] = bookmarks
+    request.session.modified = True
+
+    return JsonResponse({"success": True, "status": status})
+
+@require_GET
+def api_bookmarked_news(request):
+    bookmarks = request.session.get('bookmarks', [])
+    news_qs = News.objects.filter(id__in=bookmarks)
+
+    data = [
+        {
+            "id": n.id,
+            "title": n.title,
+            "author": n.author,
+            "source": n.source,
+            "publish_time": n.publish_time,
+            "category": n.category,
+            "thumbnail": n.thumbnail_url,
+        }
+        for n in news_qs
+    ]
+
+    return JsonResponse({"bookmarks": data})
 
 # VIEWS MODUL PLAYER
 
