@@ -1,4 +1,5 @@
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
@@ -6,6 +7,7 @@ import json
 from main.models import Person, Match, Team
 from django.utils.html import strip_tags
 from django.contrib.auth import logout as auth_logout
+from django.db.models import Q
 
 # VIEWS AUTENTIKASI
 @csrf_exempt
@@ -176,8 +178,21 @@ def team_list(request):
     try:
         teams = Team.objects.all()
         
+        # FILTER (optional)
+        min_goals = request.GET.get('min_goals')
+        if min_goals:
+            teams = teams.filter(goals__gte=int(min_goals))
+        
+        # SORT (optional)
+        sort_by = request.GET.get('sort_by', 'goals')
+        order = request.GET.get('order', 'asc')
+        
+        allowed_sort = ['name', 'goals', 'possession', 'age', 'players', 'yellows', 'reds']
+        if sort_by in allowed_sort:
+            teams = teams.order_by(f'-{sort_by}' if order == 'desc' else sort_by)
+        
         # Build full URL untuk images
-        base_url = request.build_absolute_uri('/')[:-1]  # Removes trailing slash
+        base_url = request.build_absolute_uri('/')[:-1]
         
         teams_data = []
         for team in teams:
@@ -197,16 +212,11 @@ def team_list(request):
             }
             teams_data.append(team_dict)
         
-        return JsonResponse({
-            'status': 'success',
-            'data': teams_data
-        }, safe=False)
+        # Return langsung array of objects (flat JSON)
+        return JsonResponse(teams_data, safe=False)
     
     except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=500)
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 # Detail team by slug
@@ -232,23 +242,15 @@ def team_detail(request, slug):
             'image_url': base_url + team.image_url if team.image_url else None
         }
         
-        return JsonResponse({
-            'status': 'success',
-            'data': team_data
-        })
+        # Return langsung object (flat JSON)
+        return JsonResponse(team_data)
     
     except Team.DoesNotExist:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Team not found'
-        }, status=404)
+        return JsonResponse({'error': 'Team not found'}, status=404)
     
     except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=500)
-
+        return JsonResponse({'error': str(e)}, status=500)
+    
 # VIEWS MODUL NEWS
 
 

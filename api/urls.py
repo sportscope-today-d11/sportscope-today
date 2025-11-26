@@ -10,8 +10,8 @@ urlpatterns = [
     path('auth/logout/', logout, name='logout'),
 
     # ENDPOINT MODUL TEAM
-    path('api/teams/', team_list, name='team_list'),
-    path('api/teams/<slug:slug>/', team_detail, name='team_detail'),
+    path('teams/', team_list, name='team_list'),
+    path('teams/<slug:slug>/', team_detail, name='team_detail'),
 
     # ENDPOINT MODUL NEWS
 
