@@ -170,7 +170,84 @@ def logout(request):
     
 
 # VIEWS MODUL TEAM
+# List semua teams
+@csrf_exempt
+def team_list(request):
+    try:
+        teams = Team.objects.all()
+        
+        # Build full URL untuk images
+        base_url = request.build_absolute_uri('/')[:-1]  # Removes trailing slash
+        
+        teams_data = []
+        for team in teams:
+            team_dict = {
+                'slug': team.slug,
+                'name': team.name,
+                'players': team.players,
+                'age': team.age,
+                'possession': team.possession,
+                'goals': team.goals,
+                'assists': team.assists,
+                'penalty_kicks': team.penalty_kicks,
+                'penalty_kick_attempts': team.penalty_kick_attempts,
+                'yellows': team.yellows,
+                'reds': team.reds,
+                'image_url': base_url + team.image_url if team.image_url else None
+            }
+            teams_data.append(team_dict)
+        
+        return JsonResponse({
+            'status': 'success',
+            'data': teams_data
+        }, safe=False)
+    
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
+
+# Detail team by slug
+@csrf_exempt
+def team_detail(request, slug):
+    try:
+        team = Team.objects.get(slug=slug)
+        
+        base_url = request.build_absolute_uri('/')[:-1]
+        
+        team_data = {
+            'slug': team.slug,
+            'name': team.name,
+            'players': team.players,
+            'age': team.age,
+            'possession': team.possession,
+            'goals': team.goals,
+            'assists': team.assists,
+            'penalty_kicks': team.penalty_kicks,
+            'penalty_kick_attempts': team.penalty_kick_attempts,
+            'yellows': team.yellows,
+            'reds': team.reds,
+            'image_url': base_url + team.image_url if team.image_url else None
+        }
+        
+        return JsonResponse({
+            'status': 'success',
+            'data': team_data
+        })
+    
+    except Team.DoesNotExist:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Team not found'
+        }, status=404)
+    
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
 # VIEWS MODUL NEWS
 
