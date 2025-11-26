@@ -4,10 +4,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
 import json
-from main.models import Person, Match, Team
+from main.models import Person, Match, Team, News
 from django.utils.html import strip_tags
 from django.contrib.auth import logout as auth_logout
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_GET, require_POST
 
 # VIEWS AUTENTIKASI
 @csrf_exempt
@@ -252,7 +254,97 @@ def team_detail(request, slug):
         return JsonResponse({'error': str(e)}, status=500)
     
 # VIEWS MODUL NEWS
+@require_GET
+def api_news_list(request):
+    q = request.GET.get('q', '')
+    category = request.GET.get('category', '')
+    sort = request.GET.get('sort', 'latest')
 
+    news_qs = News.objects.all()
+
+    # Search
+    if q:
+        news_qs = news_qs.filter(
+            Q(title__icontains=q) | Q(content__icontains=q) | Q(source__icontains=q)
+        )
+
+    # Filter kategori
+    if category:
+        news_qs = news_qs.filter(category__iexact=category)
+
+    # Sorting
+    news_qs = news_qs.order_by('publish_time' if sort == 'oldest' else '-publish_time')
+
+    # Convert ke JSON
+    data = [
+        {
+            "id": n.id,
+            "title": n.title,
+            "author": n.author,
+            "source": n.source,
+            "publish_time": n.publish_time,
+            "category": n.category,
+            "thumbnail": n.thumbnail_url,
+        }
+        for n in news_qs
+    ]
+
+    return JsonResponse({"news": data})
+
+@require_GET
+def api_news_detail(request, news_id):
+    news = get_object_or_404(News, id=news_id)
+
+    data = {
+        "id": news.id,
+        "title": news.title,
+        "author": news.author,
+        "source": news.source,
+        "publish_time": news.publish_time,
+        "content": news.content,
+        "category": news.category,
+        "thumbnail": news.thumbnail_url,
+    }
+
+    return JsonResponse(data)
+
+@require_POST
+def api_toggle_bookmark(request, news_id):
+    bookmarks = request.session.get('bookmarks', [])
+
+    nid = str(news_id)
+
+    if nid in bookmarks:
+        bookmarks.remove(nid)
+        status = "removed"
+    else:
+        bookmarks.append(nid)
+        status = "added"
+
+    request.session['bookmarks'] = bookmarks
+    request.session.modified = True
+
+    return JsonResponse({"success": True, "status": status})
+
+@require_GET
+def api_bookmarked_news(request):
+    bookmarks = request.session.get('bookmarks', [])
+    news_qs = News.objects.filter(id__in=bookmarks)
+
+    data = [
+        {
+            "id": n.id,
+            "title": n.title,
+            "author": n.author,
+            "source": n.source,
+            "publish_time": n.publish_time,
+            "category": n.category,
+            "thumbnail": n.thumbnail_url,
+        }
+        for n in news_qs
+    ]
+
+    return JsonResponse({"bookmarks": data})
 
 # VIEWS MODUL PLAYER
 
@@ -293,36 +385,33 @@ def api_match_history(request):
     # --------------------------
     # RETURN LIST
     # --------------------------
-    return JsonResponse({
-        "success": True,
-        "count": matches.count(),
-        "matches": [
-            {
-                "id": str(m.id),
-                "date": str(m.match_date),
-                "competition": m.league,
-                "home_team": m.home_team.name,
-                "away_team": m.away_team.name,
-                "home_team_slug": m.home_team.slug,
-                "away_team_slug": m.away_team.slug,
-                "score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
-            }
-            for m in matches.order_by("-match_date")
-        ]
-    })
+    data = [
+        {
+            "id": str(m.id),
+            "season": m.season,
+            "date": m.match_date.isoformat() if m.match_date else None,
+            "competition": m.league,
+
+            "home_team": m.home_team.name,
+            "home_team_slug": m.home_team.slug,
+            "away_team": m.away_team.name,
+            "away_team_slug": m.away_team.slug,
+
+            "full_time_score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
+        }
+        for m in matches.order_by("-match_date")
+    ]
+
+    return JsonResponse(data, safe=False)
 
 def api_match_detail(request, match_id):
-    match = get_object_or_404(
-        Match.objects.select_related("home_team", "away_team"),
-        id=match_id
-    )
+    try:
+        match = Match.objects.select_related("home_team", "away_team").get(id=match_id)
 
-    return JsonResponse({
-        "success": True,
-        "match": {
+        data = {
             "id": str(match.id),
             "season": match.season,
-            "date": str(match.match_date),
+            "date": match.match_date.isoformat() if match.match_date else None,
             "competition": match.league,
 
             "home_team": match.home_team.name,
@@ -333,36 +422,26 @@ def api_match_detail(request, match_id):
             "full_time_score": f"{match.full_time_home_goals} - {match.full_time_away_goals}",
             "half_time_score": f"{match.half_time_home_goals} - {match.half_time_away_goals}",
 
-            "stats": {
-                "shots": {
-                    "home": match.home_shots,
-                    "away": match.away_shots,
-                },
-                "shots_on_target": {
-                    "home": match.home_shots_on_target,
-                    "away": match.away_shots_on_target,
-                },
-                "corners": {
-                    "home": match.home_corners,
-                    "away": match.away_corners,
-                },
-                "fouls": {
-                    "home": match.home_fouls,
-                    "away": match.away_fouls,
-                },
-                "cards": {
-                    "yellow": {
-                        "home": match.home_yellow_cards,
-                        "away": match.away_yellow_cards,
-                    },
-                    "red": {
-                        "home": match.home_red_cards,
-                        "away": match.away_red_cards,
-                    }
-                }
-            }
-        }
-    })
+            "shots_home": match.home_shots,
+            "shots_away": match.away_shots,
+            "shots_on_target_home": match.home_shots_on_target,
+            "shots_on_target_away": match.away_shots_on_target,
 
+            "corners_home": match.home_corners,
+            "corners_away": match.away_corners,
+
+            "fouls_home": match.home_fouls,
+            "fouls_away": match.away_fouls,
+
+            "yellow_cards_home": match.home_yellow_cards,
+            "yellow_cards_away": match.away_yellow_cards,
+            "red_cards_home": match.home_red_cards,
+            "red_cards_away": match.away_red_cards,
+        }
+
+        return JsonResponse(data)
+
+    except Match.DoesNotExist:
+        return JsonResponse({"detail": "Match not found"}, status=404)
 
 # ========================== VIEWS MODUL FORUM ==========================
