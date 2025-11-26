@@ -32,12 +32,6 @@ class Team(models.Model):
 
     @property
     def image_url(self):
-        """
-        Priority:
-        1. Uploaded image di media/teams/
-        2. Static image di static/images/logo/
-        3. Default image
-        """
         # Jika ada uploaded image
         if self.image and hasattr(self.image, 'url'):
             return self.image.url
@@ -269,7 +263,7 @@ class News(models.Model):
 class Person(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
-        ('user', 'User'),
+        ('user', 'User '),
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE)
