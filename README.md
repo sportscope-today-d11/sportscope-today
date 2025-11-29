@@ -29,11 +29,7 @@ https://ahmad-omar-sportscopetoday.pbp.cs.ui.ac.id/
 # Modul untuk setiap anggota: modul 2-6 pakai pageination
 ## 1. Dashboard
 Berfungsi sebagai beranda utama yang menampilkan ringkasan konten penting:
-- Berita sepak bola terbaru.
-- Highlight hasil pertandingan terbaru.
-- Highlight statistik klub Liga Premier Inggris (misalnya komentar baru atau thread populer).
-- Highlight pemain FIFA paling populer saat ini (berdasarkan jumlah like).
-- Tujuan utama dashboard adalah memberikan pengguna akses cepat ke semua pembaruan penting dalam satu tampilan.
+- Halaman utama yang berisikan navigasi ke modul lain
 
 ## 2. Halaman News 
 Berisi daftar berita olahraga yang disusun berdasarkan kategori atau tanggal rilis.
@@ -55,7 +51,6 @@ Fitur ini menampilkan rekap hasil pertandingan sebelumnya.
 
 ## 5. Forum General
 Ruang diskusi komunitas yang mirip konsepnya dengan Reddit/Quora.
-
 Forum General: tempat untuk membahas topik umum seputar olahraga.
 Forum by Category: membahas topik spesifik seperti liga tertentu, klub favorit, atau pemain.
 

@@ -24,5 +24,15 @@ urlpatterns = [
     # ENDPOINT MODUL MATCH RESULTS
 
     # ENDPOINT MODUL FORUM
+    path("forum/add-forum/", api_add_forum, name="api_add_forum"),
+    path("forum/<uuid:forum_id>/add-comment/", api_add_comment, name="api_add_comment"),
+    path("forum/delete-forum/", api_delete_forum, name="api_delete_forum"),
+    path("forum/delete-comment/", api_delete_comment, name="api_delete_comment"),
+    path("forum/add-bookmart/", api_add_bookmart, name="api_add_bookmart"),
+    path("forum/forums/", api_forum_list, name="api_forum_list"),
+    path("forum/<uuid:forum_id>/", api_forum_detail, name="api_forum_detail"),
+    path("forum/<uuid:forum_id>/comments/", api_forum_comments, name="api_forum_comments"),
+    path("forum/my-bookmark/", api_forum_my_bookmark, name="api_forum_my_bookmark"),
+    path("forum/like/", api_forum_like, name="api_forum_like"),
 
 ]

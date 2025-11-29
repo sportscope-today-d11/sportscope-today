@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.models import User
 import json
-from main.models import Person, Match, Team, News
+from main.models import Person, Match, Team, News, Forum, Comment
 from django.utils.html import strip_tags
 from django.contrib.auth import logout as auth_logout
 from django.db.models import Q
@@ -445,3 +445,445 @@ def api_match_detail(request, match_id):
         return JsonResponse({"detail": "Match not found"}, status=404)
 
 # ========================== VIEWS MODUL FORUM ==========================
+def get_person_from_request(request):
+    if not request.user.is_authenticated:
+        return None
+    try:
+        return Person.objects.get(user=request.user)
+    except Person.DoesNotExist:
+        return None
+
+
+def forum_to_dict(forum, current_person=None):
+    is_bookmarked = False
+    is_liked = False
+
+    if current_person is not None:
+        is_bookmarked = forum.bookmarked_by.filter(id=current_person.id).exists()
+        is_liked = forum.liked_by.filter(id=current_person.id).exists()
+
+    return {
+        "id": str(forum.id),
+        "title": forum.title,
+        "content": forum.content,
+        "author": forum.author.user.username,
+        "author_role": forum.author.role,
+        "created_at": forum.created_at.isoformat(),
+        "updated_at": forum.updated_at.isoformat(),
+        "context": forum.get_context_preview(),
+        "like_count": forum.like_count,
+        "bookmark_count": forum.bookmark_count,
+        "comment_count": forum.comment_count,
+        "is_bookmarked": is_bookmarked,
+        "is_liked": is_liked,
+    }
+
+
+def comment_to_dict(comment):
+    return {
+        "id": str(comment.id),
+        "forum_id": str(comment.forum.id),
+        "author": comment.author.user.username,
+        "author_role": comment.author.role,
+        "text": comment.text,
+        "created_at": comment.created_at.isoformat(),
+        "parent_id": str(comment.parent.id) if comment.parent else None,
+        "reply_to_username": comment.reply_to_username,
+    }
+
+
+# =============== ENDPOINT FORUM ===============
+
+# POST /api/forum/add-forum/
+@csrf_exempt
+@require_POST
+def api_add_forum(request):
+    person = get_person_from_request(request)
+    if person is None:
+        return JsonResponse(
+            {"success": False, "message": "Authentication required."}, status=401
+        )
+
+    try:
+        if request.content_type == "application/json":
+            data = json.loads(request.body.decode("utf-8"))
+        else:
+            data = request.POST
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
+
+    title = data.get("title", "").strip()
+    content = data.get("content", "").strip()
+    news_id = data.get("news_id")
+    match_id = data.get("match_id")
+
+    if not title or not content:
+        return JsonResponse(
+            {"success": False, "message": "Title and content are required."},
+            status=400,
+        )
+
+    news = None
+    match = None
+
+    if news_id:
+        news = News.objects.filter(id=news_id).first()
+        if news is None:
+            return JsonResponse(
+                {"success": False, "message": "News not found."}, status=404
+            )
+
+    if match_id:
+        match = Match.objects.filter(id=match_id).first()
+        if match is None:
+            return JsonResponse(
+                {"success": False, "message": "Match not found."}, status=404
+            )
+
+    forum = Forum.objects.create(
+        title=title,
+        content=content,
+        author=person,
+        news=news,
+        match=match,
+    )
+
+    return JsonResponse(
+        {"success": True, "forum": forum_to_dict(forum, current_person=person)},
+        status=201,
+    )
+
+
+# POST /api/forum/<id_forum>/add-comment/
+@csrf_exempt
+@require_POST
+def api_add_comment(request, forum_id):
+    person = get_person_from_request(request)
+    if person is None:
+        return JsonResponse(
+            {"success": False, "message": "Authentication required."}, status=401
+        )
+
+    forum = Forum.objects.filter(id=forum_id).first()
+    if forum is None:
+        return JsonResponse(
+            {"success": False, "message": "Forum not found."}, status=404
+        )
+
+    try:
+        if request.content_type == "application/json":
+            data = json.loads(request.body.decode("utf-8"))
+        else:
+            data = request.POST
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
+
+    text = data.get("text", "").strip()
+    reply_to_comment_id = data.get("reply_to_comment_id")  # optional
+
+    if not text:
+        return JsonResponse(
+            {"success": False, "message": "Comment text is required."}, status=400
+        )
+
+    parent = None
+    reply_to_person = None
+
+    if reply_to_comment_id:
+        target_comment = Comment.objects.filter(
+            id=reply_to_comment_id, forum=forum
+        ).first()
+        if target_comment is None:
+            return JsonResponse(
+                {"success": False, "message": "Target comment not found."}, status=404
+            )
+
+        # root comment (maks 1 level)
+        root = target_comment
+        if target_comment.parent is not None:
+            root = target_comment.parent
+
+        parent = root
+        reply_to_person = target_comment.author
+
+    comment = Comment.objects.create(
+        forum=forum,
+        author=person,
+        parent=parent,
+        reply_to=reply_to_person,
+        text=text,
+    )
+
+    return JsonResponse(
+        {"success": True, "comment": comment_to_dict(comment)}, status=201
+    )
+
+
+# POST /api/forum/delete-forum/
+@csrf_exempt
+@require_POST
+def api_delete_forum(request):
+    person = get_person_from_request(request)
+    if person is None:
+        return JsonResponse(
+            {"success": False, "message": "Authentication required."}, status=401
+        )
+
+    try:
+        if request.content_type == "application/json":
+            data = json.loads(request.body.decode("utf-8"))
+        else:
+            data = request.POST
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
+
+    forum_id = data.get("forum_id")
+    if not forum_id:
+        return JsonResponse(
+            {"success": False, "message": "forum_id is required."}, status=400
+        )
+
+    forum = Forum.objects.filter(id=forum_id).first()
+    if forum is None:
+        return JsonResponse(
+            {"success": False, "message": "Forum not found."}, status=404
+        )
+
+    # hanya author atau admin
+    if forum.author != person and not person.is_admin():
+        return JsonResponse({"success": False, "message": "Forbidden."}, status=403)
+
+    forum.delete()
+    return JsonResponse({"success": True, "message": "Forum deleted."})
+
+
+# POST /api/forum/delete-comment/
+@csrf_exempt
+@require_POST
+def api_delete_comment(request):
+    person = get_person_from_request(request)
+    if person is None:
+        return JsonResponse(
+            {"success": False, "message": "Authentication required."}, status=401
+        )
+
+    try:
+        if request.content_type == "application/json":
+            data = json.loads(request.body.decode("utf-8"))
+        else:
+            data = request.POST
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
+
+    comment_id = data.get("comment_id")
+    if not comment_id:
+        return JsonResponse(
+            {"success": False, "message": "comment_id is required."}, status=400
+        )
+
+    comment = Comment.objects.filter(id=comment_id).first()
+    if comment is None:
+        return JsonResponse(
+            {"success": False, "message": "Comment not found."}, status=404
+        )
+
+    # boleh hapus: author comment, author forum, admin
+    if (
+        comment.author != person
+        and comment.forum.author != person
+        and not person.is_admin()
+    ):
+        return JsonResponse({"success": False, "message": "Forbidden."}, status=403)
+
+    comment.delete()
+    return JsonResponse({"success": True, "message": "Comment deleted."})
+
+
+# POST /api/forum/add-bookmart/
+@csrf_exempt
+@require_POST
+def api_add_bookmart(request):  # pakai nama typo sesuai spek lo
+    person = get_person_from_request(request)
+    if person is None:
+        return JsonResponse(
+            {"success": False, "message": "Authentication required."}, status=401
+        )
+
+    try:
+        if request.content_type == "application/json":
+            data = json.loads(request.body.decode("utf-8"))
+        else:
+            data = request.POST
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
+
+    forum_id = data.get("forum_id")
+    if not forum_id:
+        return JsonResponse(
+            {"success": False, "message": "forum_id is required."}, status=400
+        )
+
+    forum = Forum.objects.filter(id=forum_id).first()
+    if forum is None:
+        return JsonResponse(
+            {"success": False, "message": "Forum not found."}, status=404
+        )
+
+    if forum.bookmarked_by.filter(id=person.id).exists():
+        forum.bookmarked_by.remove(person)
+        status_str = "removed"
+    else:
+        forum.bookmarked_by.add(person)
+        status_str = "added"
+
+    return JsonResponse(
+        {
+            "success": True,
+            "status": status_str,
+            "bookmark_count": forum.bookmark_count,
+        }
+    )
+
+
+# GET /api/forum/forums/
+@require_GET
+def api_forum_list(request):
+    person = get_person_from_request(request)
+
+    qs = Forum.objects.all()
+
+    news_id = request.GET.get("news_id")
+    match_id = request.GET.get("match_id")
+    q = request.GET.get("q", "").strip()
+    order = request.GET.get("order", "latest")
+
+    if news_id:
+        qs = qs.filter(news_id=news_id)
+
+    if match_id:
+        qs = qs.filter(match_id=match_id)
+
+    if q:
+        qs = qs.filter(
+            Q(title__icontains=q)
+            | Q(content__icontains=q)
+            | Q(author__user__username__icontains=q)
+        )
+
+    if order == "popular":
+        qs = qs.annotate(num_likes=Count("liked_by")).order_by(
+            "-num_likes", "-created_at"
+        )
+    elif order == "commented":
+        qs = qs.annotate(num_comments=Count("comments")).order_by(
+            "-num_comments", "-created_at"
+        )
+    else:
+        qs = qs.order_by("-created_at")
+
+    data = [forum_to_dict(f, current_person=person) for f in qs]
+    return JsonResponse({"forums": data})
+
+
+# GET /api/forum/<id_forum>/
+@require_GET
+def api_forum_detail(request, forum_id):
+    person = get_person_from_request(request)
+    forum = Forum.objects.filter(id=forum_id).first()
+    if forum is None:
+        return JsonResponse(
+            {"success": False, "message": "Forum not found."}, status=404
+        )
+
+    data = forum_to_dict(forum, current_person=person)
+    return JsonResponse({"success": True, "forum": data})
+
+
+# GET /api/forum/<id_forum>/comments/
+@require_GET
+def api_forum_comments(request, forum_id):
+    forum = Forum.objects.filter(id=forum_id).first()
+    if forum is None:
+        return JsonResponse(
+            {"success": False, "message": "Forum not found."}, status=404
+        )
+
+    root_comments = (
+        forum.comments.filter(parent__isnull=True)
+        .order_by("created_at")
+        .select_related("author", "reply_to")
+    )
+    all_replies = (
+        forum.comments.filter(parent__isnull=False)
+        .order_by("created_at")
+        .select_related("author", "reply_to", "parent")
+    )
+
+    replies_map = {}
+    for c in all_replies:
+        replies_map.setdefault(str(c.parent_id), []).append(comment_to_dict(c))
+
+    result = []
+    for root in root_comments:
+        root_dict = comment_to_dict(root)
+        root_dict["replies"] = replies_map.get(str(root.id), [])
+        result.append(root_dict)
+
+    return JsonResponse({"success": True, "comments": result})
+
+
+# GET /api/forum/my-bookmark/
+@require_GET
+def api_forum_my_bookmark(request):
+    person = get_person_from_request(request)
+    if person is None:
+        return JsonResponse(
+            {"success": False, "message": "Authentication required."}, status=401
+        )
+
+    qs = Forum.objects.filter(bookmarked_by=person).order_by("-created_at")
+    data = [forum_to_dict(f, current_person=person) for f in qs]
+
+    return JsonResponse({"success": True, "bookmarks": data})
+
+
+# POST /api/forum/like
+@csrf_exempt
+@require_POST
+def api_forum_like(request):
+    person = get_person_from_request(request)
+    if person is None:
+        return JsonResponse(
+            {"success": False, "message": "Authentication required."}, status=401
+        )
+
+    try:
+        if request.content_type == "application/json":
+            data = json.loads(request.body.decode("utf-8"))
+        else:
+            data = request.POST
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
+
+    forum_id = data.get("forum_id")
+    if not forum_id:
+        return JsonResponse(
+            {"success": False, "message": "forum_id is required."}, status=400
+        )
+
+    forum = Forum.objects.filter(id=forum_id).first()
+    if forum is None:
+        return JsonResponse(
+            {"success": False, "message": "Forum not found."}, status=404
+        )
+
+    if forum.liked_by.filter(id=person.id).exists():
+        forum.liked_by.remove(person)
+        status_str = "unliked"
+    else:
+        forum.liked_by.add(person)
+        status_str = "liked"
+
+    return JsonResponse(
+        {"success": True, "status": status_str, "like_count": forum.like_count}
+    )
