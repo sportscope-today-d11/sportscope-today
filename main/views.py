@@ -304,7 +304,7 @@ def match_detail(request, match_id):
     )
 
     # Fallback kalau league kosong
-    if not match.league or match.league.strip() == "":
+    if not match.league or match.league.strip() == "" or match.league == "Unknown":
         match.league = "Premier League"
 
     context = {
@@ -315,6 +315,14 @@ def match_detail(request, match_id):
 def match_history(request):
     # Ambil semua data pertandingan, urutkan dari terbaru
     matches = Match.objects.all().order_by('-match_date')
+
+    # Ganti Unknown atau kosong jadi Premier League ---
+    cleaned_matches = []
+    for m in matches:
+        if not m.league or m.league.strip() == "" or m.league == "Unknown":
+            m.league = "Premier League"
+        cleaned_matches.append(m)
+    matches = cleaned_matches
 
     # Ambil parameter filter dari query GET
     competition = request.GET.get('competition')
