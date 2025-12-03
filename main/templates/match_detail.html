@@ -6,7 +6,7 @@
 
   <div class="bg-white rounded-2xl shadow border border-gray-200 p-8">
     <h1 class="text-2xl font-bold text-center text-[#052962] mb-2">
-      {{ match.league }}
+      {{ match.league|default:"Premier League" }}
     </h1>
     <p class="text-center text-gray-500 mb-8 text-sm">
       {{ match.match_date|date:"j F Y" }}
@@ -51,28 +51,28 @@
 
     <!-- Statistik -->
     <h3 class="text-center text-lg font-semibold text-[#052962] mb-4">
-      Statistik Pertandingan
+      Match Statistics
     </h3>
 
     <div class="grid grid-cols-3 text-center text-sm text-gray-700 gap-y-3">
       <div>
         <p class="font-semibold text-gray-900">{{ match.home_shots }}</p>
-        <p>Tembakan</p>
+        <p>Shots</p>
       </div>
       <div class="text-gray-500">vs</div>
       <div>
         <p class="font-semibold text-gray-900">{{ match.away_shots }}</p>
-        <p>Tembakan</p>
+        <p>Shots</p>
       </div>
 
       <div>
         <p class="font-semibold text-gray-900">{{ match.home_shots_on_target }}</p>
-        <p>Tepat Sasaran</p>
+        <p>Shot on target</p>
       </div>
       <div class="text-gray-500">vs</div>
       <div>
         <p class="font-semibold text-gray-900">{{ match.away_shots_on_target }}</p>
-        <p>Tepat Sasaran</p>
+        <p>Shot on target</p>
       </div>
 
       <div>
@@ -87,22 +87,22 @@
 
       <div>
         <p class="font-semibold text-gray-900">{{ match.home_yellow_cards }}</p>
-        <p>Kartu Kuning</p>
+        <p>Yellow Card</p>
       </div>
       <div class="text-gray-500">vs</div>
       <div>
         <p class="font-semibold text-gray-900">{{ match.away_yellow_cards }}</p>
-        <p>Kartu Kuning</p>
+        <p>Yellow Card</p>
       </div>
 
       <div>
         <p class="font-semibold text-gray-900">{{ match.home_red_cards }}</p>
-        <p>Kartu Merah</p>
+        <p>Red Card</p>
       </div>
       <div class="text-gray-500">vs</div>
       <div>
         <p class="font-semibold text-gray-900">{{ match.away_red_cards }}</p>
-        <p>Kartu Merah</p>
+        <p>Red Card</p>
       </div>
     </div>
 
