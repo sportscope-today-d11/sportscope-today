@@ -22,8 +22,8 @@ urlpatterns = [
     # ENDPOINT MODUL PLAYER
 
     # ENDPOINT MODUL MATCH RESULTS
-    path("matches/", api_match_history, name="api_match_history"),
-    path("matches/uuid:match_id/", api_match_detail, name="api_match_detail"),
+    path("api/matches/", api_match_history, name="api_match_history"),
+    path("api/matches/<str:match_id>/", api_match_detail, name="api_match_detail"),
 
     # ENDPOINT MODUL FORUM
     path("forum/add-forum/", api_add_forum, name="api_add_forum"),

@@ -406,13 +406,17 @@ def api_match_history(request):
 
 def api_match_detail(request, match_id):
     try:
+        # Handle UUID format with or without 'uuid:' prefix
+        if match_id.startswith('uuid:'):
+            match_id = match_id[5:]  # Remove 'uuid:' prefix
+        
         match = Match.objects.select_related("home_team", "away_team").get(id=match_id)
 
         data = {
             "id": str(match.id),
             "season": match.season,
             "date": match.match_date.isoformat() if match.match_date else None,
-            "competition": match.league,
+            "competition": match.league or "Premier League",  # Default to Premier League
 
             "home_team": match.home_team.name,
             "home_team_slug": match.home_team.slug,
@@ -443,6 +447,8 @@ def api_match_detail(request, match_id):
 
     except Match.DoesNotExist:
         return JsonResponse({"detail": "Match not found"}, status=404)
+    except ValueError:
+        return JsonResponse({"detail": "Invalid match ID format"}, status=400)
 
 # ========================== VIEWS MODUL FORUM ==========================
 def get_person_from_request(request):
