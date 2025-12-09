@@ -1,3 +1,0 @@
-ini cuman buat ngetes CI/CD
-tes kedua
-tes terakhir fix work
