@@ -350,6 +350,7 @@ def api_bookmarked_news(request):
 
 
 # VIEWS MODUL MATCH 
+@csrf_exempt
 def api_match_history(request):
     matches = Match.objects.select_related("home_team", "away_team").all()
 
@@ -404,6 +405,7 @@ def api_match_history(request):
 
     return JsonResponse(data, safe=False)
 
+@csrf_exempt
 def api_match_detail(request, match_id):
     try:
         # Handle UUID format with or without 'uuid:' prefix

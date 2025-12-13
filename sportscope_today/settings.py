@@ -174,3 +174,13 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE = 'None'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5000",   # flutter web
+    "http://127.0.0.1:5000",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
+]
