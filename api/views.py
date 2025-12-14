@@ -354,50 +354,42 @@ def api_bookmarked_news(request):
 def api_match_history(request):
     matches = Match.objects.select_related("home_team", "away_team").all()
 
-    team_id = request.GET.get("team_id")   # expecting team slug
+    team_id = request.GET.get("team_id")
     competition_id = request.GET.get("competition_id")
+    date = request.GET.get("date")  # 👈 TAMBAH INI (YYYY-MM-DD)
 
-    # --------------------------
-    # FILTER BY TEAM (slug)
-    # --------------------------
+    # FILTER BY TEAM
     if team_id:
         if not Team.objects.filter(slug=team_id).exists():
-            return JsonResponse({
-                "success": False,
-                "message": "team_id not found"
-            }, status=404)
-
+            return JsonResponse({"success": False, "message": "team_id not found"}, status=404)
         matches = matches.filter(
             Q(home_team__slug=team_id) | Q(away_team__slug=team_id)
         )
 
-    # --------------------------
     # FILTER BY COMPETITION
-    # --------------------------
     if competition_id:
         matches = matches.filter(league__iexact=competition_id)
 
-        if not matches.exists():
-            return JsonResponse({
-                "success": False,
-                "message": "competition_id not found"
-            }, status=404)
+    # FILTER BY DATE
+    if date:
+        try:
+            matches = matches.filter(match_date=date)
+        except ValueError:
+            return JsonResponse(
+                {"success": False, "message": "Invalid date format (YYYY-MM-DD)"},
+                status=400
+            )
 
-    # --------------------------
-    # RETURN LIST
-    # --------------------------
     data = [
         {
             "id": str(m.id),
             "season": m.season,
             "date": m.match_date.isoformat() if m.match_date else None,
-            "competition": m.league,
-
+            "competition": m.league or "Premier League",
             "home_team": m.home_team.name,
             "home_team_slug": m.home_team.slug,
             "away_team": m.away_team.name,
             "away_team_slug": m.away_team.slug,
-
             "full_time_score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
         }
         for m in matches.order_by("-match_date")
