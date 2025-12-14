@@ -11,6 +11,10 @@ from django.contrib.auth import logout as auth_logout
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET, require_POST
+from django.core.paginator import Paginator
+from django.db.models import Count
+from datetime import datetime
+from django.views.decorators.http import require_http_methods
 
 # VIEWS AUTENTIKASI
 @csrf_exempt
@@ -476,6 +480,15 @@ def api_delete_news(request):
 
 
 # VIEWS MODUL MATCH 
+def is_admin_request(request):
+    if not request.user.is_authenticated:
+        return False
+    try:
+        person = Person.objects.get(user=request.user)
+        return person.is_admin()
+    except Person.DoesNotExist:
+        return False
+
 @csrf_exempt
 def api_match_history(request):
     matches = Match.objects.select_related("home_team", "away_team").all()
@@ -594,6 +607,140 @@ def api_match_detail(request, match_id):
         return JsonResponse({"detail": "Match not found"}, status=404)
     except ValueError:
         return JsonResponse({"detail": "Invalid match ID format"}, status=400)
+
+
+def api_matches_by_date(request, date):
+    try:
+        match_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse(
+        {"success": False, "message": "Invalid date format (YYYY-MM-DD)"},
+        status=400,)
+
+    matches = Match.objects.select_related("home_team", "away_team").filter(match_date=match_date)
+
+    results = {}
+    for m in matches:
+        league = m.league or "Premier League"
+        results.setdefault(league, []).append({
+            "id": str(m.id),
+            "date": m.match_date.isoformat() if m.match_date else None,
+            "competition": league,
+            "season": m.season,
+            "home_team": m.home_team.name,
+            "home_team_slug": m.home_team.slug,
+            "away_team": m.away_team.name,
+            "away_team_slug": m.away_team.slug,
+            "full_time_score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
+        })
+
+    return JsonResponse({
+        "success": True,
+        "date": match_date.isoformat(),
+        "matches_by_league": results,
+    })
+
+# views modul match untuk admin
+@csrf_exempt
+@require_GET
+def api_match_list_admin(request):
+    if not is_admin_request(request):
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403,)
+
+    matches = Match.objects.select_related("home_team", "away_team").order_by("-match_date")
+
+    page = int(request.GET.get("page", 1))
+    page_size = int(request.GET.get("page_size", 10))
+
+    paginator = Paginator(matches, page_size)
+    page_obj = paginator.get_page(page)
+
+    results = [
+        {
+            "id": str(m.id),
+            "date": m.match_date.isoformat() if m.match_date else None,
+            "competition": m.league or "Premier League",
+            "season": m.season,
+            "home_team": m.home_team.name,
+            "away_team": m.away_team.name,
+            "score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
+        }
+        for m in page_obj.object_list
+    ]
+
+    return JsonResponse({
+        "success": True,
+        "results": results,
+        "page": page_obj.number,
+        "has_next": page_obj.has_next(),
+        "has_prev": page_obj.has_previous(),
+        "total_pages": paginator.num_pages,
+    })
+
+@csrf_exempt
+@require_POST
+def api_add_match(request):
+    if not is_admin_request(request):
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403,)
+
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400,)
+
+    try:
+        match = Match.objects.create(
+            home_team=Team.objects.get(slug=data["home_team_slug"]),
+            away_team=Team.objects.get(slug=data["away_team_slug"]),
+            league=data.get("competition", "Premier League"),
+            season=data.get("season", ""),
+            match_date=data.get("date"),
+            full_time_home_goals=data.get("home_goals", 0),
+            full_time_away_goals=data.get("away_goals", 0),
+            half_time_home_goals=data.get("ht_home_goals", 0),
+            half_time_away_goals=data.get("ht_away_goals", 0),
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400,)
+
+    return JsonResponse({"success": True, "id": str(match.id)}, status=201,)
+
+
+@csrf_exempt
+@require_http_methods(["PUT", "PATCH"])
+def api_edit_match(request, match_id):
+    if not is_admin_request(request):
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403,)
+
+    match = get_object_or_404(Match, id=match_id)
+
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400,)
+
+    match.league = data.get("competition", match.league)
+    match.season = data.get("season", match.season)
+    match.match_date = data.get("date", match.match_date)
+
+    match.full_time_home_goals = data.get("home_goals", match.full_time_home_goals)
+    match.full_time_away_goals = data.get("away_goals", match.full_time_away_goals)
+
+    match.save()
+
+    return JsonResponse({"success": True})
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def api_delete_match(request, match_id):
+    if not is_admin_request(request):
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403,)
+
+    match = get_object_or_404(Match, id=match_id)
+    match.delete()
+
+    return JsonResponse({"success": True})
+
 
 # ========================== VIEWS MODUL FORUM ==========================
 def get_person_from_request(request):
