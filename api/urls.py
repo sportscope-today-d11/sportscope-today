@@ -17,7 +17,10 @@ urlpatterns = [
     path("news/", api_news_list, name="api_news_list"),
     path("news/<int:news_id>/", api_news_detail, name="api_news_detail"),
     path("news/<int:news_id>/bookmark/", api_toggle_bookmark, name="api_toggle_bookmark"),
-    path("bookmarks/", api_bookmarked_news, name="api_bookmarked_news"),
+    path("news/bookmarks/", api_bookmarked_news, name="api_bookmarked_news"),
+    path("news/create/", api_create_news, name="api_create_news"),
+    path("news/update/", api_update_news, name="api_update_news"),
+    path("news/delete/", api_delete_news, name="api_delete_news"),
 
     # ENDPOINT MODUL PLAYER
 
