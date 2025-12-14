@@ -354,48 +354,73 @@ def api_bookmarked_news(request):
 def api_match_history(request):
     matches = Match.objects.select_related("home_team", "away_team").all()
 
+    # ===== QUERY PARAMS =====
     team_id = request.GET.get("team_id")
     competition_id = request.GET.get("competition_id")
-    date = request.GET.get("date")  # 👈 TAMBAH INI (YYYY-MM-DD)
+    date = request.GET.get("date")           # YYYY-MM-DD
+    page = int(request.GET.get("page", 1))   # 👈 pagination
+    page_size = int(request.GET.get("page_size", 10))
 
-    # FILTER BY TEAM
+    # ===== FILTER BY TEAM =====
     if team_id:
         if not Team.objects.filter(slug=team_id).exists():
-            return JsonResponse({"success": False, "message": "team_id not found"}, status=404)
+            return JsonResponse(
+                {"success": False, "message": "team_id not found"},
+                status=404
+            )
         matches = matches.filter(
             Q(home_team__slug=team_id) | Q(away_team__slug=team_id)
         )
 
-    # FILTER BY COMPETITION
+    # ===== FILTER BY COMPETITION =====
     if competition_id:
         matches = matches.filter(league__iexact=competition_id)
 
-    # FILTER BY DATE
+    # ===== FILTER BY DATE =====
     if date:
         try:
-            matches = matches.filter(match_date=date)
+            parsed_date = datetime.strptime(date, "%Y-%m-%d").date()
+            matches = matches.filter(match_date=parsed_date)
         except ValueError:
             return JsonResponse(
                 {"success": False, "message": "Invalid date format (YYYY-MM-DD)"},
                 status=400
             )
 
-    data = [
+    # ===== ORDERING =====
+    matches = matches.order_by("-match_date")
+
+    # ===== PAGINATION =====
+    paginator = Paginator(matches, page_size)
+    page_obj = paginator.get_page(page)
+
+    # ===== SERIALIZE DATA =====
+    results = [
         {
             "id": str(m.id),
             "season": m.season,
             "date": m.match_date.isoformat() if m.match_date else None,
             "competition": m.league or "Premier League",
+
             "home_team": m.home_team.name,
             "home_team_slug": m.home_team.slug,
             "away_team": m.away_team.name,
             "away_team_slug": m.away_team.slug,
+
             "full_time_score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
         }
-        for m in matches.order_by("-match_date")
+        for m in page_obj.object_list
     ]
 
-    return JsonResponse(data, safe=False)
+    return JsonResponse({
+        "results": results,
+        "page": page_obj.number,
+        "page_size": page_size,
+        "total_pages": paginator.num_pages,
+        "total_items": paginator.count,
+        "has_next": page_obj.has_next(),
+        "has_prev": page_obj.has_previous(),
+    })
 
 @csrf_exempt
 def api_match_detail(request, match_id):
