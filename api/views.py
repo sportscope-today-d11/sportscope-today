@@ -13,6 +13,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 # VIEWS AUTENTIKASI
 @csrf_exempt
+@csrf_exempt
 def login(request):
     if request.method == 'POST':
         try:
@@ -36,9 +37,15 @@ def login(request):
             
             if user is not None:
                 if user.is_active:
+                    # login: ini yang ngelink session <-> user
                     auth_login(request, user)
-                    
-                    # Get role from Person model
+
+                    # pastikan session_key ada
+                    if not request.session.session_key:
+                        request.session.create()
+                    session_key = request.session.session_key
+
+                    # ambil role dari Person
                     try:
                         person = Person.objects.get(user=user)
                         role = person.role
@@ -48,6 +55,7 @@ def login(request):
                     return JsonResponse({
                         "username": user.username,
                         "role": role,
+                        "sessionid": session_key,   # ⬅️ ini yang dipakai Flutter
                         "status": True,
                         "message": "Login successful!"
                     }, status=200)
@@ -497,8 +505,6 @@ def comment_to_dict(comment):
         "reply_to_username": comment.reply_to_username,
     }
 
-
-# =============== ENDPOINT FORUM ===============
 
 # POST /api/forum/add-forum/
 @csrf_exempt
