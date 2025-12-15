@@ -1,3 +1,4 @@
+from datetime import timezone
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +11,10 @@ from django.contrib.auth import logout as auth_logout
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET, require_POST
+from django.core.paginator import Paginator
+from django.db.models import Count
+from datetime import datetime
+from django.views.decorators.http import require_http_methods
 
 # VIEWS AUTENTIKASI
 @csrf_exempt
@@ -264,6 +269,7 @@ def team_detail(request, slug):
 # VIEWS MODUL NEWS
 @require_GET
 def api_news_list(request):
+    bookmarks = request.session.get('bookmarks', [])
     q = request.GET.get('q', '')
     category = request.GET.get('category', '')
     sort = request.GET.get('sort', 'latest')
@@ -288,11 +294,14 @@ def api_news_list(request):
         {
             "id": n.id,
             "title": n.title,
+            "link": n.link,
             "author": n.author,
             "source": n.source,
             "publish_time": n.publish_time,
+            "content": n.content,
             "category": n.category,
             "thumbnail": n.thumbnail_url,
+            "is_bookmarked": str(n.id) in bookmarks,
         }
         for n in news_qs
     ]
@@ -301,25 +310,44 @@ def api_news_list(request):
 
 @require_GET
 def api_news_detail(request, news_id):
+    if not request.session.session_key:
+        request.session.create()
+        
+    bookmarks = request.session.get('bookmarks', [])
     news = get_object_or_404(News, id=news_id)
 
     data = {
         "id": news.id,
         "title": news.title,
+        "link": news.link,
         "author": news.author,
         "source": news.source,
         "publish_time": news.publish_time,
         "content": news.content,
         "category": news.category,
         "thumbnail": news.thumbnail_url,
+        "is_bookmarked": str(news.id) in bookmarks,
     }
 
     return JsonResponse(data)
 
+@csrf_exempt
 @require_POST
 def api_toggle_bookmark(request, news_id):
-    bookmarks = request.session.get('bookmarks', [])
+    if not request.session.session_key:
+        return JsonResponse(
+            {"success": False, "error": "Login required"},
+            status=401
+        )
 
+    news = News.objects.filter(id=news_id).first()
+    if not news:
+        return JsonResponse(
+            {"success": False, "error": "News not found"},
+            status=404
+        )
+
+    bookmarks = request.session.get('bookmarks', [])
     nid = str(news_id)
 
     if nid in bookmarks:
@@ -332,73 +360,194 @@ def api_toggle_bookmark(request, news_id):
     request.session['bookmarks'] = bookmarks
     request.session.modified = True
 
-    return JsonResponse({"success": True, "status": status})
+    return JsonResponse({
+        "success": True,
+        "status": status,
+        "is_bookmarked": nid in bookmarks
+    })
 
 @require_GET
 def api_bookmarked_news(request):
+    # Pastikan user sudah login
+    if not request.session.session_key:
+        return JsonResponse(
+            {"success": False, "error": "Login required"},
+            status=401
+        )
+
+    if not request.session.session_key:
+        request.session.create()
+
     bookmarks = request.session.get('bookmarks', [])
-    news_qs = News.objects.filter(id__in=bookmarks)
+    
+    # Convert string IDs to integers for filtering
+    bookmark_ids = []
+    for bid in bookmarks:
+        try:
+            bookmark_ids.append(int(bid))
+        except (ValueError, TypeError):
+            continue
+    
+    news_qs = News.objects.filter(id__in=bookmark_ids)
 
     data = [
         {
             "id": n.id,
             "title": n.title,
+            "link": n.link,
             "author": n.author,
             "source": n.source,
             "publish_time": n.publish_time,
+            "content": n.content,
             "category": n.category,
             "thumbnail": n.thumbnail_url,
+            "is_bookmarked": True,
         }
         for n in news_qs
     ]
 
     return JsonResponse({"bookmarks": data})
 
+@csrf_exempt
+@require_POST
+def api_create_news(request):
+    person = get_person_from_request(request)
+    if person is None or not person.is_admin():
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403)
+
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400)
+
+    required = ["title", "author", "source", "content", "category"]
+    for f in required:
+        if not data.get(f):
+            return JsonResponse({"success": False, "message": f"{f} is required"}, status=400)
+
+    news = News.objects.create(
+        title=data["title"],
+        author=data["author"],
+        source=data["source"],
+        content=data["content"],
+        category=data["category"],
+        link=data.get("link", ""),
+        thumbnail_url=data.get("thumbnail_url", ""),
+        publish_time=timezone.now(),
+    )
+
+    return JsonResponse({"success": True, "news_id": news.id}, status=201)
+
+@csrf_exempt
+@require_POST
+def api_update_news(request):
+    person = get_person_from_request(request)
+    if person is None or not person.is_admin():
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403)
+
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400)
+
+    news_id = data.get("news_id")
+    if not news_id:
+        return JsonResponse({"success": False, "message": "news_id required"}, status=400)
+
+    news = News.objects.filter(id=news_id).first()
+    if not news:
+        return JsonResponse({"success": False, "message": "News not found"}, status=404)
+
+    for field in ["title", "author", "source", "content", "category", "thumbnail_url"]:
+        if field in data:
+            setattr(news, field, data[field])
+
+    news.save()
+    return JsonResponse({"success": True})
+
+@csrf_exempt
+@require_POST
+def api_delete_news(request):
+    person = get_person_from_request(request)
+    if person is None or not person.is_admin():
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403)
+
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400)
+
+    news_id = data.get("news_id")
+    if not news_id:
+        return JsonResponse({"success": False, "message": "news_id required"}, status=400)
+
+    News.objects.filter(id=news_id).delete()
+    return JsonResponse({"success": True})
+
 # VIEWS MODUL PLAYER
 
 
 # VIEWS MODUL MATCH 
+def is_admin_request(request):
+    if not request.user.is_authenticated:
+        return False
+    try:
+        person = Person.objects.get(user=request.user)
+        return person.is_admin()
+    except Person.DoesNotExist:
+        return False
+
+@csrf_exempt
 def api_match_history(request):
     matches = Match.objects.select_related("home_team", "away_team").all()
 
-    team_id = request.GET.get("team_id")   # expecting team slug
+    # ===== QUERY PARAMS =====
+    team_id = request.GET.get("team_id")
     competition_id = request.GET.get("competition_id")
+    date = request.GET.get("date")           # YYYY-MM-DD
+    page = int(request.GET.get("page", 1))   # 👈 pagination
+    page_size = int(request.GET.get("page_size", 10))
 
-    # --------------------------
-    # FILTER BY TEAM (slug)
-    # --------------------------
+    # ===== FILTER BY TEAM =====
     if team_id:
         if not Team.objects.filter(slug=team_id).exists():
-            return JsonResponse({
-                "success": False,
-                "message": "team_id not found"
-            }, status=404)
-
+            return JsonResponse(
+                {"success": False, "message": "team_id not found"},
+                status=404
+            )
         matches = matches.filter(
             Q(home_team__slug=team_id) | Q(away_team__slug=team_id)
         )
 
-    # --------------------------
-    # FILTER BY COMPETITION
-    # --------------------------
+    # ===== FILTER BY COMPETITION =====
     if competition_id:
         matches = matches.filter(league__iexact=competition_id)
 
-        if not matches.exists():
-            return JsonResponse({
-                "success": False,
-                "message": "competition_id not found"
-            }, status=404)
+    # ===== FILTER BY DATE =====
+    if date:
+        try:
+            parsed_date = datetime.strptime(date, "%Y-%m-%d").date()
+            matches = matches.filter(match_date=parsed_date)
+        except ValueError:
+            return JsonResponse(
+                {"success": False, "message": "Invalid date format (YYYY-MM-DD)"},
+                status=400
+            )
 
-    # --------------------------
-    # RETURN LIST
-    # --------------------------
-    data = [
+    # ===== ORDERING =====
+    matches = matches.order_by("-match_date")
+
+    # ===== PAGINATION =====
+    paginator = Paginator(matches, page_size)
+    page_obj = paginator.get_page(page)
+
+    # ===== SERIALIZE DATA =====
+    results = [
         {
             "id": str(m.id),
             "season": m.season,
             "date": m.match_date.isoformat() if m.match_date else None,
-            "competition": m.league,
+            "competition": m.league or "Premier League",
 
             "home_team": m.home_team.name,
             "home_team_slug": m.home_team.slug,
@@ -407,11 +556,20 @@ def api_match_history(request):
 
             "full_time_score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
         }
-        for m in matches.order_by("-match_date")
+        for m in page_obj.object_list
     ]
 
-    return JsonResponse(data, safe=False)
+    return JsonResponse({
+        "results": results,
+        "page": page_obj.number,
+        "page_size": page_size,
+        "total_pages": paginator.num_pages,
+        "total_items": paginator.count,
+        "has_next": page_obj.has_next(),
+        "has_prev": page_obj.has_previous(),
+    })
 
+@csrf_exempt
 def api_match_detail(request, match_id):
     try:
         # Handle UUID format with or without 'uuid:' prefix
@@ -457,6 +615,140 @@ def api_match_detail(request, match_id):
         return JsonResponse({"detail": "Match not found"}, status=404)
     except ValueError:
         return JsonResponse({"detail": "Invalid match ID format"}, status=400)
+
+
+def api_matches_by_date(request, date):
+    try:
+        match_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse(
+        {"success": False, "message": "Invalid date format (YYYY-MM-DD)"},
+        status=400,)
+
+    matches = Match.objects.select_related("home_team", "away_team").filter(match_date=match_date)
+
+    results = {}
+    for m in matches:
+        league = m.league or "Premier League"
+        results.setdefault(league, []).append({
+            "id": str(m.id),
+            "date": m.match_date.isoformat() if m.match_date else None,
+            "competition": league,
+            "season": m.season,
+            "home_team": m.home_team.name,
+            "home_team_slug": m.home_team.slug,
+            "away_team": m.away_team.name,
+            "away_team_slug": m.away_team.slug,
+            "full_time_score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
+        })
+
+    return JsonResponse({
+        "success": True,
+        "date": match_date.isoformat(),
+        "matches_by_league": results,
+    })
+
+# views modul match untuk admin
+@csrf_exempt
+@require_GET
+def api_match_list_admin(request):
+    if not is_admin_request(request):
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403,)
+
+    matches = Match.objects.select_related("home_team", "away_team").order_by("-match_date")
+
+    page = int(request.GET.get("page", 1))
+    page_size = int(request.GET.get("page_size", 10))
+
+    paginator = Paginator(matches, page_size)
+    page_obj = paginator.get_page(page)
+
+    results = [
+        {
+            "id": str(m.id),
+            "date": m.match_date.isoformat() if m.match_date else None,
+            "competition": m.league or "Premier League",
+            "season": m.season,
+            "home_team": m.home_team.name,
+            "away_team": m.away_team.name,
+            "score": f"{m.full_time_home_goals} - {m.full_time_away_goals}",
+        }
+        for m in page_obj.object_list
+    ]
+
+    return JsonResponse({
+        "success": True,
+        "results": results,
+        "page": page_obj.number,
+        "has_next": page_obj.has_next(),
+        "has_prev": page_obj.has_previous(),
+        "total_pages": paginator.num_pages,
+    })
+
+@csrf_exempt
+@require_POST
+def api_add_match(request):
+    if not is_admin_request(request):
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403,)
+
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400,)
+
+    try:
+        match = Match.objects.create(
+            home_team=Team.objects.get(slug=data["home_team_slug"]),
+            away_team=Team.objects.get(slug=data["away_team_slug"]),
+            league=data.get("competition", "Premier League"),
+            season=data.get("season", ""),
+            match_date=data.get("date"),
+            full_time_home_goals=data.get("home_goals", 0),
+            full_time_away_goals=data.get("away_goals", 0),
+            half_time_home_goals=data.get("ht_home_goals", 0),
+            half_time_away_goals=data.get("ht_away_goals", 0),
+        )
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400,)
+
+    return JsonResponse({"success": True, "id": str(match.id)}, status=201,)
+
+
+@csrf_exempt
+@require_http_methods(["PUT", "PATCH"])
+def api_edit_match(request, match_id):
+    if not is_admin_request(request):
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403,)
+
+    match = get_object_or_404(Match, id=match_id)
+
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400,)
+
+    match.league = data.get("competition", match.league)
+    match.season = data.get("season", match.season)
+    match.match_date = data.get("date", match.match_date)
+
+    match.full_time_home_goals = data.get("home_goals", match.full_time_home_goals)
+    match.full_time_away_goals = data.get("away_goals", match.full_time_away_goals)
+
+    match.save()
+
+    return JsonResponse({"success": True})
+
+@csrf_exempt
+@require_http_methods(["DELETE"])
+def api_delete_match(request, match_id):
+    if not is_admin_request(request):
+        return JsonResponse({"success": False, "message": "Admin only"}, status=403,)
+
+    match = get_object_or_404(Match, id=match_id)
+    match.delete()
+
+    return JsonResponse({"success": True})
+
 
 # ========================== VIEWS MODUL FORUM ==========================
 def get_person_from_request(request):
