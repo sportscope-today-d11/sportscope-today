@@ -380,6 +380,13 @@ class Comment(models.Model):
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # siapa aja yang nge-like comment ini
+    liked_by = models.ManyToManyField(
+        Person,
+        related_name="liked_comments",
+        blank=True,
+    )
+
     class Meta:
         ordering = ["created_at"]
 
@@ -395,3 +402,8 @@ class Comment(models.Model):
         if self.reply_to:
             return self.reply_to.user.username
         return None
+
+    # 👇 NEW: helper counter like
+    @property
+    def like_count(self):
+        return self.liked_by.count()
