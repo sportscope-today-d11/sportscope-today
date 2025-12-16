@@ -106,45 +106,31 @@ class Match(models.Model):
     away_team = models.ForeignKey(Team, related_name="away_matches", on_delete=models.CASCADE)
 
     # Full-time results
-    full_time_home_goals = models.IntegerField()
-    full_time_away_goals = models.IntegerField()
-    full_time_result = models.CharField(max_length=1)  # 'H' (home), 'A' (away), 'D' (draw)
+    full_time_home_goals = models.IntegerField(default=0)
+    full_time_away_goals = models.IntegerField(default=0)
+    full_time_result = models.CharField(max_length=1, default="D")  # 'H' (home), 'A' (away), 'D' (draw)
 
     # Half-time results
-    half_time_home_goals = models.IntegerField()
-    half_time_away_goals = models.IntegerField()
-    half_time_result = models.CharField(max_length=1)
+    half_time_home_goals = models.IntegerField(default=0)
+    half_time_away_goals = models.IntegerField(default=0)
+    half_time_result = models.CharField(max_length=1, default="D")
 
     # Stats
-    home_shots = models.IntegerField()
-    away_shots = models.IntegerField()
-    home_shots_on_target = models.IntegerField()
-    away_shots_on_target = models.IntegerField()
-    home_corners = models.IntegerField()
-    away_corners = models.IntegerField()
-    home_fouls = models.IntegerField()
-    away_fouls = models.IntegerField()
-    home_yellow_cards = models.IntegerField()
-    away_yellow_cards = models.IntegerField()
-    home_red_cards = models.IntegerField()
-    away_red_cards = models.IntegerField()
+    home_shots = models.IntegerField(default=0)
+    away_shots = models.IntegerField(default=0)
+    home_shots_on_target = models.IntegerField(default=0)
+    away_shots_on_target = models.IntegerField(default=0)
+    home_corners = models.IntegerField(default=0)
+    away_corners = models.IntegerField(default=0)
+    home_fouls = models.IntegerField(default=0)
+    away_fouls = models.IntegerField(default=0)
+    home_yellow_cards = models.IntegerField(default=0)
+    away_yellow_cards = models.IntegerField(default=0)
+    home_red_cards = models.IntegerField(default=0)
+    away_red_cards = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name} ({self.match_date})"
-        
-        # Coba cari di static folder
-        if self.slug:
-            static_path = f"images/logo/{self.slug}.png"
-            # Cek apakah file ada di static folder
-            static_file_path = os.path.join('static', static_path)
-            if os.path.exists(static_file_path):
-                return static(static_path)
-        
-        # Return default image
-        return static("images/teams/default.png")
-
-    def __str__(self):
-        return self.name or "Unnamed Team"
 
 class Player(models.Model):
     slug = models.SlugField(unique=True, primary_key=True)
