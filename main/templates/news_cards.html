@@ -15,6 +15,10 @@
           {% if news.id in bookmarked_ids %}★{% else %}☆{% endif %}
         </button>
         {% if user.is_staff %}
+        <a href="{% url 'main:news_update' news.id %}" 
+          class="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition">
+          Edit
+        </a>
         <button class="delete-news bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition"
                 data-id="{{ news.id }}">Delete</button>
         {% endif %}

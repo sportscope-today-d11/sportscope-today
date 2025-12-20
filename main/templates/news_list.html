@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 
-<div class="flex justify-between items-center mb-6 px-4 md:px-8">
+<div class="flex justify-between items-center mb-6 px-4 md:px-8 mt-10">
   <h1 class="text-2xl font-bold text-gray-800">Latest News</h1>
 
   <div class="flex items-center gap-4">
@@ -19,7 +19,14 @@
       <option value="latest">Latest to Oldest</option>
       <option value="oldest">Oldest to Latest</option>
     </select>
-
+    
+    {% if user.is_staff %}
+    <a href="{% url 'main:news_create' %}" 
+       class="bg-green-600 text-white font-semibold px-4 py-2 rounded hover:bg-green-700 transition shadow-sm">
+      + Add News
+    </a>
+    {% endif %}
+    
     <!-- Tombol Lihat Bookmark -->
     <button id="toggle-bookmark-view"
             class="bg-yellow-400 text-white font-semibold px-4 py-2 rounded hover:bg-yellow-500 transition">
