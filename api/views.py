@@ -371,22 +371,10 @@ def api_toggle_bookmark(request, news_id):
 
 @csrf_exempt
 @require_POST
-def api_create_news(request):
-    # --- MULAI DEBUG ---
-    print(f"DEBUG: User Logged In: {request.user}")
-    print(f"DEBUG: Is Authenticated: {request.user.is_authenticated}")
-    
+def api_create_news(request):    
     person = get_person_from_request(request)
-    print(f"DEBUG: Person Found: {person}")
-    
-    if person:
-        # Cek manual attribute role atau is_staff
-        print(f"DEBUG: Person Role: {getattr(person, 'role', 'No Role Attr')}")
-        print(f"DEBUG: Is Admin Method: {person.is_admin()}")
-    # --- SELESAI DEBUG ---
 
     if not person or not person.is_admin():
-        # Tambahkan info detail di pesan error untuk Flutter
         user_info = str(request.user) if request.user.is_authenticated else "Anonymous"
         return JsonResponse(
             {"success": False, "message": f"Admin only. Detected as: {user_info}"}, 
