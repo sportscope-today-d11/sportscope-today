@@ -785,7 +785,11 @@ def forum_to_dict(forum, current_person=None):
     }
 
 
-def comment_to_dict(comment):
+def comment_to_dict(comment, current_person=None):
+    is_liked = False
+    if current_person is not None:
+        is_liked = comment.liked_by.filter(id=current_person.id).exists()
+
     return {
         "id": str(comment.id),
         "forum_id": str(comment.forum.id),
@@ -795,6 +799,8 @@ def comment_to_dict(comment):
         "created_at": comment.created_at.isoformat(),
         "parent_id": str(comment.parent.id) if comment.parent else None,
         "reply_to_username": comment.reply_to_username,
+        "like_count": comment.like_count,
+        "is_liked": is_liked,
     }
 
 
@@ -919,7 +925,8 @@ def api_add_comment(request, forum_id):
     )
 
     return JsonResponse(
-        {"success": True, "comment": comment_to_dict(comment)}, status=201
+        {"success": True, "comment": comment_to_dict(comment, current_person=person)},  # 👈
+        status=201,
     )
 
 
@@ -1112,6 +1119,9 @@ def api_forum_comments(request, forum_id):
             {"success": False, "message": "Forum not found."}, status=404
         )
 
+    # 👇 NEW: boleh None kalau belum login
+    person = get_person_from_request(request)
+
     root_comments = (
         forum.comments.filter(parent__isnull=True)
         .order_by("created_at")
@@ -1125,15 +1135,71 @@ def api_forum_comments(request, forum_id):
 
     replies_map = {}
     for c in all_replies:
-        replies_map.setdefault(str(c.parent_id), []).append(comment_to_dict(c))
+        replies_map.setdefault(str(c.parent_id), []).append(
+            comment_to_dict(c, current_person=person)  # 👈
+        )
 
     result = []
     for root in root_comments:
-        root_dict = comment_to_dict(root)
+        root_dict = comment_to_dict(root, current_person=person)  # 👈
         root_dict["replies"] = replies_map.get(str(root.id), [])
         result.append(root_dict)
 
     return JsonResponse({"success": True, "comments": result})
+
+# POST /api/forum/comment-like/
+@csrf_exempt
+@require_POST
+def api_comment_like(request):
+    person = get_person_from_request(request)
+    if person is None:
+        return JsonResponse(
+            {"success": False, "message": "Authentication required."},
+            status=401,
+        )
+
+    try:
+        if request.content_type == "application/json":
+            data = json.loads(request.body.decode("utf-8"))
+        else:
+            data = request.POST
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"success": False, "message": "Invalid JSON."},
+            status=400,
+        )
+
+    comment_id = data.get("comment_id")
+    if not comment_id:
+        return JsonResponse(
+            {"success": False, "message": "comment_id is required."},
+            status=400,
+        )
+
+    comment = Comment.objects.filter(id=comment_id).select_related("author").first()
+    if comment is None:
+        return JsonResponse(
+            {"success": False, "message": "Comment not found."},
+            status=404,
+        )
+
+    if comment.liked_by.filter(id=person.id).exists():
+        comment.liked_by.remove(person)
+        status_str = "unliked"
+    else:
+        comment.liked_by.add(person)
+        status_str = "liked"
+
+    return JsonResponse(
+        {
+            "success": True,
+            "status": status_str,
+            "like_count": comment.like_count,
+            "is_liked": comment.liked_by.filter(id=person.id).exists(),
+            "comment_id": str(comment.id),
+        }
+    )
+
 
 
 # GET /api/forum/my-bookmark/

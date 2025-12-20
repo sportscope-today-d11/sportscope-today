@@ -45,5 +45,5 @@ urlpatterns = [
     path("forum/<uuid:forum_id>/comments/", api_forum_comments, name="api_forum_comments"),
     path("forum/my-bookmark/", api_forum_my_bookmark, name="api_forum_my_bookmark"),
     path("forum/like/", api_forum_like, name="api_forum_like"),
-
+    path("forum/comment-like/", api_comment_like, name="api_comment_like"),
 ]
