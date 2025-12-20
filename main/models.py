@@ -46,6 +46,28 @@ class Team(models.Model):
         # kalau gak ada logo, gausah tampil apa-apa
         return None
 
+class Person(models.Model):
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('user', 'User '),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
+
+    def __str__(self):
+        return f"{self.user.username} ({self.role})"
+
+    def is_admin(self):
+        return self.role == 'admin'
+
+    @classmethod
+    def get_user_role(cls, user):
+        try:
+            return cls.objects.get(user=user).role
+        except cls.DoesNotExist:
+            return 'user'
+          
 class News(models.Model):
     CATEGORY_CHOICES = [
         ("Transfer", "Transfer"),
@@ -73,6 +95,12 @@ class News(models.Model):
         max_length=50,
         choices=CATEGORY_CHOICES,
         default="Other"
+    )
+
+    bookmarked_by = models.ManyToManyField(
+        Person,
+        related_name="bookmarked_news",
+        blank=True,
     )
 
     def __str__(self):
@@ -197,28 +225,6 @@ class Player(models.Model):
     def __str__(self):
         return self.name or "Unnamed Player"
 
-class Person(models.Model):
-    ROLE_CHOICES = [
-        ('admin', 'Admin'),
-        ('user', 'User '),
-    ]
-    
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='user')
-
-    def __str__(self):
-        return f"{self.user.username} ({self.role})"
-
-    def is_admin(self):
-        return self.role == 'admin'
-
-    @classmethod
-    def get_user_role(cls, user):
-        try:
-            return cls.objects.get(user=user).role
-        except cls.DoesNotExist:
-            return 'user'
-          
 
 class Forum(models.Model):
     """
