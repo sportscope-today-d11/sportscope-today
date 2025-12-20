@@ -15,6 +15,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count
 from datetime import datetime
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 
 # VIEWS AUTENTIKASI
 @csrf_exempt
@@ -267,200 +268,171 @@ def team_detail(request, slug):
         return JsonResponse({'error': str(e)}, status=500)
     
 # VIEWS MODUL NEWS
+def news_to_dict(news, person):
+    return {
+        "id": news.id,
+        "title": news.title,
+        "author": news.author,
+        "source": news.source,
+        "content": news.content,
+        "category": news.category,
+        "thumbnail_url": news.thumbnail_url, # Menggunakan @property thumbnail_url di model
+        "publish_time": news.publish_time.strftime("%Y-%m-%d"),
+        "featured": news.featured,
+        "link": news.link,
+        # Logika krusial: cek apakah 'person' ada di ManyToMany bookmarked_by
+        "is_bookmarked": news.bookmarked_by.filter(id=person.id).exists() if person else False,
+    }
+
 @require_GET
 def api_news_list(request):
-    bookmarks = request.session.get('bookmarks', [])
-    q = request.GET.get('q', '')
-    category = request.GET.get('category', '')
-    sort = request.GET.get('sort', 'latest')
+    person = get_person_from_request(request)
+
+    q = request.GET.get("q", "")
+    category = request.GET.get("category", "")
+    sort = request.GET.get("sort", "latest")
+    featured = request.GET.get("featured")  # optional
 
     news_qs = News.objects.all()
 
     # Search
     if q:
         news_qs = news_qs.filter(
-            Q(title__icontains=q) | Q(content__icontains=q) | Q(source__icontains=q)
+            Q(title__icontains=q) |
+            Q(content__icontains=q) |
+            Q(source__icontains=q)
         )
 
     # Filter kategori
     if category:
         news_qs = news_qs.filter(category__iexact=category)
 
+    # Filter featured
+    if featured == "true":
+        news_qs = news_qs.filter(featured=True)
+
     # Sorting
-    news_qs = news_qs.order_by('publish_time' if sort == 'oldest' else '-publish_time')
+    news_qs = news_qs.order_by(
+        "publish_time" if sort == "oldest" else "-publish_time"
+    )
 
-    # Convert ke JSON
-    data = [
-        {
-            "id": n.id,
-            "title": n.title,
-            "link": n.link,
-            "author": n.author,
-            "source": n.source,
-            "publish_time": n.publish_time,
-            "content": n.content,
-            "category": n.category,
-            "thumbnail": n.thumbnail_url,
-            "is_bookmarked": str(n.id) in bookmarks,
-        }
-        for n in news_qs
-    ]
-
-    return JsonResponse({"news": data})
-
-@require_GET
-def api_news_detail(request, news_id):
-    if not request.session.session_key:
-        request.session.create()
-        
-    bookmarks = request.session.get('bookmarks', [])
-    news = get_object_or_404(News, id=news_id)
-
-    data = {
-        "id": news.id,
-        "title": news.title,
-        "link": news.link,
-        "author": news.author,
-        "source": news.source,
-        "publish_time": news.publish_time,
-        "content": news.content,
-        "category": news.category,
-        "thumbnail": news.thumbnail_url,
-        "is_bookmarked": str(news.id) in bookmarks,
-    }
-
-    return JsonResponse(data)
-
-@csrf_exempt
-@require_POST
-def api_toggle_bookmark(request, news_id):
-    if not request.session.session_key:
-        return JsonResponse(
-            {"success": False, "error": "Login required"},
-            status=401
-        )
-
-    news = News.objects.filter(id=news_id).first()
-    if not news:
-        return JsonResponse(
-            {"success": False, "error": "News not found"},
-            status=404
-        )
-
-    bookmarks = request.session.get('bookmarks', [])
-    nid = str(news_id)
-
-    if nid in bookmarks:
-        bookmarks.remove(nid)
-        status = "removed"
-    else:
-        bookmarks.append(nid)
-        status = "added"
-
-    request.session['bookmarks'] = bookmarks
-    request.session.modified = True
+    data = [news_to_dict(n, person) for n in news_qs]
 
     return JsonResponse({
-        "success": True,
-        "status": status,
-        "is_bookmarked": nid in bookmarks
+        "is_admin": person.is_admin() if (person is not None) else False,
+        "news": data
     })
 
 @require_GET
+def api_news_detail(request, news_id):
+    person = get_person_from_request(request)
+    news = get_object_or_404(News, id=news_id)
+
+    return JsonResponse(news_to_dict(news, person))
+
+@require_GET
 def api_bookmarked_news(request):
-    # Pastikan user sudah login
-    if not request.session.session_key:
+    person = get_person_from_request(request)
+    if not person:
         return JsonResponse(
-            {"success": False, "error": "Login required"},
+            {"success": False, "message": "Login required"},
             status=401
         )
 
-    if not request.session.session_key:
-        request.session.create()
-
-    bookmarks = request.session.get('bookmarks', [])
-    
-    # Convert string IDs to integers for filtering
-    bookmark_ids = []
-    for bid in bookmarks:
-        try:
-            bookmark_ids.append(int(bid))
-        except (ValueError, TypeError):
-            continue
-    
-    news_qs = News.objects.filter(id__in=bookmark_ids)
-
-    data = [
-        {
-            "id": n.id,
-            "title": n.title,
-            "link": n.link,
-            "author": n.author,
-            "source": n.source,
-            "publish_time": n.publish_time,
-            "content": n.content,
-            "category": n.category,
-            "thumbnail": n.thumbnail_url,
-            "is_bookmarked": True,
-        }
-        for n in news_qs
-    ]
+    news_qs = News.objects.filter(bookmarked_by=person)
+    data = [news_to_dict(n, person) for n in news_qs]
 
     return JsonResponse({"bookmarks": data})
 
 @csrf_exempt
 @require_POST
-def api_create_news(request):
+def api_toggle_bookmark(request, news_id):
     person = get_person_from_request(request)
-    if person is None or not person.is_admin():
-        return JsonResponse({"success": False, "message": "Admin only"}, status=403)
+    if not person:
+        return JsonResponse(
+            {"success": False, "message": "Login required"},
+            status=401
+        )
 
-    try:
-        data = json.loads(request.body)
-    except Exception:
-        return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400)
+    news = get_object_or_404(News, id=news_id)
+
+    if news.bookmarked_by.filter(id=person.id).exists():
+        news.bookmarked_by.remove(person)
+        status = "removed"
+    else:
+        news.bookmarked_by.add(person)
+        status = "added"
+
+    return JsonResponse({
+        "success": True,
+        "status": status,
+        "is_bookmarked": status == "added"
+    })
+
+@csrf_exempt
+@require_POST
+def api_create_news(request):    
+    person = get_person_from_request(request)
+
+    if not person or not person.is_admin():
+        user_info = str(request.user) if request.user.is_authenticated else "Anonymous"
+        return JsonResponse(
+            {"success": False, "message": f"Admin only. Detected as: {user_info}"}, 
+            status=403
+        )
+    # GUNAKAN LOGIKA DARI FORUM
+    if request.content_type == "application/json":
+        try:
+            data = json.loads(request.body)
+        except:
+            return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400)
+    else:
+        data = request.POST
 
     required = ["title", "author", "source", "content", "category"]
-    for f in required:
-        if not data.get(f):
-            return JsonResponse({"success": False, "message": f"{f} is required"}, status=400)
+    for field in required:
+        if not data.get(field):
+            return JsonResponse({"success": False, "message": f"{field} is required"}, status=400)
 
     news = News.objects.create(
-        title=data["title"],
-        author=data["author"],
-        source=data["source"],
-        content=data["content"],
-        category=data["category"],
+        title=data.get("title"),
         link=data.get("link", ""),
-        thumbnail_url=data.get("thumbnail_url", ""),
+        author=data.get("author"),
+        source=data.get("source"),
+        content=data.get("content"),
+        category=data.get("category"),
+        thumbnail=data.get("thumbnail_url", ""),
+        featured=data.get("featured") == "true" or data.get("featured") is True, # Handle string vs bool
         publish_time=timezone.now(),
     )
 
-    return JsonResponse({"success": True, "news_id": news.id}, status=201)
+    return JsonResponse({"success": True, "news": news_to_dict(news, person)}, status=201)
 
 @csrf_exempt
 @require_POST
 def api_update_news(request):
     person = get_person_from_request(request)
-    if person is None or not person.is_admin():
+    if not person or not person.is_admin():
         return JsonResponse({"success": False, "message": "Admin only"}, status=403)
 
-    try:
+    if request.content_type == "application/json":
         data = json.loads(request.body)
-    except Exception:
-        return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400)
+    else:
+        data = request.POST
 
     news_id = data.get("news_id")
-    if not news_id:
-        return JsonResponse({"success": False, "message": "news_id required"}, status=400)
+    news = get_object_or_404(News, id=news_id)
 
-    news = News.objects.filter(id=news_id).first()
-    if not news:
-        return JsonResponse({"success": False, "message": "News not found"}, status=404)
-
-    for field in ["title", "author", "source", "content", "category", "thumbnail_url"]:
+    for field in ["title", "author", "source", "content", "category"]:
         if field in data:
-            setattr(news, field, data[field])
+            setattr(news, field, data.get(field))
+            
+    if "featured" in data:
+        # Handle jika dikirim lewat Form-Data (string "true") atau JSON (bool true)
+        news.featured = data.get("featured") == "true" or data.get("featured") is True
+
+    if "thumbnail_url" in data:
+        news.thumbnail = data.get("thumbnail_url")
 
     news.save()
     return JsonResponse({"success": True})
@@ -469,7 +441,7 @@ def api_update_news(request):
 @require_POST
 def api_delete_news(request):
     person = get_person_from_request(request)
-    if person is None or not person.is_admin():
+    if not person or not person.is_admin():
         return JsonResponse({"success": False, "message": "Admin only"}, status=403)
 
     try:
@@ -477,11 +449,9 @@ def api_delete_news(request):
     except Exception:
         return JsonResponse({"success": False, "message": "Invalid JSON"}, status=400)
 
-    news_id = data.get("news_id")
-    if not news_id:
-        return JsonResponse({"success": False, "message": "news_id required"}, status=400)
+    news = get_object_or_404(News, id=data.get("news_id"))
+    news.delete()
 
-    News.objects.filter(id=news_id).delete()
     return JsonResponse({"success": True})
 
 # VIEWS MODUL PLAYER

@@ -165,22 +165,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CSRF_TRUSTED_ORIGINS = [
     'https://ahmad-omar-sportscopetoday.pbp.cs.ui.ac.id',
+    "http://localhost:5000",
+    "http://127.0.0.1:5000",
 ]
 
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE = 'None'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5000",   # flutter web
-    "http://127.0.0.1:5000",
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5000",
     "http://127.0.0.1:5000",
 ]
