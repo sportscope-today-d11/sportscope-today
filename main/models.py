@@ -225,17 +225,32 @@ class Player(models.Model):
     def __str__(self):
         return self.name or "Unnamed Player"
 
-
 class Forum(models.Model):
-    """
-    Forum post:
-    - Bisa terhubung ke News / Match / general
-    - Bisa di-like & di-bookmark Person
-    """
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
     content = models.TextField()
+    views = models.PositiveIntegerField(default=0)
+
+    # 👇 NEW: optional image untuk post (supaya FE bisa render image_url)
+    image = models.ImageField(
+        upload_to="forum_images/",
+        null=True,
+        blank=True,
+    )
+
+    quoted_post = models.ForeignKey(
+        "self",
+        related_name="quoted_by",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    bookmarked_by = models.ManyToManyField(
+        Person,
+        related_name="bookmarked_forums",
+        blank=True
+    )
 
     author = models.ForeignKey(
         Person,
@@ -243,35 +258,12 @@ class Forum(models.Model):
         on_delete=models.CASCADE,
     )
 
-    # optional context
-    news = models.ForeignKey(
-        News,
-        related_name="forums",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
-    match = models.ForeignKey(
-        Match,
-        related_name="forums",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-    )
-
-    # bookmark & like
-    bookmarked_by = models.ManyToManyField(
-        Person,
-        related_name="bookmarked_forums",
-        blank=True,
-    )
     liked_by = models.ManyToManyField(
         Person,
         related_name="liked_forums",
         blank=True,
     )
 
-    # waktu
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -290,53 +282,29 @@ class Forum(models.Model):
     def bookmark_count(self):
         return self.bookmarked_by.count()
 
+    # 👇 NEW: comment count biar UI ga perlu hitung manual
     @property
     def comment_count(self):
-        return self.comments.count()
+        return self.comments.filter(parent__isnull=True).count()
 
-    # ---- context flattened buat preview di Flutter ----
-    def get_context_preview(self):
-        if self.news:
-            n = self.news
-            return {
-                "type": "news",
-                "news_id": n.id,
-                "title": n.title,
-                "subtitle": (
-                    f"{n.source} • {n.publish_time.isoformat()}"
-                    if n.publish_time
-                    else n.source
-                ),
-                "thumbnail_url": n.thumbnail_url,
-            }
-
-        if self.match:
-            m = self.match
-            return {
-                "type": "match",
-                "match_id": str(m.id),
-                "league": m.league,
-                "match_date": m.match_date.isoformat() if m.match_date else None,
-                "home_team_name": m.home_team.name,
-                "home_team_logo": m.home_team.image_url,
-                "home_team_score": m.full_time_home_goals,
-                "away_team_name": m.away_team.name,
-                "away_team_logo": m.away_team.image_url,
-                "away_team_score": m.full_time_away_goals,
-            }
-
-        return None
+    # 👇 NEW: "reposts" / "quotes" ala X (sementara sama-sama dari quoted_by)
+    @property
+    def repost_count(self):
+        return self.quoted_by.count()
 
     @property
-    def context(self):
-        return self.get_context_preview()
+    def quote_count(self):
+        return self.quoted_by.count()
 
+    # 👇 NEW: image_url helper untuk API response
+    @property
+    def image_url(self):
+        if self.image and hasattr(self.image, "url"):
+            return self.image.url
+        return None
 
+    
 class Comment(models.Model):
-    """
-    - root comment: parent = None, reply_to = None
-    - reply (maks 1 level): parent = root, reply_to = Person target
-    """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 

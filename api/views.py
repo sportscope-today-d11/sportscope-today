@@ -12,10 +12,12 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET, require_POST
 from django.core.paginator import Paginator
-from django.db.models import Count
 from datetime import datetime
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
+from datetime import timedelta
+from django.db.models import Count, F, Value
+from django.db.models.functions import Coalesce
 
 # VIEWS AUTENTIKASI
 @csrf_exempt
@@ -729,31 +731,54 @@ def get_person_from_request(request):
     except Person.DoesNotExist:
         return None
 
+def forum_preview_to_dict(forum):
+    """
+    Preview ringan untuk embedded quote card (mirip X/Quora quote preview).
+    Dipakai di field "quoted_post" pada forum_to_dict.
+    """
+    # Quote preview removed: return None for compatibility
+    return None
+
 
 def forum_to_dict(forum, current_person=None):
-    is_bookmarked = False
+    """
+    Dict utama untuk Forum List & Forum Detail.
+    - Tidak pakai context (news/match) lagi.
+    - Menyediakan quote_count untuk UI (tanpa repost).
+    """
     is_liked = False
-
     if current_person is not None:
-        is_bookmarked = forum.bookmarked_by.filter(id=current_person.id).exists()
         is_liked = forum.liked_by.filter(id=current_person.id).exists()
+
+    # aman untuk image_url
+    image_url = None
+    if getattr(forum, "image", None) and hasattr(forum.image, "url"):
+        image_url = forum.image.url
+
+    # quote_count/quoted_post removed
 
     return {
         "id": str(forum.id),
         "title": forum.title,
         "content": forum.content,
         "author": forum.author.user.username,
-        "author_role": forum.author.role,
+        "author_role": getattr(forum.author, "role", ""),
         "created_at": forum.created_at.isoformat(),
         "updated_at": forum.updated_at.isoformat(),
-        "context": forum.get_context_preview(),
-        "like_count": forum.like_count,
-        "bookmark_count": forum.bookmark_count,
-        "comment_count": forum.comment_count,
-        "is_bookmarked": is_bookmarked,
-        "is_liked": is_liked,
-    }
 
+        # counts/stats
+        "views": forum.views,
+        "like_count": forum.like_count,
+        "comment_count": forum.comment_count,
+
+        # flags
+        "is_liked": is_liked,
+
+        # media
+        "image_url": image_url,
+
+        # quote preview removed
+    }
 
 def comment_to_dict(comment, current_person=None):
     is_liked = False
@@ -775,27 +800,32 @@ def comment_to_dict(comment, current_person=None):
 
 
 # POST /api/forum/add-forum/
+
 @csrf_exempt
 @require_POST
 def api_add_forum(request):
+    """
+    API: POST /forum/add-forum/
+    - Create forum baru
+    - Support optional:
+      - image (1 file) -> request.FILES['image']
+      - quoted_post_id -> request.POST['quoted_post_id']
+      - news_id / match_id
+    - Return forum object via forum_to_dict
+    """
+
     person = get_person_from_request(request)
     if person is None:
         return JsonResponse(
-            {"success": False, "message": "Authentication required."}, status=401
+            {"success": False, "message": "Authentication required."},
+            status=401,
         )
 
-    try:
-        if request.content_type == "application/json":
-            data = json.loads(request.body.decode("utf-8"))
-        else:
-            data = request.POST
-    except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
-
-    title = data.get("title", "").strip()
-    content = data.get("content", "").strip()
-    news_id = data.get("news_id")
-    match_id = data.get("match_id")
+    # NOTE:
+    # Untuk create + upload image, request harus multipart/form-data
+    # Jadi kita prioritas baca dari request.POST.
+    title = (request.POST.get("title") or "").strip()
+    content = (request.POST.get("content") or "").strip()
 
     if not title or not content:
         return JsonResponse(
@@ -803,36 +833,43 @@ def api_add_forum(request):
             status=400,
         )
 
-    news = None
-    match = None
-
-    if news_id:
-        news = News.objects.filter(id=news_id).first()
-        if news is None:
-            return JsonResponse(
-                {"success": False, "message": "News not found."}, status=404
-            )
-
-    if match_id:
-        match = Match.objects.filter(id=match_id).first()
-        if match is None:
-            return JsonResponse(
-                {"success": False, "message": "Match not found."}, status=404
-            )
-
-    forum = Forum.objects.create(
+    forum = Forum(
         title=title,
         content=content,
         author=person,
-        news=news,
-        match=match,
+    )
+
+    # Optional: image (create only)
+    if "image" in request.FILES:
+        forum.image = request.FILES["image"]
+
+    # Optional: context news/match
+    news_id = (request.POST.get("news_id") or "").strip()
+    match_id = (request.POST.get("match_id") or "").strip()
+
+    if news_id:
+        # aman: set FK by id
+        forum.news_id = news_id
+
+    if match_id:
+        forum.match_id = match_id
+
+    # Optional: quote
+    # quoted_post removed (quote feature disabled)
+
+    forum.save()
+
+    # Re-fetch dengan select_related biar quoted_post/author kebaca rapi
+    forum = (
+        Forum.objects
+        .select_related("author", "author__user")
+        .filter(id=forum.id)
+        .first()
     )
 
     return JsonResponse(
-        {"success": True, "forum": forum_to_dict(forum, current_person=person)},
-        status=201,
+        {"success": True, "forum": forum_to_dict(forum, current_person=person)}
     )
-
 
 # POST /api/forum/<id_forum>/add-comment/
 @csrf_exempt
@@ -902,35 +939,17 @@ def api_add_comment(request, forum_id):
 
 # POST /api/forum/delete-forum/
 @csrf_exempt
-@require_POST
-def api_delete_forum(request):
+@require_http_methods(["DELETE", "POST"])
+def api_delete_forum(request, forum_id):
     person = get_person_from_request(request)
     if person is None:
-        return JsonResponse(
-            {"success": False, "message": "Authentication required."}, status=401
-        )
-
-    try:
-        if request.content_type == "application/json":
-            data = json.loads(request.body.decode("utf-8"))
-        else:
-            data = request.POST
-    except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
-
-    forum_id = data.get("forum_id")
-    if not forum_id:
-        return JsonResponse(
-            {"success": False, "message": "forum_id is required."}, status=400
-        )
+        return JsonResponse({"success": False, "message": "Authentication required."}, status=401)
 
     forum = Forum.objects.filter(id=forum_id).first()
     if forum is None:
-        return JsonResponse(
-            {"success": False, "message": "Forum not found."}, status=404
-        )
+        return JsonResponse({"success": False, "message": "Forum not found."}, status=404)
 
-    # hanya author atau admin
+    # author boleh delete sendiri, admin boleh delete semua
     if forum.author != person and not person.is_admin():
         return JsonResponse({"success": False, "message": "Forbidden."}, status=403)
 
@@ -938,57 +957,56 @@ def api_delete_forum(request):
     return JsonResponse({"success": True, "message": "Forum deleted."})
 
 
+
 # POST /api/forum/delete-comment/
 @csrf_exempt
-@require_POST
-def api_delete_comment(request):
+@require_http_methods(["DELETE", "POST"])  #
+def api_delete_comment(request, comment_id):  
     person = get_person_from_request(request)
     if person is None:
         return JsonResponse(
-            {"success": False, "message": "Authentication required."}, status=401
+            {"success": False, "message": "Authentication required."}, 
+            status=401
         )
 
-    try:
-        if request.content_type == "application/json":
-            data = json.loads(request.body.decode("utf-8"))
-        else:
-            data = request.POST
-    except json.JSONDecodeError:
-        return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
+    # Fetch comment
+    comment = Comment.objects.select_related(
+        "author__user", 
+        "forum__author__user"
+    ).filter(id=comment_id).first()
 
-    comment_id = data.get("comment_id")
-    if not comment_id:
-        return JsonResponse(
-            {"success": False, "message": "comment_id is required."}, status=400
-        )
-
-    comment = Comment.objects.filter(id=comment_id).first()
     if comment is None:
         return JsonResponse(
-            {"success": False, "message": "Comment not found."}, status=404
+            {"success": False, "message": "Comment not found."}, 
+            status=404
         )
 
-    # boleh hapus: author comment, author forum, admin
-    if (
-        comment.author != person
-        and comment.forum.author != person
-        and not person.is_admin()
-    ):
-        return JsonResponse({"success": False, "message": "Forbidden."}, status=403)
+    # Permission check
+    is_comment_author = (comment.author.id == person.id)
+    is_forum_author = (comment.forum.author.id == person.id)
+    is_admin = person.is_admin()
 
+    if not (is_comment_author or is_forum_author or is_admin):
+        return JsonResponse(
+            {"success": False, "message": "Forbidden."}, 
+            status=403
+        )
+
+    # Delete
     comment.delete()
-    return JsonResponse({"success": True, "message": "Comment deleted."})
+    
+    return JsonResponse({
+        "success": True, 
+        "message": "Comment deleted successfully."
+    })
 
-
-# POST /api/forum/add-bookmart/
+# POST /api/forum/edit-forum/
 @csrf_exempt
-@require_POST
-def api_add_bookmart(request):  # pakai nama typo sesuai spek lo
+@require_http_methods(["POST", "PUT"])
+def api_edit_forum(request, forum_id):
     person = get_person_from_request(request)
     if person is None:
-        return JsonResponse(
-            {"success": False, "message": "Authentication required."}, status=401
-        )
+        return JsonResponse({"success": False, "message": "Authentication required."}, status=401)
 
     try:
         if request.content_type == "application/json":
@@ -998,124 +1016,74 @@ def api_add_bookmart(request):  # pakai nama typo sesuai spek lo
     except json.JSONDecodeError:
         return JsonResponse({"success": False, "message": "Invalid JSON."}, status=400)
 
-    forum_id = data.get("forum_id")
-    if not forum_id:
-        return JsonResponse(
-            {"success": False, "message": "forum_id is required."}, status=400
-        )
+    title = (data.get("title") or "").strip()
+    content = (data.get("content") or "").strip()
+
+    if not title or not content:
+        return JsonResponse({"success": False, "message": "Title and content are required."}, status=400)
 
     forum = Forum.objects.filter(id=forum_id).first()
     if forum is None:
-        return JsonResponse(
-            {"success": False, "message": "Forum not found."}, status=404
-        )
+        return JsonResponse({"success": False, "message": "Forum not found."}, status=404)
 
-    if forum.bookmarked_by.filter(id=person.id).exists():
-        forum.bookmarked_by.remove(person)
-        status_str = "removed"
-    else:
-        forum.bookmarked_by.add(person)
-        status_str = "added"
+    # hanya author boleh edit (admin gak usah bisa edit post orang kalau mau strict)
+    if forum.author != person:
+        return JsonResponse({"success": False, "message": "Forbidden."}, status=403)
 
-    return JsonResponse(
-        {
-            "success": True,
-            "status": status_str,
-            "bookmark_count": forum.bookmark_count,
-        }
-    )
+    forum.title = title
+    forum.content = content
+    forum.save(update_fields=["title", "content", "updated_at"])
+
+    return JsonResponse({"success": True, "forum": forum_to_dict(forum, current_person=person)})
+
 
 
 # GET /api/forum/forums/
 @require_GET
 def api_forum_list(request):
     person = get_person_from_request(request)
+    filter_by = (request.GET.get("filter") or "latest").lower()
 
-    qs = Forum.objects.all()
+    qs = (
+        Forum.objects
+        .select_related("author", "author__user")
+        .annotate(
+            like_count_db=Count("liked_by", distinct=True),
+            comment_count_db=Count("comments", distinct=True),
+        )
+    )
 
-    news_id = request.GET.get("news_id")
-    match_id = request.GET.get("match_id")
-    q = request.GET.get("q", "").strip()
-    order = request.GET.get("order", "latest")
+    # ----- filter scope -----
+    if filter_by == "my":
+        if person is None:
+            return JsonResponse(
+                {"success": False, "message": "Authentication required."},
+                status=401,
+            )
+        qs = qs.filter(author=person).order_by("-created_at")
 
-    if news_id:
-        qs = qs.filter(news_id=news_id)
+    elif filter_by == "trending":
+        week_ago = timezone.now() - timedelta(days=7)
 
-    if match_id:
-        qs = qs.filter(match_id=match_id)
-
-    if q:
-        qs = qs.filter(
-            Q(title__icontains=q)
-            | Q(content__icontains=q)
-            | Q(author__user__username__icontains=q)
+        qs = (
+            qs.filter(created_at__gte=week_ago)
+            .annotate(
+                trending_score=(
+                    Coalesce(F("views"), Value(0), output_field=IntegerField()) +
+                    Coalesce(F("like_count_db"), Value(0), output_field=IntegerField()) +
+                    Coalesce(F("comment_count_db"), Value(0), output_field=IntegerField())
+                )
+            )
+            .order_by("-trending_score", "-created_at")
         )
 
-    if order == "popular":
-        qs = qs.annotate(num_likes=Count("liked_by")).order_by(
-            "-num_likes", "-created_at"
-        )
-    elif order == "commented":
-        qs = qs.annotate(num_comments=Count("comments")).order_by(
-            "-num_comments", "-created_at"
-        )
     else:
+        # "latest" or "all" or unknown -> treat as latest
         qs = qs.order_by("-created_at")
 
-    data = [forum_to_dict(f, current_person=person) for f in qs]
-    return JsonResponse({"forums": data})
+    forums = [forum_to_dict(f, current_person=person) for f in qs]
+    return JsonResponse({"success": True, "forums": forums})
 
-
-# GET /api/forum/<id_forum>/
-@require_GET
-def api_forum_detail(request, forum_id):
-    person = get_person_from_request(request)
-    forum = Forum.objects.filter(id=forum_id).first()
-    if forum is None:
-        return JsonResponse(
-            {"success": False, "message": "Forum not found."}, status=404
-        )
-
-    data = forum_to_dict(forum, current_person=person)
-    return JsonResponse({"success": True, "forum": data})
-
-
-# GET /api/forum/<id_forum>/comments/
-@require_GET
-def api_forum_comments(request, forum_id):
-    forum = Forum.objects.filter(id=forum_id).first()
-    if forum is None:
-        return JsonResponse(
-            {"success": False, "message": "Forum not found."}, status=404
-        )
-
-    # 👇 NEW: boleh None kalau belum login
-    person = get_person_from_request(request)
-
-    root_comments = (
-        forum.comments.filter(parent__isnull=True)
-        .order_by("created_at")
-        .select_related("author", "reply_to")
-    )
-    all_replies = (
-        forum.comments.filter(parent__isnull=False)
-        .order_by("created_at")
-        .select_related("author", "reply_to", "parent")
-    )
-
-    replies_map = {}
-    for c in all_replies:
-        replies_map.setdefault(str(c.parent_id), []).append(
-            comment_to_dict(c, current_person=person)  # 👈
-        )
-
-    result = []
-    for root in root_comments:
-        root_dict = comment_to_dict(root, current_person=person)  # 👈
-        root_dict["replies"] = replies_map.get(str(root.id), [])
-        result.append(root_dict)
-
-    return JsonResponse({"success": True, "comments": result})
 
 # POST /api/forum/comment-like/
 @csrf_exempt
@@ -1170,21 +1138,7 @@ def api_comment_like(request):
         }
     )
 
-
-
-# GET /api/forum/my-bookmark/
-@require_GET
-def api_forum_my_bookmark(request):
-    person = get_person_from_request(request)
-    if person is None:
-        return JsonResponse(
-            {"success": False, "message": "Authentication required."}, status=401
-        )
-
-    qs = Forum.objects.filter(bookmarked_by=person).order_by("-created_at")
-    data = [forum_to_dict(f, current_person=person) for f in qs]
-
-    return JsonResponse({"success": True, "bookmarks": data})
+# GET /api/forum/my-bookmark/ removed: bookmark feature disabled
 
 
 # POST /api/forum/like
@@ -1225,5 +1179,97 @@ def api_forum_like(request):
         status_str = "liked"
 
     return JsonResponse(
-        {"success": True, "status": status_str, "like_count": forum.like_count}
+        {
+            "success": True, 
+            "status": status_str, 
+            "like_count": forum.like_count,
+            "is_liked": forum.liked_by.filter(id=person.id).exists()
+        }
     )
+
+@require_GET
+def api_forum_comments(request, forum_id):
+    person = get_person_from_request(request)
+
+    forum = Forum.objects.filter(id=forum_id).first()
+    if forum is None:
+        return JsonResponse(
+            {"success": False, "message": "Forum not found."},
+            status=404,
+        )
+
+    # Ambil semua comment dalam forum (root + replies)
+    # root: parent is NULL
+    # reply: parent != NULL (parent = root sesuai logic kamu)
+    all_comments = (
+        Comment.objects
+        .select_related("author", "author__user", "reply_to", "reply_to__user", "forum")
+        .prefetch_related("liked_by")
+        .filter(forum=forum)
+        .order_by("created_at")
+    )
+
+    # Pisahkan root & reply
+    roots = []
+    replies_map = {}  # root_id -> list of reply Comment
+
+    for c in all_comments:
+        if c.parent_id is None:
+            roots.append(c)
+        else:
+            replies_map.setdefault(str(c.parent_id), []).append(c)
+
+    # Build nested JSON
+    out = []
+    for root in roots:
+        root_dict = comment_to_dict(root, current_person=person)
+
+        child_comments = replies_map.get(str(root.id), [])
+        root_dict["replies"] = [
+            comment_to_dict(child, current_person=person) for child in child_comments
+        ]
+
+        out.append(root_dict)
+
+    return JsonResponse(
+        {"success": True, "comments": out}
+    )
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+
+@require_GET
+def api_forum_detail(request, forum_id):
+    """
+    API: GET /forum/<uuid:forum_id>/
+    - Return detail 1 forum
+    - Increment views +1 setiap kali endpoint ini dipanggil (masuk detail)
+    - Response forum memakai forum_to_dict (yang sudah include views + quoted_post + image_url)
+    """
+    person = get_person_from_request(request)
+
+    forum = (
+        Forum.objects
+        .select_related(
+            "author", "author__user",
+            "quoted_post", "quoted_post__author", "quoted_post__author__user",
+        )
+        .filter(id=forum_id)
+        .first()
+    )
+
+    if forum is None:
+        return JsonResponse(
+            {"success": False, "message": "Forum not found."},
+            status=404,
+        )
+
+    # increment views
+    forum.views = (forum.views or 0) + 1
+    forum.save(update_fields=["views"])
+
+    return JsonResponse(
+        {"success": True, "forum": forum_to_dict(forum, current_person=person)}
+    )
+
+
