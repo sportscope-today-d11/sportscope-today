@@ -2,7 +2,7 @@
 {% block content %}
 <div class="max-w-3xl mx-auto mt-10 bg-white shadow-lg rounded-2xl p-8">
     <h1 class="text-2xl font-bold text-gray-800 mb-6">
-        {% if mode == "edit" %}✏️ Edit Berita{% else %}📰 Tambah Berita{% endif %}
+        {% if mode == "edit" %}Edit Berita{% else %}Tambah Berita{% endif %}
     </h1>
 
     <form id="newsForm" method="POST" data-mode="{{ mode }}" data-id="{{ form.instance.id|default:'' }}">
@@ -49,11 +49,11 @@ document.getElementById("newsForm").addEventListener("submit", async function(e)
     const msg = document.getElementById("statusMsg");
 
     if (result.success) {
-        msg.textContent = "✅ Berita berhasil disimpan!";
+        msg.textContent = "Berita berhasil disimpan!";
         msg.classList.add("text-green-600");
         setTimeout(() => window.location.href = "/news/", 1200);
     } else {
-        msg.textContent = "❌ Gagal menyimpan berita!";
+        msg.textContent = "Gagal menyimpan berita!";
         msg.classList.add("text-red-600");
     }
 });

@@ -20,7 +20,7 @@
       <option value="oldest">Oldest to Latest</option>
     </select>
     
-    {% if user.is_staff %}
+    {% if user.person.is_admin %}
     <a href="{% url 'main:news_create' %}" 
        class="bg-green-600 text-white font-semibold px-4 py-2 rounded hover:bg-green-700 transition shadow-sm">
       + Add News

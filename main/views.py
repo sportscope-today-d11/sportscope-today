@@ -60,6 +60,24 @@ def admin_required(view_func):
         return view_func(request, *args, **kwargs)
     return wrapper
 
+def check_admin_access(user):
+    if not user.is_authenticated:
+        return False
+        
+    # 1. Cek cara lama (buat temanmu yang pakai is_staff)
+    if user.is_staff:
+        return True
+
+    # 2. Cek cara baru (buat kamu yang pakai person.is_admin)
+    try:
+        if user.person.is_admin:
+            return True
+    except AttributeError:
+        # Error ini muncul kalau user gak punya 'person'
+        pass 
+
+    return False
+
 # ------------------------------
 # HOMEPAGE
 # ------------------------------
@@ -634,7 +652,7 @@ def bookmarked_news(request):
     })
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(check_admin_access)
 def news_create(request):
     from .forms import NewsForm
     
@@ -659,7 +677,7 @@ def news_create(request):
     return render(request, 'news_form.html', {'form': form, 'mode': 'create'})
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(check_admin_access)
 def news_update(request, news_id):
     from .forms import NewsForm
     
@@ -679,7 +697,7 @@ def news_update(request, news_id):
     return render(request, 'news_form.html', {'form': form, 'mode': 'edit'})
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(check_admin_access)
 def news_delete(request, news_id):
     news = get_object_or_404(News, id=news_id)
     if request.method == 'POST':
